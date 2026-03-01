@@ -1,0 +1,27 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "DevFactory Backend API - Express.js with TypeScript and Prisma",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Test suite not yet configured\""
+  },
+  "keywords": ["express", "typescript", "prisma"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^7.4.2",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.3",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "prisma": "^6.19.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
