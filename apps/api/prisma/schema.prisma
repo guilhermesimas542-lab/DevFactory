@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Projects
+model Project {
+  id              Int       @id @default(autoincrement())
+  name            String
+  description     String?
+  repositoryUrl   String?
+  localFolder     String?
+  prdOriginal     Json
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  modules         Module[]
+  stories         Story[]
+  alerts          Alert[]
+  analysisResults AnalysisResult[]
+  snapshots       Snapshot[]
+  glossaryTerms   GlossaryTerm[]
+
+  @@index([name])
+}
+
+// Modules (Hexágonos)
+model Module {
+  id               Int      @id @default(autoincrement())
+  projectId        Int
+  name             String
+  description      String?
+  hierarchy        String // 'critical', 'important', 'necessary', 'desirable', 'optional'
+  parentModuleId   Int?
+  progressPercentage Float  @default(0)
+  createdAt        DateTime @default(now())
+
+  project          Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentModule     Module? @relation("ModuleHierarchy", fields: [parentModuleId], references: [id])
+  childModules     Module[] @relation("ModuleHierarchy")
+  components       Component[]
+  stories          Story[]
+  alerts           Alert[]
+  analysisResults  AnalysisResult[]
+
+  @@unique([projectId, name])
+  @@index([projectId])
+}
+
+// Components
+model Component {
+  id            Int      @id @default(autoincrement())
+  moduleId      Int
+  name          String
+  type          String?  // 'function', 'component', 'route', 'model'
+  description   String?
+  status        String   @default("pending") // 'pending', 'partial', 'implemented'
+  codeReference String?
+  createdAt     DateTime @default(now())
+
+  module        Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+}
+
+// Stories
+model Story {
+  id               Int       @id @default(autoincrement())
+  projectId        Int
+  moduleId         Int?
+  title            String
+  description      String?
+  epic             String?
+  status           String    @default("pending") // 'pending', 'in_progress', 'completed'
+  agentResponsible String?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  project          Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  module           Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([moduleId])
+}
+
+// Alerts
+model Alert {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  type      String   // 'story_without_code', 'code_without_story', 'stagnation'
+  severity  String   // 'low', 'medium', 'high'
+  message   String
+  moduleId  Int?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  module    Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([isRead])
+}
+
+// Analysis Results
+model AnalysisResult {
+  id               Int      @id @default(autoincrement())
+  projectId        Int
+  moduleId         Int?
+  analyzedFunction String?
+  prdItem          String?
+  matchConfidence  Float    // 0.0 - 1.0
+  analysisData     Json
+  createdAt        DateTime @default(now())
+
+  project          Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  module           Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([moduleId])
+}
+
+// Snapshots (Histórico)
+model Snapshot {
+  id             Int      @id @default(autoincrement())
+  projectId      Int
+  overallProgress Float
+  snapshotData   Json
+  createdAt      DateTime @default(now())
+
+  project        Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// Glossary Terms
+model GlossaryTerm {
+  id        Int      @id @default(autoincrement())
+  projectId Int
+  term      String
+  definition String
+  analogy   String?
+  relevance String?
+  isExplored Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, term])
+  @@index([projectId])
+}
