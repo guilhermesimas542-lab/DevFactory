@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "buildCommand": "bash build.sh",
-  "outputDirectory": "apps/web/.next",
-  "env": {
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url"
-  }
-}
