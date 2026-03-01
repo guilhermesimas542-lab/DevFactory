@@ -3,7 +3,7 @@ import cors from 'cors'
 import { logger } from './middleware/logger'
 import { errorHandler } from './middleware/errorHandler'
 import healthRoutes from './routes/health'
-import databaseRoutes from './routes/database'
+import dbTestRoutes from './routes/db-test'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -28,7 +28,7 @@ app.use(logger)
 
 // Routes
 app.use('/api', healthRoutes)
-app.use('/api/db', databaseRoutes)
+app.use('/api/db', dbTestRoutes)
 
 // 404 Handler
 app.use((_req, res) => {
