@@ -10,7 +10,11 @@
     "typecheck": "tsc --noEmit",
     "test": "echo \"Test suite not yet configured\""
   },
-  "keywords": ["express", "typescript", "prisma"],
+  "keywords": [
+    "express",
+    "typescript",
+    "prisma"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -18,10 +22,14 @@
     "@prisma/client": "^7.4.2",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.3",
+    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "prisma": "^6.19.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19"
   }
 }
