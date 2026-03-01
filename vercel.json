@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "apps/web/package.json",
-      "use": "@vercel/next@latest"
-    }
-  ]
+  "buildCommand": "bash build.sh",
+  "outputDirectory": "apps/web/.next",
+  "env": {
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "NEXTAUTH_URL": "@nextauth_url"
+  }
 }
