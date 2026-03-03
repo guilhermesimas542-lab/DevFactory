@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import { execSync } from 'child_process'
 import { logger } from './middleware/logger'
 import { errorHandler } from './middleware/errorHandler'
 import healthRoutes from './routes/health'
@@ -8,6 +9,21 @@ import projectsRoutes from './routes/projects'
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+// Run Prisma migrations on startup
+async function runMigrations() {
+  try {
+    console.log('🔄 Running Prisma migrations...')
+    execSync('npx prisma migrate deploy', {
+      stdio: 'inherit',
+      cwd: __dirname
+    })
+    console.log('✅ Migrations completed successfully')
+  } catch (error) {
+    console.error('❌ Migration failed:', error)
+    process.exit(1)
+  }
+}
 
 // CORS Configuration
 app.use(cors({
@@ -46,6 +62,8 @@ app.use((_req, res) => {
 app.use(errorHandler)
 
 // Start Server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`)
+runMigrations().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`)
+  })
 })
