@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-03
+**Data:** 2026-03-03 (Sessão 2)
 **Branches ativos:** `main` (clean)
-**Último commit:** STORY-007-B implementada (dashboard com listagem)
-**Status:** 🟢 ÉPICO 1 COMPLETO | STORY-006 ✅ CONCLUÍDA | STORY-007 (A+B) ✅ CONCLUÍDA
+**Último commit:** debug: expand console logs to show full data structure (5c6e6df)
+**Status:** 🟡 STORY-007 (A+B) EM DEBUGGING | PROBLEMA IDENTIFICADO: dados carregam mas não renderizam
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base)
 
@@ -277,6 +277,56 @@ feat: [STORY-007-B] Implement dashboard with project listing and deletion
 
 **Próxima ação recomendada:**
 Testar fluxo completo no navegador (Upload → Resultado → Dashboard)
+
+---
+
+### [2026-03-03 (Sessão 2)] — @dev — STORY-007 (A+B) — DEBUG E CORREÇÕES
+
+**Descrição:**
+Debugging do fluxo completo de upload → detalhes → dashboard. Identificação e correção de múltiplos problemas em Pages Router vs App Router.
+
+**Problemas Encontrados:**
+
+1. **UploadForm.tsx usando App Router em projeto Pages Router**
+   - ❌ Erro: `'use client'` + `import { useRouter } from 'next/navigation'`
+   - ✅ Correção: Remover `'use client'`, usar `import { useRouter } from 'next/router'`
+   - Commit: `fix: correct Next.js router import in UploadForm (400ecf2)`
+
+2. **Redirect para página não-existente `/projects/{id}/validate`**
+   - ❌ Erro: onSuccess callback em UploadForm redirecionava para `/projects/${projectId}/validate`
+   - ✅ Correção: Redirecionar para `/projects/${projectId}` (página de detalhes)
+   - Commit: `fix: redirect to project detail page instead of non-existent validate page (d15fca7)`
+
+3. **Variável de Ambiente NEXT_PUBLIC_API_URL não configurada**
+   - ❌ Problema: Frontend tentava chamar `http://localhost:5000` em produção
+   - ✅ Solução: Configurar `NEXT_PUBLIC_API_URL = https://dev-factory-al5c.up.railway.app` em Vercel
+   - Resultado: API agora alcançável do frontend em produção
+
+**Status Atual:**
+- ✅ Upload funciona
+- ✅ Redirecionamento automático funciona
+- ✅ Página de detalhes carrega
+- 🟡 **BLOQUEADOR:** Dados carregam no state mas não aparecem no UI
+  - Console logs mostram: `✅ Project loaded: Object` (sucesso na API)
+  - Mas nome, descrição, ID aparecem vazios na página
+  - **Próximo passo:** Analisar conteúdo real do objeto retornado para identificar estrutura
+
+**Commits desta sessão:**
+```
+400ecf2 fix: correct Next.js router import in UploadForm (Pages Router, not App Router)
+d15fca7 fix: redirect to project detail page instead of non-existent validate page
+5c6e6df debug: expand console logs to show full data structure
+```
+
+**Arquivos modificados:**
+- `apps/web/components/UploadForm.tsx`
+- `apps/web/pages/projects.tsx`
+- `apps/web/pages/projects/[id].tsx`
+
+**Próxima ação:**
+1. User executa novo upload
+2. User abre DevTools Console e copia logs de `📡 Response Data:` (JSON)
+3. Analisar estrutura dos dados retornados para identificar problema de renderização
 
 ---
 
