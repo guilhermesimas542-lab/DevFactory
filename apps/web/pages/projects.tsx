@@ -57,8 +57,8 @@ export default function ProjectsPage() {
           <div className="lg:col-span-2">
             <UploadForm
               onSuccess={(projectId) => {
-                // Redirect to project validation page
-                router.push(`/projects/${projectId}/validate`);
+                // Redirect to project detail page
+                router.push(`/projects/${projectId}`);
               }}
             />
           </div>
