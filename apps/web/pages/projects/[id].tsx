@@ -56,9 +56,13 @@ export default function ProjectDetail() {
       console.log('📡 Fetching project:', id);
       const result = await getProject(id);
       console.log('📡 API Response:', result);
+      console.log('📡 Response Data:', JSON.stringify(result.data, null, 2));
 
       if (result.success && result.data) {
         console.log('✅ Project loaded:', result.data);
+        console.log('✅ Project name:', result.data.name);
+        console.log('✅ Project description:', result.data.description);
+        console.log('✅ Project prd_original:', result.data.prd_original);
         setProject(result.data);
       } else {
         console.error('❌ API Error:', result.error);
