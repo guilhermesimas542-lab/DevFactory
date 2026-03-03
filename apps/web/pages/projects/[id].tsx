@@ -44,20 +44,29 @@ export default function ProjectDetail() {
       setError(null);
 
       const { id } = router.query;
+      console.log('🔍 Router query:', router.query);
+      console.log('🔍 ID:', id);
+
       if (!id || typeof id !== 'string') {
+        console.error('❌ Invalid ID:', id);
         setError('Invalid project ID');
         return;
       }
 
+      console.log('📡 Fetching project:', id);
       const result = await getProject(id);
+      console.log('📡 API Response:', result);
 
       if (result.success && result.data) {
+        console.log('✅ Project loaded:', result.data);
         setProject(result.data);
       } else {
+        console.error('❌ API Error:', result.error);
         setError(result.error || 'Failed to load project');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('❌ Exception:', message, err);
       setError(message);
     } finally {
       setLoading(false);
