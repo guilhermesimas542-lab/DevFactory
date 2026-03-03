@@ -49,6 +49,19 @@ export async function uploadPRD(file: File): Promise<ApiResponse<{ projectId: st
 }
 
 /**
+ * Get all projects
+ * @returns Array of projects
+ */
+export async function getProjects(): Promise<ApiResponse<Array<{
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}>>> {
+  return apiCall('/api/projects');
+}
+
+/**
  * Get a specific project by ID
  * @param projectId - The project ID
  * @returns Project details
@@ -62,6 +75,17 @@ export async function getProject(projectId: string): Promise<ApiResponse<{
   updated_at: string;
 }>> {
   return apiCall(`/api/projects/${projectId}`);
+}
+
+/**
+ * Delete a project
+ * @param projectId - The project ID to delete
+ * @returns Success status
+ */
+export async function deleteProject(projectId: string): Promise<ApiResponse<{ message: string }>> {
+  return apiCall(`/api/projects/${projectId}`, {
+    method: 'DELETE',
+  });
 }
 
 /**

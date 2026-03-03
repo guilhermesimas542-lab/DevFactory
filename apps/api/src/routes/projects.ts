@@ -26,6 +26,38 @@ const upload = multer({
 });
 
 /**
+ * GET /api/projects
+ * Get all projects (paginated, sorted by creation date DESC)
+ */
+router.get('/', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const projects = await prisma.project.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        created_at: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: projects,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Get projects error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
  * GET /api/projects/{id}
  * Get a specific project by ID
  */
@@ -58,6 +90,43 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Get project error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
+ * DELETE /api/projects/{id}
+ * Delete a specific project by ID
+ */
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      res.status(404).json({
+        error: 'Project not found',
+      });
+      return;
+    }
+
+    await prisma.project.delete({
+      where: { id },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Project deleted successfully',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Delete project error:', error);
 
     res.status(400).json({
       error: message,
