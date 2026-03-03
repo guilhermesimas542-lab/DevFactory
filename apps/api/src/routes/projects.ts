@@ -29,7 +29,7 @@ const upload = multer({
  * GET /api/projects
  * Get all projects (paginated, sorted by creation date DESC)
  */
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
     const projects = await prisma.project.findMany({
       select: {
@@ -63,7 +63,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
  */
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     const project = await prisma.project.findUnique({
       where: { id },
@@ -103,7 +103,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
  */
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     const project = await prisma.project.findUnique({
       where: { id },
