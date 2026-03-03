@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { uploadPRD } from '@/lib/api';
 
 interface UploadFormProps {
@@ -8,6 +9,7 @@ interface UploadFormProps {
 }
 
 export default function UploadForm({ onSuccess }: UploadFormProps) {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,12 +59,12 @@ export default function UploadForm({ onSuccess }: UploadFormProps) {
         setSuccess(true);
         setFile(null);
 
-        // Redirect to dashboard after 2 seconds
+        // Redirect to project detail page after 2 seconds
         setTimeout(() => {
           if (onSuccess) {
             onSuccess(result.data!.projectId);
           } else {
-            window.location.href = '/dashboard';
+            router.push(`/projects/${result.data!.projectId}`);
           }
         }, 2000);
       } else {

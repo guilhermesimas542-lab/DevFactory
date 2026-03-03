@@ -49,6 +49,22 @@ export async function uploadPRD(file: File): Promise<ApiResponse<{ projectId: st
 }
 
 /**
+ * Get a specific project by ID
+ * @param projectId - The project ID
+ * @returns Project details
+ */
+export async function getProject(projectId: string): Promise<ApiResponse<{
+  id: string;
+  name: string;
+  description: string | null;
+  prd_original: any;
+  created_at: string;
+  updated_at: string;
+}>> {
+  return apiCall(`/api/projects/${projectId}`);
+}
+
+/**
  * Generic fetch wrapper for API calls
  */
 export async function apiCall<T>(

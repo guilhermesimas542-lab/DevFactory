@@ -26,6 +26,46 @@ const upload = multer({
 });
 
 /**
+ * GET /api/projects/{id}
+ * Get a specific project by ID
+ */
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      res.status(404).json({
+        error: 'Project not found',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        prd_original: project.prd_original,
+        created_at: project.created_at,
+        updated_at: project.updated_at,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Get project error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
  * POST /api/projects/import-prd
  * Upload a PRD file and create a project
  */
