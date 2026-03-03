@@ -70,7 +70,7 @@ app.listen(PORT, () => {
 })
 
 // Try migrations in background (won't block server startup)
-runMigrationsAsync().catch(error => {
+runMigrationsAsync().catch(_error => {
   console.error('⚠️ Async migration failed, server continuing anyway...')
   // Server stays alive even if migration fails
 })
