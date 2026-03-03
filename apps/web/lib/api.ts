@@ -31,10 +31,13 @@ export async function uploadPRD(file: File): Promise<ApiResponse<{ projectId: st
       throw new Error(errorData.error || `Upload failed with status ${response.status}`);
     }
 
-    const data = await response.json();
+    const responseData = await response.json();
     return {
       success: true,
-      data,
+      data: {
+        projectId: responseData.projectId,
+        status: responseData.status,
+      },
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';

@@ -69,7 +69,8 @@ export default function UploadForm({ onSuccess }: UploadFormProps) {
         setError(result.error || 'Erro ao fazer upload do arquivo');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      const message = err instanceof Error ? err.message : JSON.stringify(err);
+      console.error('Upload error:', err);
       setError(message);
     } finally {
       setLoading(false);
