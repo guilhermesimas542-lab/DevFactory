@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-02 14:35
+**Data:** 2026-03-03 (continua)
 **Branches ativos:** `main` (clean)
-**Último commit:** Deploy verificado e funcionando
-**Status:** 🟢 ÉPICO 1 COMPLETO | STORY-005 ✅ CONCLUÍDA | INICIANDO STORY-006
+**Último commit:** STORY-007-A implementada (página de resultado)
+**Status:** 🟢 ÉPICO 1 COMPLETO | STORY-006 ✅ CONCLUÍDA | STORY-007-A ✅ CONCLUÍDA | INICIANDO STORY-007-B
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base)
 
@@ -35,10 +35,12 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 **Roadmap:**
 1. ✅ STORY-005: Deploy (CONCLUÍDO)
-2. 🔄 STORY-006: Upload de PRD (IMPLEMENTADO - TESTE NECESSÁRIO)
-3. ⏳ STORY-007-010: Importação de PRD (próximas)
-4. ⏳ STORY-011-015: Mapa Hexagonal
-5. ⏳ STORY-016-020: Análise de Progresso
+2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
+3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
+4. 🔄 STORY-007-B: Dashboard com Listagem (PRÓXIMA)
+5. ⏳ STORY-008-010: Análise de PRD (futuro)
+6. ⏳ STORY-011-015: Mapa Hexagonal (futuro)
+7. ⏳ STORY-016-020: Análise de Progresso (futuro)
 
 ---
 
@@ -172,10 +174,60 @@ Criação de página frontend + endpoint backend para upload de PRD (Product Req
 feat: [STORY-006] Criar página de upload de PRD (frontend) + endpoint backend
 ```
 
-**Status:** ✅ IMPLEMENTADO | 🔄 AGUARDANDO TESTES MANUAIS
+**Status:** ✅ COMPLETO E TESTADO
+
+**Resultado Final:**
+- ✅ 3 uploads de PRD testados com sucesso
+- ✅ Dados persistidos no PostgreSQL em Railway
+- ✅ DATABASE_PUBLIC_URL configurada (custo negligenciável)
+- ✅ Migração Prisma criada e executada
+
+---
+
+### [2026-03-03] — @dev — STORY-007-A (Página de Resultado) — Implementação Completa
+
+**Descrição:**
+Criação de página para mostrar resultado do upload e detalhes do projeto importado.
+
+**O que foi feito:**
+1. ✅ Endpoint GET `/api/projects/{id}` no backend
+   - Busca projeto por ID
+   - Retorna: id, name, description, prd_original, created_at
+
+2. ✅ Função `getProject()` na lib/api.ts
+   - Client para chamar novo endpoint
+   - Tipagem correta com TypeScript
+
+3. ✅ Página `/projects/[id].tsx` (Next.js dinâmica)
+   - Autenticação via NextAuth
+   - Loading state com spinner
+   - Exibição de detalhes do projeto
+   - Informações do documento (arquivo, tamanho, tipo, data)
+   - Preview do conteúdo (primeiros 1000 chars)
+   - Botões de ação: Voltar, Ir para Dashboard
+
+4. ✅ Atualização de UploadForm.tsx
+   - Redirect automático para `/projects/{projectId}` após upload
+   - Usar router.push() ao invés de window.location.href
+
+5. ✅ Testes manuais
+   - Upload → Redirect → Página carrega com dados corretos ✅
+
+**Arquivos criados/modificados:**
+- `apps/web/pages/projects/[id].tsx` (NOVO)
+- `apps/api/src/routes/projects.ts` (EDITAR: adicionar GET /{id})
+- `apps/web/lib/api.ts` (EDITAR: adicionar getProject())
+- `apps/web/components/UploadForm.tsx` (EDITAR: atualizar redirect)
+
+**Git Commit:**
+```
+feat: [STORY-007-A] Implement project detail page with upload result
+```
+
+**Status:** ✅ COMPLETO
 
 **Próxima ação recomendada:**
-Usuário → Testar em https://dev-factory-al5c.vercel.app/projects (ver docs/STORY-006-TEST.md)
+STORY-007-B: Criar Dashboard com listagem de todos os projetos importados
 
 ---
 
@@ -222,4 +274,4 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 ---
 
 **Mantido por:** AIOS Agents
-**Última atualização:** 2026-03-02 (Orion, aios-master)
+**Última atualização:** 2026-03-03 (Orion, aios-master) — STORY-007-A completa
