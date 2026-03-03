@@ -14,10 +14,13 @@ const PORT = process.env.PORT || 5000
 async function runMigrations() {
   try {
     console.log('🔄 Running Prisma migrations...')
+    console.time('Prisma migration')
     execSync('npx prisma migrate deploy', {
       stdio: 'inherit',
-      cwd: __dirname
+      cwd: process.cwd(),
+      timeout: 30000 // 30 second timeout
     })
+    console.timeEnd('Prisma migration')
     console.log('✅ Migrations completed successfully')
   } catch (error) {
     console.error('❌ Migration failed:', error)
