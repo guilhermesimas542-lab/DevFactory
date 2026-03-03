@@ -33,14 +33,12 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ### 🚀 Próximas Ações
 
-**STORY-006:** Criar Página de Upload de PRD (Frontend)
-→ Começar AGORA
-
 **Roadmap:**
 1. ✅ STORY-005: Deploy (CONCLUÍDO)
-2. 🔄 STORY-006-010: Importação de PRD (próximas)
-3. ⏳ STORY-011-015: Mapa Hexagonal
-4. ⏳ STORY-016-020: Análise de Progresso
+2. 🔄 STORY-006: Upload de PRD (IMPLEMENTADO - TESTE NECESSÁRIO)
+3. ⏳ STORY-007-010: Importação de PRD (próximas)
+4. ⏳ STORY-011-015: Mapa Hexagonal
+5. ⏳ STORY-016-020: Análise de Progresso
 
 ---
 
@@ -122,6 +120,62 @@ feat: [STORY-005] Configurar variáveis de ambiente para deploy Vercel + Railway
 
 **Próxima ação recomendada:**
 Usuário → Seguir guia em `docs/RAILWAY_VERCEL_SETUP.md` (Railway + Vercel setup manual nos dashboards)
+
+---
+
+### [2026-03-02] — @dev — STORY-006 (Upload de PRD) — Implementação Completa
+
+**Descrição:**
+Criação de página frontend + endpoint backend para upload de PRD (Product Requirements Document).
+
+**O que foi feito:**
+1. ✅ Página `/projects` criada (pages/projects.tsx)
+   - Layout com header, form de upload, info panel
+   - Proteção com NextAuth (redireciona se não autenticado)
+   - Feedback visual com bem-vindo do usuário
+
+2. ✅ Componente UploadForm.tsx
+   - Input file com validação (.md, .txt)
+   - File size validation (máximo 5MB)
+   - Loading state com spinner
+   - Mensagens de erro/sucesso (toast-like)
+   - Redirecionamento automático após sucesso
+
+3. ✅ API Client lib/api.ts
+   - Função uploadPRD() para enviar arquivo via FormData
+   - Tratamento de erros da rede
+   - Uso de NEXT_PUBLIC_API_URL para flexibilidade
+
+4. ✅ Endpoint Backend: POST /api/projects/import-prd
+   - Multer para upload seguro
+   - Validação de tipo (.md, .txt)
+   - Validação de tamanho (5MB)
+   - Criação de projeto no PostgreSQL
+   - Armazenamento de PRD raw content em JSONB
+   - Limpeza automática de arquivos temporários
+
+5. ✅ Dependências instaladas
+   - npm install multer @types/multer
+
+**Arquivos criados:**
+- `apps/web/pages/projects.tsx`
+- `apps/web/components/UploadForm.tsx`
+- `apps/web/lib/api.ts`
+- `apps/api/src/routes/projects.ts`
+- `docs/STORY-006-TEST.md` (teste manual)
+
+**Arquivos modificados:**
+- `apps/api/src/index.ts` (adicionar rota de projects)
+
+**Git Commit:**
+```
+feat: [STORY-006] Criar página de upload de PRD (frontend) + endpoint backend
+```
+
+**Status:** ✅ IMPLEMENTADO | 🔄 AGUARDANDO TESTES MANUAIS
+
+**Próxima ação recomendada:**
+Usuário → Testar em https://dev-factory-al5c.vercel.app/projects (ver docs/STORY-006-TEST.md)
 
 ---
 
