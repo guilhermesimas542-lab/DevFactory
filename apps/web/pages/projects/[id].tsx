@@ -161,44 +161,48 @@ export default function ProjectDetail() {
         </div>
 
         {/* PRD Info Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Documento Importado</h2>
+        {project.prd_original && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Documento Importado</h2>
 
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Arquivo</label>
-              <p className="text-gray-900">{project.prd_original.originalFileName}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tamanho</label>
-                <p className="text-gray-900">{formatFileSize(project.prd_original.fileSize)}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Arquivo</label>
+                <p className="text-gray-900">{project.prd_original.originalFileName}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tamanho</label>
+                  <p className="text-gray-900">{formatFileSize(project.prd_original.fileSize)}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                  <p className="text-gray-900">{project.prd_original.mimeType}</p>
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                <p className="text-gray-900">{project.prd_original.mimeType}</p>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Importado em</label>
+                <p className="text-gray-900">{formatDate(project.prd_original.uploadedAt)}</p>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Importado em</label>
-              <p className="text-gray-900">{formatDate(project.prd_original.uploadedAt)}</p>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Preview Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Visualização do Documento</h2>
-          <div className="bg-gray-50 rounded p-4 max-h-96 overflow-y-auto border border-gray-200">
-            <pre className="text-sm text-gray-700 whitespace-pre-wrap break-words font-mono">
-              {project.prd_original.rawContent.substring(0, 1000)}
-              {project.prd_original.rawContent.length > 1000 && '\n\n... (documento contém mais conteúdo)'}
-            </pre>
+        {project.prd_original && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Visualização do Documento</h2>
+            <div className="bg-gray-50 rounded p-4 max-h-96 overflow-y-auto border border-gray-200">
+              <pre className="text-sm text-gray-700 whitespace-pre-wrap break-words font-mono">
+                {project.prd_original.rawContent.substring(0, 1000)}
+                {project.prd_original.rawContent.length > 1000 && '\n\n... (documento contém mais conteúdo)'}
+              </pre>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-4">
