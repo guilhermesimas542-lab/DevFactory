@@ -10,8 +10,8 @@ import projectsRoutes from './routes/projects'
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Run Prisma migrations on startup
-async function runMigrations() {
+// Run Prisma migrations asynchronously (non-blocking)
+async function runMigrationsAsync() {
   try {
     console.log('🔄 Running Prisma migrations...')
     console.time('Prisma migration')
@@ -24,7 +24,7 @@ async function runMigrations() {
     console.log('✅ Migrations completed successfully')
   } catch (error) {
     console.error('❌ Migration failed:', error)
-    process.exit(1)
+    throw error // Don't block server startup
   }
 }
 
@@ -64,9 +64,13 @@ app.use((_req, res) => {
 // Error Handler (deve ser o último middleware)
 app.use(errorHandler)
 
-// Start Server
-runMigrations().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`)
-  })
+// Start Server FIRST (non-blocking)
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`)
+})
+
+// Try migrations in background (won't block server startup)
+runMigrationsAsync().catch(error => {
+  console.error('⚠️ Async migration failed, server continuing anyway...')
+  // Server stays alive even if migration fails
 })
