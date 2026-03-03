@@ -29,15 +29,16 @@ const upload = multer({
  * POST /api/projects/import-prd
  * Upload a PRD file and create a project
  */
-router.post('/import-prd', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/import-prd', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'No file uploaded',
       });
+      return;
     }
 
-    const { filename, mimetype, size } = req.file;
+    const { mimetype, size } = req.file;
 
     // For now, just read the file content and store it
     // In STORY-007, we'll parse and validate it
