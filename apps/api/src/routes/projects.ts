@@ -65,6 +65,11 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
     const project = await prisma.project.findUnique({
       where: { id },
     });
@@ -104,6 +109,11 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
 
     const project = await prisma.project.findUnique({
       where: { id },
