@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-03 (continua)
+**Data:** 2026-03-03
 **Branches ativos:** `main` (clean)
-**Último commit:** STORY-007-A implementada (página de resultado)
-**Status:** 🟢 ÉPICO 1 COMPLETO | STORY-006 ✅ CONCLUÍDA | STORY-007-A ✅ CONCLUÍDA | INICIANDO STORY-007-B
+**Último commit:** STORY-007-B implementada (dashboard com listagem)
+**Status:** 🟢 ÉPICO 1 COMPLETO | STORY-006 ✅ CONCLUÍDA | STORY-007 (A+B) ✅ CONCLUÍDA
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base)
 
@@ -37,10 +37,11 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 1. ✅ STORY-005: Deploy (CONCLUÍDO)
 2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
 3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
-4. 🔄 STORY-007-B: Dashboard com Listagem (PRÓXIMA)
-5. ⏳ STORY-008-010: Análise de PRD (futuro)
-6. ⏳ STORY-011-015: Mapa Hexagonal (futuro)
-7. ⏳ STORY-016-020: Análise de Progresso (futuro)
+4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
+5. ⏳ STORY-008: Visualização Completa de PRD (próxima)
+6. ⏳ STORY-009-010: Análise de PRD
+7. ⏳ STORY-011-015: Mapa Hexagonal
+8. ⏳ STORY-016-020: Análise de Progresso
 
 ---
 
@@ -227,7 +228,55 @@ feat: [STORY-007-A] Implement project detail page with upload result
 **Status:** ✅ COMPLETO
 
 **Próxima ação recomendada:**
-STORY-007-B: Criar Dashboard com listagem de todos os projetos importados
+Teste STORY-007-B no navegador
+
+---
+
+### [2026-03-03] — @dev — STORY-007-B (Dashboard com Listagem) — Implementação Completa
+
+**Descrição:**
+Criação de dashboard para listar todos os projetos importados com opções de visualização e exclusão.
+
+**O que foi feito:**
+1. ✅ Endpoints no backend:
+   - GET `/api/projects` — lista todos os projetos (ordenado por created_at DESC)
+   - DELETE `/api/projects/{id}` — deleta um projeto
+
+2. ✅ Funções na lib/api.ts:
+   - `getProjects()` — busca lista de projetos
+   - `deleteProject(id)` — deleta um projeto
+
+3. ✅ Página `/dashboard.tsx`:
+   - Autenticação via NextAuth
+   - Loading state
+   - Empty state (nenhum projeto)
+   - Grid de cards (responsive: 1-2-3 colunas)
+   - Cada card mostra:
+     - Nome e data do projeto
+     - Descrição (truncada)
+     - Botões: "Ver Detalhes" e "Deletar"
+   - Total de projetos em stats box
+   - Botão "+ Novo Projeto" no header
+
+4. ✅ Fluxo completo:
+   - Upload → Redirect para /projects/{id} (STORY-007-A)
+   - /projects/{id} → Botão "Ir para Dashboard" → /dashboard
+   - /dashboard → Grid de projetos → Ver/Deletar
+
+**Arquivos criados/modificados:**
+- `apps/web/pages/dashboard.tsx` (NOVO)
+- `apps/api/src/routes/projects.ts` (EDITAR: adicionar GET / e DELETE /:id)
+- `apps/web/lib/api.ts` (EDITAR: adicionar getProjects() e deleteProject())
+
+**Git Commit:**
+```
+feat: [STORY-007-B] Implement dashboard with project listing and deletion
+```
+
+**Status:** ✅ COMPLETO
+
+**Próxima ação recomendada:**
+Testar fluxo completo no navegador (Upload → Resultado → Dashboard)
 
 ---
 
@@ -274,4 +323,4 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 ---
 
 **Mantido por:** AIOS Agents
-**Última atualização:** 2026-03-03 (Orion, aios-master) — STORY-007-A completa
+**Última atualização:** 2026-03-03 (Orion, aios-master) — STORY-007 (A+B) completa
