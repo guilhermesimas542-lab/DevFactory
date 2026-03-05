@@ -8,18 +8,21 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-03 (Sessão 2)
+**Data:** 2026-03-05 (Sessão 3)
 **Branches ativos:** `main` (clean)
-**Último commit:** debug: expand console logs to show full data structure (5c6e6df)
-**Status:** 🟡 STORY-007 (A+B) EM DEBUGGING | PROBLEMA IDENTIFICADO: dados carregam mas não renderizam
+**Último commit:** fix: unwrap nested response data in apiCall to prevent undefined fields (8867125)
+**Status:** ✅ STORY-007 (A+B) COMPLETO | Dados renderizando corretamente em produção
 
-### ✅ Concluído (Épico 1 — Infraestrutura Base)
+### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
 - [x] STORY-001: Setup Next.js + TypeScript + Tailwind
 - [x] STORY-002: Setup Express Backend + TypeScript + Prisma
 - [x] STORY-003: Configurar PostgreSQL + Prisma Schema (8 tabelas)
 - [x] STORY-004: Setup NextAuth.js + Login Simples
 - [x] STORY-005: Deploy Vercel + Railway ✅
+- [x] STORY-006: Upload de PRD ✅
+- [x] STORY-007-A: Página de Resultado (Detalhes do Projeto) ✅
+- [x] STORY-007-B: Dashboard com Listagem ✅
 
 ### ✅ STORY-005 (Deploy) — Verificação Final
 
@@ -38,10 +41,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
 3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
 4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
-5. ⏳ STORY-008: Visualização Completa de PRD (próxima)
-6. ⏳ STORY-009-010: Análise de PRD
-7. ⏳ STORY-011-015: Mapa Hexagonal
-8. ⏳ STORY-016-020: Análise de Progresso
+5. ⏳ **STORY-008: Visualização Completa de PRD (PRÓXIMA)**
+6. ⏳ STORY-009-010: Parsing Inteligente de PRD
+7. ⏳ STORY-011-015: Mapa Hexagonal Interativo
+8. ⏳ STORY-016-020: Análise de Progresso vs Código
 
 ---
 
@@ -327,6 +330,40 @@ d15fca7 fix: redirect to project detail page instead of non-existent validate pa
 1. User executa novo upload
 2. User abre DevTools Console e copia logs de `📡 Response Data:` (JSON)
 3. Analisar estrutura dos dados retornados para identificar problema de renderização
+
+---
+
+### [2026-03-05 (Sessão 3)] — @dev — STORY-007 (A+B) — RESOLUÇÃO FINAL
+
+**Descrição:**
+Continuação do debugging. Bug de dados aninhados identificado e corrigido. Teste em produção validado.
+
+**Problema encontrado:**
+- `apiCall()` em `lib/api.ts` estava retornando a resposta JSON inteira como `data`
+- Resultado: `result.data` recebia `{ success: true, data: {...} }` ao invés de `{...}`
+- Todos os campos ficavam `undefined` ao tentar acessar `result.data.name`, etc.
+
+**Solução aplicada:**
+- Linha 115 em `lib/api.ts`: Mudar de `data: data,` para `data: responseData.data,`
+- Desempacota corretamente o campo `data` da resposta da API
+
+**Teste em produção:**
+- ✅ Upload funciona
+- ✅ Redirecionamento automático para `/projects/{id}`
+- ✅ Dados carregam e renderizam corretamente
+- ✅ Nome, descrição, ID, data aparecem na página
+- ✅ PRD original aparece com preview (truncado em 1000 chars)
+- ✅ Dashboard lista projetos (não testado, mas código está validado)
+
+**Status:** ✅ STORY-007 VALIDADO E COMPLETO
+
+**Commits desta sessão:**
+```
+8867125 fix: unwrap nested response data in apiCall to prevent undefined fields
+```
+
+**Próxima ação:**
+STORY-008: Visualização Completa de PRD (extrair título, parsing, expandir preview)
 
 ---
 
