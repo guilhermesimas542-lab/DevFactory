@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-05 (Sessão 3)
-**Branches ativos:** `main` (clean)
+**Data:** 2026-03-05 (Sessão 4 — Parser de Markdown)
+**Branches ativos:** `main` (com mudanças não-commitadas)
 **Último commit:** fix: unwrap nested response data in apiCall to prevent undefined fields (8867125)
-**Status:** ✅ STORY-007 (A+B) COMPLETO | Dados renderizando corretamente em produção
+**Status:** ✅ STORY-007 (A+B) COMPLETO | 🔄 STORY-008 IMPLEMENTADO (testes passando)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -41,10 +41,11 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
 3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
 4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
-5. ⏳ **STORY-008: Visualização Completa de PRD (PRÓXIMA)**
-6. ⏳ STORY-009-010: Parsing Inteligente de PRD
-7. ⏳ STORY-011-015: Mapa Hexagonal Interativo
-8. ⏳ STORY-016-020: Análise de Progresso vs Código
+5. 🔄 **STORY-008: Parser de Markdown → Estrutura JSON (IMPLEMENTADO — Testes Passando)**
+6. ⏳ STORY-009: Criar módulos no banco a partir de parsed data
+7. ⏳ STORY-010: UI de validação/confirmação da árvore de módulos
+8. ⏳ STORY-011-015: Mapa Hexagonal Interativo
+9. ⏳ STORY-016-020: Análise de Progresso vs Código
 
 ---
 
@@ -364,6 +365,105 @@ Continuação do debugging. Bug de dados aninhados identificado e corrigido. Tes
 
 **Próxima ação:**
 STORY-008: Visualização Completa de PRD (extrair título, parsing, expandir preview)
+
+---
+
+### [2026-03-05 (Sessão 4)] — @dev — STORY-008 (Parser de Markdown → Estrutura JSON) — Implementação Completa
+
+**Descrição:**
+Criação de parser determinístico usando regex + string manipulation para extrair estrutura de PRD markdown (título, visão, módulos, stories) sem dependências externas. Integração com route de import-prd para extrair título automaticamente e eliminar nomes genéricos.
+
+**Abordagem:**
+- ✅ **Regex + String Manipulation** — Determinístico, sem dependências, zero overhead
+- ✅ **Sem remark/marked** — PRD tem estrutura previsível (H1/H2/H3 headers)
+- ✅ **Graceful Degradation** — Funciona com PRDs malformados, adiciona warnings
+
+**O que foi feito:**
+
+1. ✅ **Criado `src/types/index.ts`**
+   - Interfaces: `ParsedModule`, `ParsedStory`, `ParsedPRD`
+   - Type: `HierarchyLevel` = critico | importante | necessario | desejavel | opcional
+
+2. ✅ **Criado `src/utils/prdParser.ts`** — Função `parsePRDMarkdown(content: string): ParsedPRD`
+   - Extrai **título** (primeiro H1)
+   - Extrai **visão** (conteúdo entre H1 e primeiro H2)
+   - Extrai **módulos** (seções H3/H4 com keywords de hierarquia)
+     - Detecta: "Crítico", "Must Have", "Mandatory" → `critico`
+     - Detecta: "Importante", "Should Have", "Significant" → `importante`
+     - Detecta: "Necessário", "Could Have" → `necessario`
+     - Detecta: "Desejável", "Nice to Have" → `desejavel`
+     - Detecta: "Opcional", "Won't Have" → `opcional`
+   - Extrai **componentes** (bullets dentro de cada módulo)
+   - Extrai **stories** (padrão STORY-NNN)
+   - Adiciona **warnings** se documento malformado
+
+3. ✅ **Criado `src/utils/prdParser.test.ts`** — 5 testes com node:assert (zero config)
+   - Test 1: Parse completo (título, visão, módulos com hierarquia)
+   - Test 2: Graceful degradation (sem H1 → adiciona warning)
+   - Test 3: Todos os níveis de hierarquia detectados
+   - Test 4: Formato real-world de PRD
+   - Test 5: Edge case (arquivo vazio)
+   - **Resultado:** ✅ Todos os 5 testes passam
+
+4. ✅ **Atualizado `src/routes/projects.ts` — POST /import-prd**
+   - Importa `parsePRDMarkdown` do utils
+   - Chama parser após ler arquivo
+   - **Antes:** nome = `Project (${new Date().toLocaleDateString()})`
+   - **Depois:** nome = `parsedPRD.title || req.file.originalname`
+   - Adiciona `parsed: {...}` em `prd_original` no banco
+   - Estrutura agora: `{ rawContent, originalFileName, uploadedAt, fileSize, mimeType, parsed: { title, vision, modules, stories, warnings } }`
+
+**Arquivos criados:**
+- `apps/api/src/types/index.ts` (NOVO)
+- `apps/api/src/utils/prdParser.ts` (NOVO)
+- `apps/api/src/utils/prdParser.test.ts` (NOVO)
+
+**Arquivos modificados:**
+- `apps/api/src/routes/projects.ts` (adicionar parser call + import)
+
+**Verificações:**
+- ✅ Testes: 5/5 passando
+- ✅ TypeScript: npm run typecheck → sem erros
+- ✅ Build: npm run build → sucesso
+- ✅ Imports: Sem extensões `.js` (problema de módulos resolvido)
+
+**Status:** ✅ STORY-008 PRONTO (sem commit — aguardando validação)
+
+**Exemplo de saída do parser:**
+```json
+{
+  "title": "DevFactory Platform",
+  "vision": "Uma plataforma inteligente para orquestração de AI...",
+  "modules": [
+    {
+      "name": "Crítico - Autenticação",
+      "hierarchy": "critico",
+      "description": "Todos os usuários...",
+      "components": ["OAuth 2.0 integration", "JWT token management"]
+    }
+  ],
+  "stories": [
+    {
+      "title": "STORY-001: Setup autenticação",
+      "epic": "EPIC-TBD",
+      "description": "",
+      "dependencies": []
+    }
+  ],
+  "warnings": []
+}
+```
+
+**Fora do escopo (próximas stories):**
+- STORY-009: Criar módulos no banco a partir de dados parsed
+- STORY-010: UI de validação/confirmação da árvore de módulos
+- STORY-011: Mapa Hexagonal com módulos extraídos
+
+**Próxima ação recomendada:**
+1. Testar upload de PRD.md real
+2. Verificar se nome do projeto aparece corretamente (extraído de H1)
+3. Validar estrutura de `parsed` no banco
+4. Commit: `feat: implement PRD markdown parser with automatic title extraction`
 
 ---
 

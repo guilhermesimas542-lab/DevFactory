@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
+import { parsePRDMarkdown } from '../utils/prdParser';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -159,15 +160,15 @@ router.post('/import-prd', upload.single('file'), async (req: Request, res: Resp
 
     const { mimetype, size } = req.file;
 
-    // For now, just read the file content and store it
-    // In STORY-007, we'll parse and validate it
+    // Read file content and parse markdown
     const fs = await import('fs').then(m => m.promises);
     const fileContent = await fs.readFile(req.file.path, 'utf-8');
+    const parsedPRD = parsePRDMarkdown(fileContent);
 
     // Create a project entry in the database
     const project = await prisma.project.create({
       data: {
-        name: `Project (${new Date().toLocaleDateString()})`,
+        name: parsedPRD.title || req.file.originalname,
         description: `Imported from ${req.file.originalname}`,
         prd_original: {
           rawContent: fileContent,
@@ -175,7 +176,14 @@ router.post('/import-prd', upload.single('file'), async (req: Request, res: Resp
           uploadedAt: new Date().toISOString(),
           fileSize: size,
           mimeType: mimetype,
-        },
+          parsed: {
+            title: parsedPRD.title,
+            vision: parsedPRD.vision,
+            modules: parsedPRD.modules,
+            stories: parsedPRD.stories,
+            warnings: parsedPRD.warnings,
+          },
+        } as any,
       },
     });
 
