@@ -109,10 +109,10 @@ export async function apiCall<T>(
       throw new Error(errorData.error || `Request failed with status ${response.status}`);
     }
 
-    const data = await response.json();
+    const responseData = await response.json();
     return {
       success: true,
-      data,
+      data: responseData.data,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
