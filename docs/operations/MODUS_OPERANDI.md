@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 6 — STORY-014 + STORY-015 IMPLEMENTADAS)
+**Data:** 2026-03-06 (Sessão 6 — ÉPICO 3 COMPLETO + STORY-016 INICIADO)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: implement Tooltip and Reset Zoom for interactive map navigation (5eeedeb)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ STORY-011-015 IMPLEMENTADAS | Épico 3 COMPLETO (100%)
+**Último commit:** feat: implement GitHub repository fetcher for code analysis (132b3dd)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | 🚀 ÉPICO 4 INICIADO (STORY-016)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -1077,6 +1077,66 @@ Implementação de tooltips ao hover e botão Reset Zoom visual. Zoom com limite
    - Drag → move visualização
    - Duplo-clique → reset (modo alternativo)
 2. Começar STORY-016 (GitHub Clone - Épico 4 — Análise de Progresso)
+
+---
+
+### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-016 (GitHub Clone + File Reading) — IMPLEMENTADA
+
+**Descrição:**
+Criação de utilitário para clonar repositório GitHub via GitHub API e ler arquivos JavaScript/TypeScript.
+
+**O que foi feito:**
+
+1. ✅ **Criado `src/utils/githubFetcher.ts`**
+   - Função `cloneGitHubRepo(repoUrl, githubToken)`
+   - Parsing de URL GitHub: `https://github.com/owner/repo` → owner/repo
+   - Busca recursiva de arquivos via API (não git CLI)
+   - Filtro de extensões: `.js`, `.ts`, `.jsx`, `.tsx`
+   - Filtro de pastas: ignora node_modules, .git, dist, build, .next, .env
+   - Retorna: `{ files: [{path, content, size}, ...], repoUrl, totalFiles, totalSize }`
+   - Suporta private repos com token GitHub
+   - Error handling robusto
+
+2. ✅ **Estendido `src/types/index.ts`**
+   - `GitHubFile`: estrutura de arquivo
+   - `GitHubCloneResult`: resultado do clone
+   - `CodePattern`: padrão extraído de código
+   - `AnalysisResult`: resultado da análise completa
+
+3. ✅ **Criado `src/utils/githubFetcher.test.ts`**
+   - Testes de lógica de filtros (extensões, paths)
+   - Validação de estrutura de retorno
+   - 4/4 testes passando
+
+**Arquivos criados:**
+- `apps/api/src/utils/githubFetcher.ts` (NOVO)
+- `apps/api/src/utils/githubFetcher.test.ts` (NOVO)
+
+**Arquivos modificados:**
+- `apps/api/src/types/index.ts` (tipos adicionados)
+
+**Verificações:**
+- ✅ TypeScript: npm run typecheck → zero erros
+- ✅ Testes: npx ts-node → 4/4 passando
+- ✅ GitHub API: suportado
+- ✅ URL parsing: validado
+- ✅ File filtering: funcionando
+
+**Git Commit:**
+```
+132b3dd feat: implement GitHub repository fetcher for code analysis [STORY-016]
+```
+
+**Status:** ✅ STORY-016 IMPLEMENTADA | 🚀 PRÓXIMA: STORY-017 (Babel Parser)
+
+**Épico 4 Progress:**
+```
+1. STORY-016: GitHub Clone (✅ COMPLETO) ← NOVO
+2. [PRÓXIMO] STORY-017: Babel Parser
+3. STORY-018: Heurísticas
+4. STORY-019: Analysis Engine
+5. STORY-020: Progress API + Dashboard
+```
 
 ---
 
