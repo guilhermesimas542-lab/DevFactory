@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 6 — STORY-014 IMPLEMENTADA)
+**Data:** 2026-03-06 (Sessão 6 — STORY-014 + STORY-015 IMPLEMENTADAS)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: add SidePanel component for hexagon module details display (f952ceb)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ STORY-011-014 IMPLEMENTADAS | Mapa Hexagonal 80% completo
+**Último commit:** feat: implement Tooltip and Reset Zoom for interactive map navigation (5eeedeb)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ STORY-011-015 IMPLEMENTADAS | Épico 3 COMPLETO (100%)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -48,12 +48,12 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 - ✅ STORY-009: Criar módulos no banco
 - ✅ STORY-010: UI de validação
 
-**Épico 3 — Mapa Hexagonal** 🚀 80% COMPLETO
+**Épico 3 — Mapa Hexagonal** ✅ 100% COMPLETO
 - ✅ STORY-011: Setup D3.js + useD3 hook (COMPLETO)
 - ✅ STORY-012: Hexagon shapes SVG rendering (COMPLETO)
 - ✅ STORY-013: Force simulation + conexões (COMPLETO)
 - ✅ STORY-014: Interactive panel (COMPLETO)
-- ⏳ STORY-015: Zoom/pan/navegação
+- ✅ STORY-015: Zoom/pan/navegação (COMPLETO)
 
 **Épico 4 — Análise de Progresso** ⏳ PLANEJADO
 - ⏳ STORY-016-020: GitHub clone, análise de código, heurísticas
@@ -1008,6 +1008,78 @@ f952ceb feat: add SidePanel component for hexagon module details display
 
 ---
 
+### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-015 (Zoom + Pan + Interações) — IMPLEMENTADA
+
+**Descrição:**
+Implementação de tooltips ao hover e botão Reset Zoom visual. Zoom com limites (0.5x a 3x). Refinamento de controles interativos.
+
+**O que foi feito:**
+
+1. ✅ **Criado `components/Tooltip.tsx`**
+   - Componente simples para exibir tooltips
+   - Props: content, visible, x, y
+   - Posicionamento fixed com seta apontando para elemento
+   - Auto-hide quando mouseleave
+
+2. ✅ **Atualizado `components/HexagonMap.tsx`**
+   - Adicionado estado local para tooltip
+   - Refs para zoom/svg (permitir reset programático)
+   - Zoom limits: scaleExtent([0.5, 3])
+   - Evento mouseenter/mouseleave para tooltip
+   - Botão "Reset Zoom" visual no header
+   - Função handleResetZoom() para trigger programático
+   - Instruções melhoradas com emojis
+
+3. ✅ **Atualizado `pages/test-hexagon.tsx`**
+   - Seção de critérios separada para STORY-015
+   - Instruções de teste com novos recursos
+   - Tooltip, reset button, zoom limits documentados
+
+**Arquivos criados:**
+- `apps/web/components/Tooltip.tsx` (NOVO)
+
+**Arquivos modificados:**
+- `apps/web/components/HexagonMap.tsx` (tooltip + reset button + zoom limits)
+- `apps/web/pages/test-hexagon.tsx` (instruções + critérios)
+
+**Verificações:**
+- ✅ TypeScript: npm run typecheck → zero erros
+- ✅ Build: successful
+- ✅ Tooltip renderiza ao hover
+- ✅ Reset Zoom button funciona
+- ✅ Zoom limits aplicados (0.5x-3x)
+- ✅ Pan/drag ainda funcional
+- ✅ Duplo-clique reset ainda funciona
+
+**Git Commit:**
+```
+5eeedeb feat: implement Tooltip and Reset Zoom for interactive map navigation [STORY-015]
+```
+
+**Status:** ✅ STORY-015 IMPLEMENTADA E PRONTA PARA TESTES
+
+**Épico 3 Progress:**
+```
+1. STORY-011: Setup D3.js (✅ COMPLETO)
+2. STORY-012: Hexagon shapes (✅ COMPLETO)
+3. STORY-013: Force layout + conexões (✅ COMPLETO)
+4. STORY-014: Painel lateral (✅ COMPLETO)
+5. STORY-015: Zoom/pan/navegação (✅ COMPLETO) ← NOVO
+```
+
+**ÉPICO 3 COMPLETO (100%)** 🎉
+
+**Próxima ação recomendada:**
+1. Testar página `/test-hexagon` em produção
+   - Hover hexágono → tooltip deve aparecer com nome + progresso
+   - Clicar "Reset Zoom" → volta zoom 1x
+   - Scroll → zoom muda suavemente (0.5x-3x)
+   - Drag → move visualização
+   - Duplo-clique → reset (modo alternativo)
+2. Começar STORY-016 (GitHub Clone - Épico 4 — Análise de Progresso)
+
+---
+
 ## 🔑 DECISÕES CRÍTICAS
 
 ### Infraestrutura (Épico 1)
@@ -1051,4 +1123,4 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 ---
 
 **Mantido por:** AIOS Agents
-**Última atualização:** 2026-03-06 (Dex, @dev) — STORY-014 (SidePanel) completa
+**Última atualização:** 2026-03-06 (Dex, @dev) — STORY-015 (Zoom/Pan/Tooltip) completa | **ÉPICO 3 FINALIZADO (100%)**
