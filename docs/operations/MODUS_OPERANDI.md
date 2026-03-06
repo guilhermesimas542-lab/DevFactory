@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-05 (Sessão 4 — Parser de Markdown)
-**Branches ativos:** `main` (com mudanças não-commitadas)
-**Último commit:** fix: unwrap nested response data in apiCall to prevent undefined fields (8867125)
-**Status:** ✅ STORY-007 (A+B) COMPLETO | 🔄 STORY-008 IMPLEMENTADO (testes passando)
+**Data:** 2026-03-06 (Sessão 5 — ProjectService + Módulos)
+**Branches ativos:** `main` (sincronizado)
+**Último commit:** feat: implement ProjectService to create modules and components from parsed PRD (5d1966f)
+**Status:** ✅ STORY-008 DEPLOYADO | ✅ STORY-009 IMPLEMENTADO (deploy em andamento)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -41,9 +41,9 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
 3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
 4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
-5. 🔄 **STORY-008: Parser de Markdown → Estrutura JSON (IMPLEMENTADO — Testes Passando)**
-6. ⏳ STORY-009: Criar módulos no banco a partir de parsed data
-7. ⏳ STORY-010: UI de validação/confirmação da árvore de módulos
+5. ✅ **STORY-008: Parser de Markdown → Estrutura JSON (DEPLOYADO)**
+6. ✅ **STORY-009: Criar módulos no banco a partir de parsed data (DEPLOYADO)**
+7. ⏳ **STORY-010: UI de validação/confirmação da árvore de módulos (PRÓXIMA)**
 8. ⏳ STORY-011-015: Mapa Hexagonal Interativo
 9. ⏳ STORY-016-020: Análise de Progresso vs Código
 
@@ -475,6 +475,80 @@ f6a07f3 feat: implement PRD markdown parser with automatic title extraction [STO
 2. Verificar se nome do projeto aparece corretamente (extraído de H1)
 3. Validar estrutura de `parsed` no banco
 4. Commit: `feat: implement PRD markdown parser with automatic title extraction`
+
+---
+
+### [2026-03-06 (Sessão 5)] — @dev — STORY-009 (Criar Módulos no Banco) — Implementação Completa
+
+**Descrição:**
+Criação de `ProjectService` para converter dados parseados do PRD em registros no banco de dados (projetos, módulos, componentes). Integração com endpoint de upload para criar estrutura completa automaticamente.
+
+**O que foi feito:**
+
+1. ✅ **Criado `src/services/ProjectService.ts`**
+   - Função `createProjectFromParsedPRD(parsedPRD, projectName)`
+   - Insere projeto com metadados do PRD
+   - Cria módulos com hierarquia
+   - Cria componentes vazios (status: pending)
+   - Usa Prisma `$transaction` para atomicidade (tudo ou nada)
+   - Retorna `projectId`
+   - Função helper `getProjectWithModules(projectId)` para queries
+
+2. ✅ **Criado `src/services/ProjectService.test.ts`**
+   - Testes estruturais de dados mock
+   - Valida quantidade de módulos e componentes
+   - ✅ Todos os testes passam
+
+3. ✅ **Integrado ao POST /import-prd**
+   - Endpoint agora:
+     1. Lê arquivo
+     2. Parseia markdown
+     3. Cria projeto com módulos/componentes (STORY-009 ✅)
+     4. Armazena raw content + parsed metadata
+     5. Retorna `projectId + modulesCount`
+   - Status response: `'modules_created'` (em vez de apenas 'uploaded')
+
+4. ✅ **Verificações**
+   - TypeScript: zero erros
+   - Build: sucesso
+   - Teste de estrutura: 5/5 passing
+
+**Arquivos criados:**
+- `apps/api/src/services/ProjectService.ts` (NOVO)
+- `apps/api/src/services/ProjectService.test.ts` (NOVO)
+
+**Arquivos modificados:**
+- `apps/api/src/routes/projects.ts` (importar + integrar serviço)
+
+**Git Commit:**
+```
+5d1966f feat: implement ProjectService to create modules and components from parsed PRD [STORY-009]
+```
+
+**Status:** ✅ STORY-009 IMPLEMENTADA E DEPLOYADA
+
+**Fluxo Completo Agora:**
+```
+Upload PRD.md
+  ↓
+Parsear markdown (STORY-008)
+  ↓
+Criar módulos/componentes no banco (STORY-009) ← NOVO
+  ↓
+Retornar projectId com modulesCount
+  ↓
+Próxima: UI de validação (STORY-010)
+```
+
+**Banco de Dados:**
+- `projects` table: tem prd_original com raw + parsed metadata
+- `modules` table: preenchida com nome, description, hierarchy
+- `components` table: preenchida com nomes dos componentes, status=pending
+
+**Próxima ação recomendada:**
+1. Testar upload com PRD.md real
+2. Verificar se módulos aparecem no banco
+3. Começar STORY-010 (UI de validação/confirmação da árvore)
 
 ---
 
