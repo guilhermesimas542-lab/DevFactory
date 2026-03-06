@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 5 — ProjectService + Módulos)
+**Data:** 2026-03-06 (Sessão 5 — Parser + ProjectService + Validation UI)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: implement ProjectService to create modules and components from parsed PRD (5d1966f)
-**Status:** ✅ STORY-008 DEPLOYADO | ✅ STORY-009 IMPLEMENTADO (deploy em andamento)
+**Último commit:** feat: implement validation UI for tree structure editing (9d6652e)
+**Status:** ✅ STORY-008 DEPLOYADO | ✅ STORY-009 DEPLOYADO | ✅ STORY-010 IMPLEMENTADO (deploy em andamento)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -43,9 +43,11 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
 5. ✅ **STORY-008: Parser de Markdown → Estrutura JSON (DEPLOYADO)**
 6. ✅ **STORY-009: Criar módulos no banco a partir de parsed data (DEPLOYADO)**
-7. ⏳ **STORY-010: UI de validação/confirmação da árvore de módulos (PRÓXIMA)**
-8. ⏳ STORY-011-015: Mapa Hexagonal Interativo
-9. ⏳ STORY-016-020: Análise de Progresso vs Código
+7. ✅ **STORY-010: UI de validação/confirmação da árvore de módulos (DEPLOYADO)**
+8. ⏳ **STORY-011-015: Mapa Hexagonal Interativo (PRÓXIMO — Épico 3)**
+9. ⏳ STORY-016-020: Análise de Progresso vs Código (Épico 4)
+
+**Épico 2 Concluído! 🎉** → Transição para Épico 3 (Mapa Hexagonal)
 
 ---
 
@@ -549,6 +551,103 @@ Próxima: UI de validação (STORY-010)
 1. Testar upload com PRD.md real
 2. Verificar se módulos aparecem no banco
 3. Começar STORY-010 (UI de validação/confirmação da árvore)
+
+---
+
+### [2026-03-06 (Sessão 5 cont.)] — @dev — STORY-010 (UI de Validação da Árvore) — Implementação Completa
+
+**Descrição:**
+Criação de interface interativa para validar e editar a estrutura de módulos antes de confirmar. Usuário pode expandir/colapsar, editar nomes, mudar hierarquia, deletar nós.
+
+**O que foi feito:**
+
+**Backend:**
+1. ✅ Função `validateAndUpdateProjectTree()` em ProjectService
+   - Recebe array de atualizações (module updates)
+   - Valida que projeto existe
+   - Atualiza nomes de módulos
+   - Atualiza hierarquias
+   - Atualiza nomes de componentes
+   - Usa transaction para atomicidade
+   - Retorna número de módulos atualizados
+
+2. ✅ Endpoint POST `/projects/:id/validate`
+   - Recebe `{ updates: [...] }` no body
+   - Valida formato dos dados
+   - Chama `validateAndUpdateProjectTree()`
+   - Retorna sucesso + modulesUpdated
+
+3. ✅ Atualizar GET `/projects/:id`
+   - Agora inclui `modules` com `components` nested
+   - Possibilita carregar árvore completa para validação
+
+**Frontend:**
+1. ✅ Componente `TreeEditor.tsx`
+   - Recebe array de módulos com componentes
+   - Collapse/expand com setas
+   - Editar nome de módulo (input)
+   - Editar componentes (inputs)
+   - Dropdown para mudar hierarquia
+     - Critico (red) / Importante (orange) / Necessario (yellow) / Desejavel (green) / Opcional (gray)
+   - Deletar módulo (botão X, com undo)
+   - Botão "✓ Confirmar" para salvar
+   - Estado local com edições antes de salvar
+
+2. ✅ Página `/projects/[id]/validate.tsx`
+   - Carrega projeto com módulos
+   - Renderiza TreeEditor
+   - Ao confirmar: POST `/api/projects/:id/validate`
+   - Feedback de sucesso
+   - Redireciona para `/projects/{id}` após sucesso
+   - Tratamento de erros com mensagens
+
+3. ✅ Função `validateProjectTree()` em lib/api.ts
+   - POST para validar e salvar mudanças
+   - Tipada com retorno correto
+
+4. ✅ Atualizar tipagem de `getProject()`
+   - Adicionado campo `modules: Array<{id, name, description, hierarchy, components}>`
+
+**Arquivos criados:**
+- `apps/web/components/TreeEditor.tsx` (NOVO)
+- `apps/web/pages/projects/[id]/validate.tsx` (NOVO)
+
+**Arquivos modificados:**
+- `apps/api/src/services/ProjectService.ts` (adicionar validação)
+- `apps/api/src/routes/projects.ts` (endpoint + GET com modules)
+- `apps/web/lib/api.ts` (função + tipos)
+
+**Verificações:**
+- Frontend: build successful
+- Backend: npm run typecheck → zero erros
+- TypeScript: todos os tipos corretos
+
+**Git Commit:**
+```
+9d6652e feat: implement validation UI for tree structure editing [STORY-010]
+```
+
+**Status:** ✅ STORY-010 IMPLEMENTADA E DEPLOYADA
+
+**Fluxo Completo Épico 2 (Importação de PRD):**
+```
+1. Upload PRD.md (STORY-006) ✅
+2. Parsear markdown (STORY-008) ✅
+3. Criar módulos/componentes no banco (STORY-009) ✅
+4. UI de validação/edição (STORY-010) ✅ ← NOVO
+5. [Confirmar árvore] → Salvo no banco
+6. [Próximo] Mapa Hexagonal (STORY-011)
+```
+
+**Próximas ações recomendadas:**
+1. Testar fluxo completo em produção:
+   - Upload PRD.md
+   - Verificar se módulos aparecem
+   - Ir para `/projects/{id}/validate`
+   - Editar alguns campos
+   - Clicar "Confirmar"
+   - Verificar se dados foram salvos
+2. Começar STORY-011 (Setup D3.js + Mapa Hexagonal)
 
 ---
 
