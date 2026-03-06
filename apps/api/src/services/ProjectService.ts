@@ -88,3 +88,60 @@ export async function getProjectWithModules(projectId: string) {
     throw new Error(`Failed to fetch project: ${message}`);
   }
 }
+
+/**
+ * Update module name and hierarchy based on user edits
+ * Called from validation/confirmation UI
+ */
+export async function validateAndUpdateProjectTree(
+  projectId: string,
+  updates: Array<{
+    moduleId: string;
+    name?: string;
+    hierarchy?: string;
+    components?: Array<{ componentId: string; name: string }>;
+  }>
+): Promise<{ success: boolean; modulesUpdated: number }> {
+  try {
+    let modulesUpdated = 0;
+
+    await prisma.$transaction(async (tx) => {
+      // Verify project exists
+      const project = await tx.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        throw new Error(`Project ${projectId} not found`);
+      }
+
+      for (const update of updates) {
+        // Update module
+        await tx.module.update({
+          where: { id: update.moduleId },
+          data: {
+            ...(update.name && { name: update.name }),
+            ...(update.hierarchy && { hierarchy: update.hierarchy }),
+          },
+        });
+        modulesUpdated++;
+
+        // Update components if provided
+        if (update.components && update.components.length > 0) {
+          for (const component of update.components) {
+            await tx.component.update({
+              where: { id: component.componentId },
+              data: { name: component.name },
+            });
+          }
+        }
+      }
+    });
+
+    return { success: true, modulesUpdated };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`Error validating project tree: ${message}`, error);
+    throw new Error(`Failed to validate and update project tree: ${message}`);
+  }
+}

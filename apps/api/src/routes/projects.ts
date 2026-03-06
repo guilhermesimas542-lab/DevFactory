@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { parsePRDMarkdown } from '../utils/prdParser';
-import { createProjectFromParsedPRD } from '../services/ProjectService';
+import { createProjectFromParsedPRD, validateAndUpdateProjectTree } from '../services/ProjectService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -74,6 +74,13 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 
     const project = await prisma.project.findUnique({
       where: { id },
+      include: {
+        modules: {
+          include: {
+            components: true,
+          },
+        },
+      },
     });
 
     if (!project) {
@@ -90,6 +97,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
         name: project.name,
         description: project.description,
         prd_original: project.prd_original,
+        modules: project.modules,
         created_at: project.created_at,
         updated_at: project.updated_at,
       },
@@ -211,6 +219,42 @@ router.post('/import-prd', upload.single('file'), async (req: Request, res: Resp
       const fs = await import('fs').then(m => m.promises);
       await fs.unlink(req.file.path).catch(() => {});
     }
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
+ * POST /api/projects/:id/validate
+ * Update modules and components based on user edits from validation UI
+ */
+router.post('/:id/validate', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { updates } = req.body;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
+    if (!updates || !Array.isArray(updates)) {
+      res.status(400).json({ error: 'Invalid updates format' });
+      return;
+    }
+
+    const result = await validateAndUpdateProjectTree(id, updates);
+
+    res.status(200).json({
+      success: true,
+      message: 'Project tree updated successfully',
+      modulesUpdated: result.modulesUpdated,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Validate project error:', error);
 
     res.status(400).json({
       error: message,

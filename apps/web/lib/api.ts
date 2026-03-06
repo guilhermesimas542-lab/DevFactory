@@ -71,6 +71,16 @@ export async function getProject(projectId: string): Promise<ApiResponse<{
   name: string;
   description: string | null;
   prd_original: any;
+  modules: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    hierarchy: string;
+    components: Array<{
+      id: string;
+      name: string;
+    }>;
+  }>;
   created_at: string;
   updated_at: string;
 }>> {
@@ -113,6 +123,51 @@ export async function apiCall<T>(
     return {
       success: true,
       data: responseData.data,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+/**
+ * Validate and update project tree with user edits
+ * @param projectId - The project ID
+ * @param updates - Array of module/component updates
+ * @returns Success status and number of modules updated
+ */
+export async function validateProjectTree(
+  projectId: string,
+  updates: Array<{
+    moduleId: string;
+    name?: string;
+    hierarchy?: string;
+    components?: Array<{ componentId: string; name: string }>;
+  }>
+): Promise<ApiResponse<{ modulesUpdated: number }>> {
+  try {
+    const response = await fetch(`${API_URL}/api/projects/${projectId}/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ updates }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Validation failed with status ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    return {
+      success: true,
+      data: {
+        modulesUpdated: responseData.modulesUpdated,
+      },
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
