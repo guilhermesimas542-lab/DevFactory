@@ -38,3 +38,45 @@ export interface ParsedPRD {
   stories: ParsedStory[];
   warnings: string[];
 }
+
+/**
+ * Arquivo lido de um repositório GitHub
+ */
+export interface GitHubFile {
+  path: string;
+  content: string;
+  size: number;
+}
+
+/**
+ * Resultado do clone de repositório GitHub
+ */
+export interface GitHubCloneResult {
+  files: GitHubFile[];
+  repoUrl: string;
+  totalFiles: number;
+  totalSize: number;
+}
+
+/**
+ * Padrão de código extraído (função, componente, classe, etc)
+ */
+export interface CodePattern {
+  type: 'function' | 'component' | 'class' | 'export' | 'route' | 'model';
+  name: string;
+  file: string;
+  line: number;
+  content?: string;
+}
+
+/**
+ * Resultado da análise de um repositório
+ */
+export interface AnalysisResult {
+  projectId: string;
+  repoUrl: string;
+  timestamp: Date;
+  patterns: CodePattern[];
+  moduleProgress: Record<string, number>;
+  alerts: string[];
+}
