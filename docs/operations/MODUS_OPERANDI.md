@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 6 — ÉPICO 3 COMPLETO + STORY-016/017/018 IMPLEMENTADAS)
+**Data:** 2026-03-06 (Sessão 6 Continuação — ÉPICO 4 COMPLETO)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: implement heuristics for PRD vs code matching (0d79460)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | 🚀 ÉPICO 4: 3/5 STORIES (60%)
+**Último commit:** feat: implement progress API endpoint and dashboard (147dec1)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | ✅ ÉPICO 4 COMPLETO (100%)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -1134,9 +1134,11 @@ Criação de utilitário para clonar repositório GitHub via GitHub API e ler ar
 1. STORY-016: GitHub Clone (✅ COMPLETO)
 2. STORY-017: Babel Parser (✅ COMPLETO)
 3. STORY-018: Heurísticas (✅ COMPLETO)
-4. STORY-019: Analysis Engine (✅ COMPLETO) ← NOVO
-5. [PRÓXIMO] STORY-020: Progress API + Dashboard
+4. STORY-019: Analysis Engine (✅ COMPLETO)
+5. STORY-020: Progress API + Dashboard (✅ COMPLETO) ← NOVO
 ```
+
+**🎉 ÉPICO 4 FINALIZADO (100%)**
 
 ### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-018 (Heurísticas de Matching) — IMPLEMENTADA
 
@@ -1204,7 +1206,45 @@ Criação de utilitário para clonar repositório GitHub via GitHub API e ler ar
 
 **Commit:** adb3f1f (STORY-019)
 
-**Status:** ✅ STORY-019 IMPLEMENTADA | 🚀 PRÓXIMA: STORY-020 (Progress API + Dashboard)
+---
+
+### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-020 (Progress API + Dashboard) — IMPLEMENTADA
+
+**Backend - Endpoint GET /api/projects/:id/progress:**
+- Retorna overall progress (0-100), by_module breakdown, deviations
+- Calcula progresso médio dos módulos
+- Detecta desvios: módulos abaixo de 70% do esperado para sua hierarquia
+- Converte Prisma Decimal para number para operações aritméticas
+- Retorna dados estruturados para frontend
+
+**Frontend - Componentes criados:**
+- ProgressBar.tsx
+  - Barra visual com codificação de cores (vermelho/amarelo/azul/verde)
+  - Opcional: linha de meta/alvo
+  - Suporta tamanhos: sm/md/lg
+  - Mostra % e meta opcionais
+
+- ModuleCard.tsx
+  - Card com informações do módulo (nome, hierarquia, progresso)
+  - Mostra número de componentes
+  - Alerta de desvio se abaixo do esperado
+  - Cores por hierarquia
+
+- Progress page (/projects/:id/progress)
+  - Visualização geral de progresso
+  - Box de alertas de desvios
+  - Grid de módulos ordenados por hierarquia
+  - Resumo por hierarquia (qtd e média)
+  - Botões de atualizar manual e polling automático (30s)
+
+**API Helper:**
+- getProgress(projectId) função em lib/api.ts
+
+**Tests:** TypeScript checks 100% passing
+
+**Commit:** 147dec1 (STORY-020)
+
+**Status:** ✅ STORY-020 IMPLEMENTADA | ✅ ÉPICO 4 FINALIZADO (100%)
 
 ---
 
