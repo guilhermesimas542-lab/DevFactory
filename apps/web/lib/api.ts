@@ -177,3 +177,32 @@ export async function validateProjectTree(
     };
   }
 }
+
+/**
+ * Get project progress
+ * @param projectId - The project ID
+ * @returns Progress data with overall %, by module, and deviations
+ */
+export async function getProgress(projectId: string): Promise<ApiResponse<{
+  projectId: string;
+  projectName: string;
+  overall: number;
+  by_module: Record<string, number>;
+  modules: Array<{
+    moduleId: string;
+    name: string;
+    hierarchy: string;
+    progress: number;
+    componentCount: number;
+  }>;
+  deviations: Array<{
+    moduleId: string;
+    name: string;
+    currentProgress: number;
+    expectedProgress: number;
+    gap: number;
+  }>;
+  timestamp: string;
+}>> {
+  return apiCall(`/api/projects/${projectId}/progress`);
+}
