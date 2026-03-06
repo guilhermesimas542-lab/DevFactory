@@ -19,7 +19,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@babel/parser": "^7.29.0",
+    "@babel/traverse": "^7.29.0",
     "@prisma/client": "^6.19.2",
+    "@types/babel__parser": "^7.0.0",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.0.0",
     "@types/node": "^25.3.3",
@@ -32,6 +35,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@types/babel__traverse": "^7.28.0",
     "@types/cors": "^2.8.19"
   }
 }
