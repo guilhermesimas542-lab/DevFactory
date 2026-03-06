@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 6 — ÉPICO 3 COMPLETO + STORY-016/017 IMPLEMENTADAS)
+**Data:** 2026-03-06 (Sessão 6 — ÉPICO 3 COMPLETO + STORY-016/017/018 IMPLEMENTADAS)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: implement Babel parser for AST extraction (cb6eb99)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | 🚀 ÉPICO 4: 2/5 STORIES (40%)
+**Último commit:** feat: implement heuristics for PRD vs code matching (0d79460)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | 🚀 ÉPICO 4: 3/5 STORIES (60%)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -1132,11 +1132,29 @@ Criação de utilitário para clonar repositório GitHub via GitHub API e ler ar
 **Épico 4 Progress:**
 ```
 1. STORY-016: GitHub Clone (✅ COMPLETO)
-2. STORY-017: Babel Parser (✅ COMPLETO) ← NOVO
-3. [PRÓXIMO] STORY-018: Heurísticas
-4. STORY-019: Analysis Engine
+2. STORY-017: Babel Parser (✅ COMPLETO)
+3. STORY-018: Heurísticas (✅ COMPLETO) ← NOVO
+4. [PRÓXIMO] STORY-019: Analysis Engine
 5. STORY-020: Progress API + Dashboard
 ```
+
+### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-018 (Heurísticas de Matching) — IMPLEMENTADA
+
+**Implementado:**
+- scoreMatch(prdItem, codeItem) → 0-100
+- Exact match (100), Substring match (80), Fuzzy match (60-75), Pattern match (70)
+- normalizeString() com suporte a acentos
+- levenshteinDistance() para fuzzy matching
+- PATTERN_MAP com 10 categorias semânticas
+- scoreMatches() para batch processing
+
+**Test Coverage:**
+- 20 real-world examples (19/20 passing = 95%)
+- String normalization, Levenshtein, Scoring strategies, Batch processing
+
+**Commit:** 0d79460 (STORY-018)
+
+---
 
 ### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-017 (Babel Parser) — IMPLEMENTADA
 
