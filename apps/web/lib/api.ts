@@ -206,3 +206,130 @@ export async function getProgress(projectId: string): Promise<ApiResponse<{
 }>> {
   return apiCall(`/api/projects/${projectId}/progress`);
 }
+
+/**
+ * Get stories for a project with optional filters
+ * @param projectId - The project ID
+ * @param filters - Optional filters (status, agent, moduleId)
+ * @returns Array of stories
+ */
+export async function getStories(
+  projectId: string,
+  filters?: { status?: string; agent?: string; moduleId?: string }
+): Promise<ApiResponse<Array<{
+  id: string;
+  project_id: string;
+  module_id: string | null;
+  title: string;
+  description: string | null;
+  epic: string | null;
+  status: string;
+  agent_responsible: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}>>> {
+  const params = new URLSearchParams({ projectId });
+  if (filters?.status) params.append('status', filters.status);
+  if (filters?.agent) params.append('agent', filters.agent);
+  if (filters?.moduleId) params.append('moduleId', filters.moduleId);
+  return apiCall(`/api/stories?${params.toString()}`);
+}
+
+/**
+ * Get a specific story by ID
+ * @param storyId - The story ID
+ * @returns Story details
+ */
+export async function getStory(storyId: string): Promise<ApiResponse<{
+  id: string;
+  project_id: string;
+  module_id: string | null;
+  title: string;
+  description: string | null;
+  epic: string | null;
+  status: string;
+  agent_responsible: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}>> {
+  return apiCall(`/api/stories/${storyId}`);
+}
+
+/**
+ * Create a new story
+ * @param story - Story data
+ * @returns Created story
+ */
+export async function createStory(story: {
+  projectId: string;
+  moduleId?: string;
+  title: string;
+  description?: string;
+  epic?: string;
+  status?: string;
+  agentResponsible?: string;
+}): Promise<ApiResponse<any>> {
+  return apiCall('/api/stories', {
+    method: 'POST',
+    body: JSON.stringify(story),
+  });
+}
+
+/**
+ * Update a story
+ * @param storyId - The story ID
+ * @param updates - Fields to update
+ * @returns Updated story
+ */
+export async function updateStory(
+  storyId: string,
+  updates: {
+    title?: string;
+    description?: string;
+    epic?: string;
+    status?: string;
+    agentResponsible?: string;
+    moduleId?: string;
+    startedAt?: string;
+    completedAt?: string;
+  }
+): Promise<ApiResponse<any>> {
+  return apiCall(`/api/stories/${storyId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+}
+
+/**
+ * Delete a story
+ * @param storyId - The story ID to delete
+ * @returns Success message
+ */
+export async function deleteStory(storyId: string): Promise<ApiResponse<{ message: string }>> {
+  return apiCall(`/api/stories/${storyId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Get timeline data for a project
+ * @param projectId - The project ID
+ * @returns Timeline metrics and story groupings
+ */
+export async function getStoryTimeline(projectId: string): Promise<ApiResponse<{
+  total: number;
+  byStatus: {
+    pending: any[];
+    in_progress: any[];
+    completed: any[];
+  };
+  completionRate: number;
+  avgDaysToCompletion: number;
+  totalCompleted: number;
+  totalPending: number;
+  totalInProgress: number;
+}>> {
+  return apiCall(`/api/stories/${projectId}/timeline`);
+}
