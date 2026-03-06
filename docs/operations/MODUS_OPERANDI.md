@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 6 — ÉPICO 3 COMPLETO + STORY-016 INICIADO)
+**Data:** 2026-03-06 (Sessão 6 — ÉPICO 3 COMPLETO + STORY-016/017 IMPLEMENTADAS)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: implement GitHub repository fetcher for code analysis (132b3dd)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | 🚀 ÉPICO 4 INICIADO (STORY-016)
+**Último commit:** feat: implement Babel parser for AST extraction (cb6eb99)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ ÉPICO 3 COMPLETO (100%) | 🚀 ÉPICO 4: 2/5 STORIES (40%)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -1131,12 +1131,28 @@ Criação de utilitário para clonar repositório GitHub via GitHub API e ler ar
 
 **Épico 4 Progress:**
 ```
-1. STORY-016: GitHub Clone (✅ COMPLETO) ← NOVO
-2. [PRÓXIMO] STORY-017: Babel Parser
-3. STORY-018: Heurísticas
+1. STORY-016: GitHub Clone (✅ COMPLETO)
+2. STORY-017: Babel Parser (✅ COMPLETO) ← NOVO
+3. [PRÓXIMO] STORY-018: Heurísticas
 4. STORY-019: Analysis Engine
 5. STORY-020: Progress API + Dashboard
 ```
+
+### [2026-03-06 (Sessão 6 cont.)] — @dev — STORY-017 (Babel Parser) — IMPLEMENTADA
+
+**Implementado:**
+- parseFiles(files): batch parsing
+- Detecção de: FunctionDeclaration, ClassDeclaration, ExportDefaultDeclaration, VariableDeclarator, CallExpression (routes)
+- TypeScript + JSX support via plugins
+- Graceful error handling
+- Line number extraction
+- Component auto-detection (uppercase naming)
+- Route pattern matching (GET/POST/PUT/DELETE)
+
+**Dependencies:** @babel/parser, @babel/traverse, @types/babel__traverse
+**Tests:** 10/10 passing (functions, classes, components, exports, variables, routes, multiple files, errors, lines, TypeScript)
+
+**Commit:** cb6eb99 (STORY-017)
 
 ---
 
