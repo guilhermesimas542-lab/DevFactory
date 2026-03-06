@@ -173,32 +173,50 @@ export default function TestHexagonPage() {
         </div>
 
         {/* Status */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-green-900">STORY-012 Critérios de Aceite</h2>
-          <ul className="mt-3 space-y-2 text-green-800 text-sm">
-            <li>✅ Função `drawHexagon` em lib/hexagon.ts</li>
-            <li>✅ Cada hexágono é grupo SVG (path + text + barra progresso)</li>
-            <li>✅ Cores: Crítico (vermelho) | Importante (laranja) | Necessário (azul) | Desejável (verde) | Opcional (cinza)</li>
-            <li>✅ Progresso visualizado como barra dentro hexágono</li>
-            <li>✅ Hover: mudança de cor (highlight)</li>
-            <li>✅ Click-ready: evento ao clicar no hexágono</li>
-            <li>✅ Componente HexagonMap integrado com useD3</li>
-            <li>✅ Force simulation para layout dinâmico</li>
-            <li>✅ Zoom, pan, duplo-clique reset funcional</li>
-          </ul>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold text-green-900">STORY-012/013/014 Critérios de Aceite</h2>
+            <ul className="mt-3 space-y-2 text-green-800 text-sm">
+              <li>✅ Função `drawHexagon` em lib/hexagon.ts</li>
+              <li>✅ Cada hexágono é grupo SVG (path + text + barra progresso)</li>
+              <li>✅ Cores: Crítico (vermelho) | Importante (laranja) | Necessário (azul) | Desejável (verde) | Opcional (cinza)</li>
+              <li>✅ Progresso visualizado como barra animada</li>
+              <li>✅ Hover: mudança de opacity (highlight)</li>
+              <li>✅ Click-ready: evento ao clicar no hexágono</li>
+              <li>✅ Componente HexagonMap integrado com useD3</li>
+              <li>✅ Force simulation para layout dinâmico</li>
+              <li>✅ Zoom, pan, duplo-clique reset funcional</li>
+              <li>✅ SidePanel exibe detalhes ao clicar</li>
+              <li>✅ ComponentsList integrada no painel</li>
+            </ul>
+          </div>
+
+          <div className="border-t border-green-200 pt-4">
+            <h2 className="text-lg font-semibold text-green-900">STORY-015 Critérios de Aceite</h2>
+            <ul className="mt-3 space-y-2 text-green-800 text-sm">
+              <li>✅ Tooltip ao hover mostra nome + progresso</li>
+              <li>✅ Botão "Reset Zoom" visual</li>
+              <li>✅ Zoom: scroll wheel muda scale (0.5x a 3x)</li>
+              <li>✅ Pan: drag no SVG move view</li>
+              <li>✅ Reset button retorna zoom 1x</li>
+              <li>✅ Zoom suave, sem jerky movements</li>
+              <li>✅ Sem bugs com múltiplas interações</li>
+            </ul>
+          </div>
         </div>
 
         {/* Instructions */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-blue-900">Instruções de Teste</h2>
           <ul className="mt-3 space-y-2 text-blue-800 text-sm">
-            <li>🖱️ <strong>Clique em um hexágono:</strong> veja detalhes no painel direito</li>
-            <li>🖱️ <strong>Hover:</strong> hexágono muda para cor mais clara</li>
-            <li>🔍 <strong>Zoom:</strong> use scroll do mouse</li>
-            <li>👆 <strong>Pan:</strong> arraste o fundo para mover</li>
-            <li>🔄 <strong>Duplo-clique:</strong> reset da view</li>
-            <li>📊 <strong>Progresso:</strong> barra dentro de cada hexágono</li>
+            <li>🖱️ <strong>Clique em um hexágono:</strong> veja detalhes no painel direito com componentes</li>
+            <li>✨ <strong>Hover:</strong> tooltip mostra nome + progresso do módulo</li>
+            <li>🔍 <strong>Zoom:</strong> use scroll do mouse (0.5x a 3x)</li>
+            <li>👆 <strong>Pan:</strong> arraste o fundo para mover a visualização</li>
+            <li>🔄 <strong>Reset Zoom:</strong> clique botão "Reset Zoom" ou duplo-clique para voltar 1x</li>
+            <li>📊 <strong>Progresso:</strong> barra dentro de cada hexágono + percentual</li>
             <li>🎨 <strong>Cores:</strong> vermelho=crítico, laranja=importante, azul=necessário, verde=desejável, cinza=opcional</li>
+            <li>⚙️ <strong>Painel:</strong> clique ✕ para fechar painel de detalhes</li>
           </ul>
         </div>
       </div>

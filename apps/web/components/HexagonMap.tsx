@@ -1,9 +1,11 @@
 'use client';
 
 import * as d3 from 'd3';
+import { useRef, useState } from 'react';
 import { useD3 } from '../hooks/useD3';
 import { drawHexagons, updateHexagonPositions, type HexagonData } from '../lib/hexagon';
 import { createForceSimulation, drawLinks, updateLinkPositions, type ModuleLink } from '../lib/forceLayout';
+import Tooltip from './Tooltip';
 
 interface HexagonMapProps {
   data: HexagonData[];
@@ -24,6 +26,15 @@ export default function HexagonMap({
   height = 700,
   onHexagonClick,
 }: HexagonMapProps) {
+  const [tooltip, setTooltip] = useState<{ visible: boolean; content: string; x: number; y: number }>({
+    visible: false,
+    content: '',
+    x: 0,
+    y: 0,
+  });
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const svgRefD3 = useRef<d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null>(null);
+
   const svgRef = useD3(
     (svg) => {
       if (!svg.node()) return;
@@ -51,7 +62,22 @@ export default function HexagonMap({
       const linkLines = drawLinks(linksGroup, links);
 
       // Draw hexagons on top
-      drawHexagons(g, nodesWithPos, onHexagonClick);
+      const hexagons = drawHexagons(g, nodesWithPos, onHexagonClick);
+
+      // Add tooltip on hover
+      hexagons
+        .on('mouseenter', function (this: any, _event: any, d: HexagonData) {
+          const bbox = (this as SVGElement).getBoundingClientRect();
+          setTooltip({
+            visible: true,
+            content: `${d.name} • ${d.progress}%`,
+            x: bbox.left + bbox.width / 2,
+            y: bbox.top,
+          });
+        })
+        .on('mouseleave', () => {
+          setTooltip({ visible: false, content: '', x: 0, y: 0 });
+        });
 
       // Update positions on simulation tick
       simulation.on('tick', () => {
@@ -59,11 +85,16 @@ export default function HexagonMap({
         updateHexagonPositions(g.selectAll('.hexagon'));
       });
 
-      // Zoom behavior
-      const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (event) => {
-        g.attr('transform', event.transform);
-      });
+      // Zoom behavior with limits (0.5x to 3x)
+      const zoom = d3
+        .zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.5, 3])
+        .on('zoom', (event) => {
+          g.attr('transform', event.transform);
+        });
 
+      zoomRef.current = zoom;
+      svgRefD3.current = svg;
       svg.call(zoom as any);
 
       // Reset zoom on double-click
@@ -83,20 +114,46 @@ export default function HexagonMap({
     [data, links, width, height, onHexagonClick]
   );
 
+  const handleResetZoom = () => {
+    if (zoomRef.current && svgRefD3.current) {
+      svgRefD3.current
+        .transition()
+        .duration(750)
+        .call(zoomRef.current.transform as any, d3.zoomIdentity.translate(0, 0).scale(1));
+    }
+  };
+
   return (
-    <div className="w-full bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-      <div className="p-4 bg-white border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900">Mapa de Módulos</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Zoom com scroll | Pan com drag | Clique para selecionar | Duplo-clique para reset
-        </p>
-      </div>
-      <svg
-        ref={svgRef}
-        width={width}
-        height={height}
-        style={{ display: 'block', backgroundColor: '#fafafa' }}
+    <>
+      <Tooltip
+        content={tooltip.content}
+        visible={tooltip.visible}
+        x={tooltip.x}
+        y={tooltip.y}
       />
-    </div>
+      <div className="relative w-full bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+        <div className="p-4 bg-white border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-gray-900">Mapa de Módulos</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              🔍 Scroll para zoom | 👆 Arraste para mover | 🖱️ Clique para selecionar | 🔄 Duplo-clique para reset
+            </p>
+          </div>
+          <button
+            onClick={handleResetZoom}
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors text-sm font-medium whitespace-nowrap ml-4"
+            title="Resetar zoom para 1x (Atalho: Duplo-clique)"
+          >
+            🔄 Reset Zoom
+          </button>
+        </div>
+        <svg
+          ref={svgRef}
+          width={width}
+          height={height}
+          style={{ display: 'block', backgroundColor: '#fafafa' }}
+        />
+      </div>
+    </>
   );
 }
