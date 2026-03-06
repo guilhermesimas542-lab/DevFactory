@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { parsePRDMarkdown } from '../utils/prdParser';
+import { createProjectFromParsedPRD } from '../services/ProjectService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -165,11 +166,16 @@ router.post('/import-prd', upload.single('file'), async (req: Request, res: Resp
     const fileContent = await fs.readFile(req.file.path, 'utf-8');
     const parsedPRD = parsePRDMarkdown(fileContent);
 
-    // Create a project entry in the database
-    const project = await prisma.project.create({
+    // Create project with modules and components from parsed PRD
+    const projectId = await createProjectFromParsedPRD(
+      parsedPRD,
+      parsedPRD.title || req.file.originalname
+    );
+
+    // Update project with raw PRD content and metadata
+    await prisma.project.update({
+      where: { id: projectId },
       data: {
-        name: parsedPRD.title || req.file.originalname,
-        description: `Imported from ${req.file.originalname}`,
         prd_original: {
           rawContent: fileContent,
           originalFileName: req.file.originalname,
@@ -191,9 +197,10 @@ router.post('/import-prd', upload.single('file'), async (req: Request, res: Resp
     await fs.unlink(req.file.path);
 
     res.status(200).json({
-      projectId: project.id.toString(),
-      status: 'uploaded',
-      message: 'File uploaded successfully. Ready for parsing.',
+      projectId: projectId.toString(),
+      status: 'modules_created',
+      message: 'File uploaded successfully. Project created with modules and components.',
+      modulesCount: parsedPRD.modules.length,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
