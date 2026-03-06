@@ -1415,5 +1415,50 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 
 ---
 
+---
+
+## 2026-03-06 16:45 — [@dev — Dex] — Redesign de Navegação: Dashboard com Sidebar
+
+**O que foi feito:**
+- ✅ Criado `components/layouts/ProjectLayout.tsx` com sidebar de navegação
+  - Sidebar com 6 itens de menu (Visão Geral, Progresso, Stories, Timeline, Alertas, Glossário)
+  - Indicador visual de página ativa (blue highlight)
+  - Botão "← Todos os Projetos" para retornar ao dashboard
+  - Header fixo no topo com nome do projeto
+
+- ✅ Editado `pages/_app.tsx` para suportar padrão `getLayout`
+  - Adicionado suporte a layouts por página
+  - Mantém SessionProvider envolvendo o layout
+
+- ✅ Refatorado 6 páginas de projeto:
+  - Removido headers duplicados de cada página
+  - Adicionado `getLayout` para ProjectLayout em:
+    - `pages/projects/[id].tsx` (Visão Geral)
+    - `pages/projects/[id]/progress.tsx`
+    - `pages/projects/[id]/stories.tsx`
+    - `pages/projects/[id]/timeline.tsx`
+    - `pages/projects/[id]/alerts.tsx`
+    - `pages/projects/[id]/glossary.tsx`
+  - Removidos botões de navegação duplicados (voltar, ir para dashboard)
+
+**Decisões tomadas:**
+- Botão "+ Nova Story", "🔍 Verificar Agora", "🔄 Atualizar" movidos para dentro do conteúdo principal
+- Sidebar é navegação compartilhada entre todas as páginas de projeto
+- Sem mudanças em `pages/projects/[id]/validate.tsx` (não estava no escopo)
+
+**Verificações:**
+- ✅ TypeScript: sem erros (`npm run typecheck`)
+- ✅ Build: sucesso completo (`npm run build`)
+- ✅ Estrutura: todos os 6 arquivos editados + 1 criado
+
+**Próximos passos recomendados:**
+- Testar fluxo de navegação em dev server
+- Verificar se links do sidebar funcionam corretamente
+- Validar appearance/styling do layout em diferentes resoluções
+
+**Estado:** Ready para QA/testes
+
+---
+
 **Mantido por:** AIOS Agents
-**Última atualização:** 2026-03-06 (Dex, @dev) — STORY-015 (Zoom/Pan/Tooltip) completa | **ÉPICO 3 FINALIZADO (100%)**
+**Última atualização:** 2026-03-06 16:45 (Dex, @dev) — Redesign de Navegação completo

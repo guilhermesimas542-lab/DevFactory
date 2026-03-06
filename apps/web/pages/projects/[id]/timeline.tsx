@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getStories, getStoryTimeline } from '@/lib/api';
+import ProjectLayout from '@/components/layouts/ProjectLayout';
 
 interface Story {
   id: string;
@@ -162,16 +163,6 @@ export default function Timeline() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Timeline de Stories</h1>
-            <p className="text-gray-600 mt-2">Visualize o progresso das stories ao longo do tempo</p>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -289,22 +280,11 @@ export default function Timeline() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex gap-4">
-          <button
-            onClick={() => router.push(`/projects/${router.query.id}/stories`)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            ← Voltar para Stories
-          </button>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            → Ir para Dashboard
-          </button>
-        </div>
       </main>
     </div>
   );
 }
+
+Timeline.getLayout = function getLayout(page: React.ReactElement) {
+  return <ProjectLayout>{page}</ProjectLayout>;
+};

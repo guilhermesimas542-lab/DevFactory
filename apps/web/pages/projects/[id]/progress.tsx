@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { getProgress } from '@/lib/api';
 import ProgressBar from '@/components/ProgressBar';
 import ModuleCard from '@/components/ModuleCard';
+import ProjectLayout from '@/components/layouts/ProjectLayout';
 
 interface ProgressData {
   projectId: string;
@@ -139,42 +140,31 @@ export default function ProjectProgress() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Progresso do Projeto</h1>
-              <p className="text-gray-600 mt-2">{progress.projectName}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={loadProgress}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-              >
-                🔄 Atualizar
-              </button>
-              {pollingInterval ? (
-                <button
-                  onClick={stopPolling}
-                  className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                >
-                  ⏸️ Parar Polling
-                </button>
-              ) : (
-                <button
-                  onClick={startPolling}
-                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                >
-                  ▶️ Iniciar Polling
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Toolbar */}
+        <div className="mb-6 flex gap-2">
+          <button
+            onClick={loadProgress}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+          >
+            🔄 Atualizar
+          </button>
+          {pollingInterval ? (
+            <button
+              onClick={stopPolling}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              ⏸️ Parar Polling
+            </button>
+          ) : (
+            <button
+              onClick={startPolling}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              ▶️ Iniciar Polling
+            </button>
+          )}
+        </div>
         {/* Overall Progress Card */}
         <div className="bg-white rounded-lg shadow p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Progresso Geral</h2>
@@ -254,23 +244,11 @@ export default function ProjectProgress() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <button
-            onClick={() => router.push(`/projects/${progress.projectId}`)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            ← Voltar para Detalhes
-          </button>
-
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            → Ir para Dashboard
-          </button>
-        </div>
       </main>
     </div>
   );
 }
+
+ProjectProgress.getLayout = function getLayout(page: React.ReactElement) {
+  return <ProjectLayout>{page}</ProjectLayout>;
+};

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getProject } from '@/lib/api';
+import ProjectLayout from '@/components/layouts/ProjectLayout';
 
 interface ProjectData {
   id: string;
@@ -20,7 +21,7 @@ interface ProjectData {
 
 export default function ProjectDetail() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,19 +128,6 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-              <p className="text-gray-600 mt-2">Bem-vindo, {session?.user?.name}!</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Success Message */}
         <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -217,23 +205,11 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <button
-            onClick={() => router.push('/projects')}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            ← Voltar para Importar
-          </button>
-
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            → Ir para Dashboard
-          </button>
-        </div>
       </main>
     </div>
   );
 }
+
+ProjectDetail.getLayout = function getLayout(page: React.ReactElement) {
+  return <ProjectLayout>{page}</ProjectLayout>;
+};

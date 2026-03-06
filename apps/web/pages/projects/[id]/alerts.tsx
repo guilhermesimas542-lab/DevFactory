@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getAlerts, checkAlerts, updateAlert, deleteAlert } from '@/lib/api';
+import ProjectLayout from '@/components/layouts/ProjectLayout';
 
 interface Alert {
   id: string;
@@ -181,26 +182,17 @@ export default function AlertsList() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Alertas</h1>
-              <p className="text-gray-600 mt-2">Acompanhe problemas e desvios do seu projeto</p>
-            </div>
-            <button
-              onClick={handleCheckAlerts}
-              disabled={checking}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors"
-            >
-              {checking ? '🔄 Verificando...' : '🔍 Verificar Agora'}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={handleCheckAlerts}
+            disabled={checking}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors"
+          >
+            {checking ? '🔄 Verificando...' : '🔍 Verificar Agora'}
+          </button>
+        </div>
+
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-700">⚠️ {error}</p>
@@ -317,22 +309,11 @@ export default function AlertsList() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex gap-4">
-          <button
-            onClick={() => router.push(`/projects/${router.query.id}`)}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            ← Voltar para Detalhes
-          </button>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            → Ir para Dashboard
-          </button>
-        </div>
       </main>
     </div>
   );
 }
+
+AlertsList.getLayout = function getLayout(page: React.ReactElement) {
+  return <ProjectLayout>{page}</ProjectLayout>;
+};
