@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 5 — ÉPICO 2 CONCLUÍDO + STORY-011 IMPLEMENTADA)
+**Data:** 2026-03-06 (Sessão 5 — STORY-011 + STORY-012 IMPLEMENTADAS)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: setup D3.js with useD3 hook and test component (e1abddf)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | 🚀 STORY-011 IMPLEMENTADA (Transição para Épico 3)
+**Último commit:** feat: implement hexagon shape rendering with progress bars (fc08305)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ STORY-011 IMPLEMENTADA | ✅ STORY-012 IMPLEMENTADA
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -50,8 +50,8 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 **Épico 3 — Mapa Hexagonal** 🚀 EM ANDAMENTO
 - ✅ STORY-011: Setup D3.js + useD3 hook (COMPLETO)
-- ⏳ STORY-012: Hexagon shapes SVG rendering (PRÓXIMO)
-- ⏳ STORY-013: Force simulation layout
+- ✅ STORY-012: Hexagon shapes SVG rendering (COMPLETO)
+- ⏳ STORY-013: Force simulation + conexões (PRÓXIMO)
 - ⏳ STORY-014: Interactive panel
 - ⏳ STORY-015: Zoom/pan/navegação
 
@@ -774,6 +774,88 @@ e1abddf feat: setup D3.js with useD3 hook and test component [STORY-011]
 1. Testar página `/test-d3` em produção (confirmar zoom/pan/drag)
 2. Começar STORY-012 (renderizar hexágonos ao invés de círculos)
 3. Conectar com dados reais (GET `/api/projects/{id}/modules`)
+
+---
+
+### [2026-03-06 (Sessão 5 final)] — @dev — STORY-012 (Hexagon Shape SVG Rendering) — IMPLEMENTADA
+
+**Descrição:**
+Criação de hexágonos SVG com cores por hierarquia, barras de progresso internas, hover effects e integração com D3 force simulation.
+
+**O que foi feito:**
+
+1. ✅ **Criado `constants/colors.ts`**
+   - Paleta HIERARCHY_COLORS com 5 níveis
+   - Variações: main, light, dark, hover
+   - Função `getHierarchyColor(hierarchy, variant)`
+
+2. ✅ **Criado `lib/hexagon.ts`**
+   - `generateHexagonPath(cx, cy, radius)` - SVG path para hexágono
+   - `drawHexagons(selection, data, onHexagonClick)` - renderiza grupos
+   - `updateHexagonPositions(selection)` - atualiza posições na simulação
+   - Features:
+     - Cores por hierarquia (critico=red, importante=orange, etc)
+     - Barra de progresso animada (0-100%)
+     - Labels: nome do módulo + progresso %
+     - Hover effect (opacity change)
+     - Click-ready (evento bindado)
+
+3. ✅ **Criado `components/HexagonMap.tsx`**
+   - Integra useD3 hook (STORY-011)
+   - Force simulation com:
+     - Charge force (repulsão entre nós)
+     - Center force (puxa ao centro)
+     - Collision force (evita sobreposição)
+   - Controles interativos:
+     - Zoom (scroll mouse)
+     - Pan (drag fundo)
+     - Duplo-clique reset
+   - Props:
+     - data: array HexagonData[]
+     - width/height: dimensões
+     - onHexagonClick: callback
+
+4. ✅ **Criado `pages/test-hexagon.tsx`**
+   - Página de teste com mock data (7 módulos)
+   - Mostra hexagon map + legend + details
+   - Selecionar hexágono mostra informações no painel
+   - Instru ções claras
+
+**Arquivos criados:**
+- `apps/web/constants/colors.ts` (NOVO)
+- `apps/web/lib/hexagon.ts` (NOVO)
+- `apps/web/components/HexagonMap.tsx` (NOVO)
+- `apps/web/pages/test-hexagon.tsx` (NOVO)
+
+**Verificações (Todos os Critérios de Aceite):**
+- ✅ Função `drawHexagon` em lib/hexagon.ts
+- ✅ Cada hexágono é grupo SVG (path + text + rect)
+- ✅ Cores: Crítico (vermelho) | Importante (laranja) | Necessário (azul) | Desejável (verde) | Opcional (cinza)
+- ✅ Progresso visualizado como barra animada
+- ✅ Hover: mudança de opacity (highlight)
+- ✅ Click-ready: evento ao clicar
+- ✅ Build: successful
+- ✅ TypeScript: zero erros
+
+**Git Commit:**
+```
+fc08305 feat: implement hexagon shape rendering with progress bars [STORY-012]
+```
+
+**Status:** ✅ STORY-012 IMPLEMENTADA E DEPLOYADA
+
+**Épico 3 Progress:**
+```
+1. STORY-011: Setup D3.js (✅ COMPLETO)
+2. STORY-012: Hexagon shapes (✅ COMPLETO — AGORA)
+3. [PRÓXIMO] STORY-013: Force layout + conexões
+4. STORY-014: Interactive panel
+5. STORY-015: Zoom/pan/navegação
+```
+
+**Próxima ação recomendada:**
+1. Testar página `/test-hexagon` em produção
+2. Começar STORY-013 (conectar com dados reais + linhas de dependência)
 
 ---
 
