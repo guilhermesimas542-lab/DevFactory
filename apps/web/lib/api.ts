@@ -333,3 +333,90 @@ export async function getStoryTimeline(projectId: string): Promise<ApiResponse<{
 }>> {
   return apiCall(`/api/stories/${projectId}/timeline`);
 }
+
+/**
+ * Get alerts for a project
+ * @param projectId - The project ID
+ * @param unreadOnly - Optional filter for unread alerts only
+ * @returns Array of alerts
+ */
+export async function getAlerts(projectId: string, unreadOnly?: boolean): Promise<ApiResponse<Array<{
+  id: string;
+  project_id: string;
+  type: string;
+  severity: string;
+  message: string;
+  module_id: string | null;
+  is_read: boolean;
+  created_at: string;
+}>>> {
+  const params = new URLSearchParams({ projectId });
+  if (unreadOnly) params.append('unreadOnly', 'true');
+  return apiCall(`/api/alerts?${params.toString()}`);
+}
+
+/**
+ * Get a specific alert by ID
+ * @param alertId - The alert ID
+ * @returns Alert details
+ */
+export async function getAlert(alertId: string): Promise<ApiResponse<any>> {
+  return apiCall(`/api/alerts/${alertId}`);
+}
+
+/**
+ * Create a new alert
+ * @param alert - Alert data
+ * @returns Created alert
+ */
+export async function createAlert(alert: {
+  projectId: string;
+  type: string;
+  severity?: string;
+  message: string;
+  moduleId?: string;
+}): Promise<ApiResponse<any>> {
+  return apiCall('/api/alerts', {
+    method: 'POST',
+    body: JSON.stringify(alert),
+  });
+}
+
+/**
+ * Mark an alert as read/unread
+ * @param alertId - The alert ID
+ * @param isRead - Whether to mark as read
+ * @returns Updated alert
+ */
+export async function updateAlert(alertId: string, isRead: boolean): Promise<ApiResponse<any>> {
+  return apiCall(`/api/alerts/${alertId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ isRead }),
+  });
+}
+
+/**
+ * Delete an alert
+ * @param alertId - The alert ID to delete
+ * @returns Success message
+ */
+export async function deleteAlert(alertId: string): Promise<ApiResponse<{ message: string }>> {
+  return apiCall(`/api/alerts/${alertId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Check and generate alerts for a project
+ * @param projectId - The project ID
+ * @returns Generated alerts
+ */
+export async function checkAlerts(projectId: string): Promise<ApiResponse<{
+  checked: boolean;
+  alertsGenerated: number;
+  alerts: any[];
+}>> {
+  return apiCall(`/api/alerts/check/${projectId}`, {
+    method: 'POST',
+  });
+}
