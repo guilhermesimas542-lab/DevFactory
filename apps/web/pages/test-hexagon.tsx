@@ -2,7 +2,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import HexagonMap from '../components/HexagonMap';
+import SidePanel from '../components/SidePanel';
 import { HexagonData } from '../lib/hexagon';
+import { Component } from '../components/ComponentsList';
 
 export default function TestHexagonPage() {
   const router = useRouter();
@@ -18,17 +20,61 @@ export default function TestHexagonPage() {
 
   // Mock data with dependencies
   const mockData: HexagonData[] = [
-    { id: '1', name: 'Autenticação', hierarchy: 'critico', progress: 85 },
-    { id: '2', name: 'Dashboard', hierarchy: 'importante', progress: 60 },
-    { id: '3', name: 'Upload PRD', hierarchy: 'critico', progress: 100 },
-    { id: '4', name: 'Parser MD', hierarchy: 'importante', progress: 95 },
-    { id: '5', name: 'Tree Editor', hierarchy: 'necessario', progress: 90 },
-    { id: '6', name: 'Analytics', hierarchy: 'desejavel', progress: 30 },
-    { id: '7', name: 'Reports', hierarchy: 'opcional', progress: 10 },
-    { id: '8', name: 'D3 Hexagons', hierarchy: 'importante', progress: 100 },
-    { id: '9', name: 'Force Layout', hierarchy: 'critico', progress: 90 },
-    { id: '10', name: 'API REST', hierarchy: 'critico', progress: 95 },
+    { id: '1', name: 'Autenticação', hierarchy: 'critico', progress: 85, description: 'Sistema de login e autenticação com JWT' },
+    { id: '2', name: 'Dashboard', hierarchy: 'importante', progress: 60, description: 'Página inicial com visão geral do projeto' },
+    { id: '3', name: 'Upload PRD', hierarchy: 'critico', progress: 100, description: 'Upload e armazenamento de documentos PRD' },
+    { id: '4', name: 'Parser MD', hierarchy: 'importante', progress: 95, description: 'Parser de Markdown para estrutura JSON' },
+    { id: '5', name: 'Tree Editor', hierarchy: 'necessario', progress: 90, description: 'Editor interativo de árvore de módulos' },
+    { id: '6', name: 'Analytics', hierarchy: 'desejavel', progress: 30, description: 'Dashboard de análise de progresso' },
+    { id: '7', name: 'Reports', hierarchy: 'opcional', progress: 10, description: 'Geração de relatórios em PDF' },
+    { id: '8', name: 'D3 Hexagons', hierarchy: 'importante', progress: 100, description: 'Visualização de módulos em hexágonos D3.js' },
+    { id: '9', name: 'Force Layout', hierarchy: 'critico', progress: 90, description: 'Simulação de força para layout dinâmico' },
+    { id: '10', name: 'API REST', hierarchy: 'critico', progress: 95, description: 'Backend Express com rotas RESTful' },
   ];
+
+  // Mock components for each module
+  const mockComponentsByModuleId: Record<string, Component[]> = {
+    '1': [
+      { id: '1-1', name: 'Login Form', status: 'implemented' },
+      { id: '1-2', name: 'JWT Token Handler', status: 'implemented' },
+      { id: '1-3', name: 'Password Reset', status: 'partial' },
+    ],
+    '2': [
+      { id: '2-1', name: 'Project List', status: 'implemented' },
+      { id: '2-2', name: 'Project Stats', status: 'partial' },
+      { id: '2-3', name: 'Recent Activities', status: 'pending' },
+    ],
+    '3': [
+      { id: '3-1', name: 'File Upload', status: 'implemented' },
+      { id: '3-2', name: 'File Validation', status: 'implemented' },
+      { id: '3-3', name: 'Storage Integration', status: 'implemented' },
+    ],
+    '4': [
+      { id: '4-1', name: 'Markdown Lexer', status: 'implemented' },
+      { id: '4-2', name: 'Module Extractor', status: 'implemented' },
+      { id: '4-3', name: 'Hierarchy Parser', status: 'partial' },
+    ],
+    '5': [
+      { id: '5-1', name: 'Tree Component', status: 'implemented' },
+      { id: '5-2', name: 'Node Editor', status: 'implemented' },
+      { id: '5-3', name: 'Drag & Drop', status: 'partial' },
+    ],
+    '8': [
+      { id: '8-1', name: 'Hexagon Generator', status: 'implemented' },
+      { id: '8-2', name: 'Color Mapping', status: 'implemented' },
+      { id: '8-3', name: 'Hover Effects', status: 'implemented' },
+    ],
+    '9': [
+      { id: '9-1', name: 'Force Simulation', status: 'implemented' },
+      { id: '9-2', name: 'Link Renderer', status: 'implemented' },
+      { id: '9-3', name: 'Collision Detection', status: 'implemented' },
+    ],
+    '10': [
+      { id: '10-1', name: 'Project Routes', status: 'implemented' },
+      { id: '10-2', name: 'Module Routes', status: 'implemented' },
+      { id: '10-3', name: 'Error Handling', status: 'partial' },
+    ],
+  };
 
   // Define dependencies (links)
   const mockLinks = [
@@ -115,31 +161,13 @@ export default function TestHexagonPage() {
               </div>
             </div>
 
-            {/* Details */}
+            {/* Side Panel */}
             {selectedHexagon && (
-              <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Detalhes</h3>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="font-medium text-gray-600">Nome:</span>
-                    <p className="text-gray-900">{selectedHexagon.name}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Hierarquia:</span>
-                    <p className="text-gray-900 capitalize">{selectedHexagon.hierarchy}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-600">Progresso:</span>
-                    <div className="mt-1 w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full transition-all"
-                        style={{ width: `${selectedHexagon.progress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-gray-900 mt-1">{selectedHexagon.progress}%</p>
-                  </div>
-                </div>
-              </div>
+              <SidePanel
+                module={selectedHexagon}
+                onClose={() => setSelectedHexagon(null)}
+                components={mockComponentsByModuleId[selectedHexagon.id] || []}
+              />
             )}
           </div>
         </div>

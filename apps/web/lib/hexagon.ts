@@ -11,6 +11,7 @@ export interface HexagonData {
   progress: number; // 0-100
   x?: number;
   y?: number;
+  description?: string;
 }
 
 /**
