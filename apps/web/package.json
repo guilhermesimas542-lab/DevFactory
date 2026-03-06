@@ -20,9 +20,11 @@
   "license": "ISC",
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
+    "@types/d3": "^7.4.3",
     "@types/node": "^25.3.3",
     "@types/react": "^19.2.14",
     "autoprefixer": "^10.4.27",
+    "d3": "^7.9.0",
     "eslint": "^9.39.3",
     "eslint-config-next": "^16.1.6",
     "next": "^16.1.6",
