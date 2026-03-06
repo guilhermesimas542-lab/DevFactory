@@ -16,50 +16,30 @@ export default function TestHexagonPage() {
     }
   }, [status, router]);
 
-  // Mock data
+  // Mock data with dependencies
   const mockData: HexagonData[] = [
-    {
-      id: '1',
-      name: 'Autenticação',
-      hierarchy: 'critico',
-      progress: 85,
-    },
-    {
-      id: '2',
-      name: 'Dashboard',
-      hierarchy: 'importante',
-      progress: 60,
-    },
-    {
-      id: '3',
-      name: 'Upload PRD',
-      hierarchy: 'critico',
-      progress: 100,
-    },
-    {
-      id: '4',
-      name: 'Parser MD',
-      hierarchy: 'importante',
-      progress: 95,
-    },
-    {
-      id: '5',
-      name: 'Tree Editor',
-      hierarchy: 'necessario',
-      progress: 90,
-    },
-    {
-      id: '6',
-      name: 'Analytics',
-      hierarchy: 'desejavel',
-      progress: 30,
-    },
-    {
-      id: '7',
-      name: 'Reports',
-      hierarchy: 'opcional',
-      progress: 10,
-    },
+    { id: '1', name: 'Autenticação', hierarchy: 'critico', progress: 85 },
+    { id: '2', name: 'Dashboard', hierarchy: 'importante', progress: 60 },
+    { id: '3', name: 'Upload PRD', hierarchy: 'critico', progress: 100 },
+    { id: '4', name: 'Parser MD', hierarchy: 'importante', progress: 95 },
+    { id: '5', name: 'Tree Editor', hierarchy: 'necessario', progress: 90 },
+    { id: '6', name: 'Analytics', hierarchy: 'desejavel', progress: 30 },
+    { id: '7', name: 'Reports', hierarchy: 'opcional', progress: 10 },
+    { id: '8', name: 'D3 Hexagons', hierarchy: 'importante', progress: 100 },
+    { id: '9', name: 'Force Layout', hierarchy: 'critico', progress: 90 },
+    { id: '10', name: 'API REST', hierarchy: 'critico', progress: 95 },
+  ];
+
+  // Define dependencies (links)
+  const mockLinks = [
+    { source: '1', target: '2' }, // Auth → Dashboard
+    { source: '1', target: '10' }, // Auth → API
+    { source: '3', target: '4' }, // Upload → Parser
+    { source: '4', target: '5' }, // Parser → TreeEditor
+    { source: '2', target: '6' }, // Dashboard → Analytics
+    { source: '8', target: '9' }, // Hexagons → Force
+    { source: '10', target: '4' }, // API → Parser
+    { source: '10', target: '2' }, // API → Dashboard
   ];
 
   if (status === 'loading') {
@@ -103,7 +83,7 @@ export default function TestHexagonPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Map */}
           <div className="lg:col-span-3">
-            <HexagonMap data={mockData} onHexagonClick={setSelectedHexagon} />
+            <HexagonMap data={mockData} links={mockLinks} onHexagonClick={setSelectedHexagon} />
           </div>
 
           {/* Legend & Details */}

@@ -3,9 +3,11 @@
 import * as d3 from 'd3';
 import { useD3 } from '../hooks/useD3';
 import { drawHexagons, updateHexagonPositions, type HexagonData } from '../lib/hexagon';
+import { createForceSimulation, drawLinks, updateLinkPositions, type ModuleLink } from '../lib/forceLayout';
 
 interface HexagonMapProps {
   data: HexagonData[];
+  links?: ModuleLink[];
   width?: number;
   height?: number;
   onHexagonClick?: (d: HexagonData) => void;
@@ -17,6 +19,7 @@ interface HexagonMapProps {
  */
 export default function HexagonMap({
   data,
+  links = [],
   width = 900,
   height = 700,
   onHexagonClick,
@@ -31,6 +34,9 @@ export default function HexagonMap({
       // Create main group for zoom
       const g = svg.append('g').attr('class', 'zoom-group');
 
+      // Create links layer (behind hexagons)
+      const linksGroup = g.append('g').attr('class', 'links-group');
+
       // Initialize positions if not already set
       const nodesWithPos = data.map((d) => ({
         ...d,
@@ -38,19 +44,18 @@ export default function HexagonMap({
         y: d.y || (height / 2 + Math.random() * 100 - 50),
       }));
 
-      // Create force simulation for layout
-      const simulation = d3
-        .forceSimulation<HexagonData>(nodesWithPos)
-        .force('charge', d3.forceManyBody().strength(-400))
-        .force('center', d3.forceCenter(width / 2, height / 2))
-        .force('collision', d3.forceCollide().radius(50))
-        .alphaDecay(0.02); // Slower convergence for smoother animation
+      // Create force simulation with links
+      const simulation = createForceSimulation(nodesWithPos, links, width, height);
 
-      // Draw initial hexagons
+      // Draw links (lines connecting modules)
+      const linkLines = drawLinks(linksGroup, links);
+
+      // Draw hexagons on top
       drawHexagons(g, nodesWithPos, onHexagonClick);
 
-      // Update hexagon positions on simulation tick
+      // Update positions on simulation tick
       simulation.on('tick', () => {
+        updateLinkPositions(linkLines);
         updateHexagonPositions(g.selectAll('.hexagon'));
       });
 
@@ -75,7 +80,7 @@ export default function HexagonMap({
         simulation.stop();
       };
     },
-    [data, width, height, onHexagonClick]
+    [data, links, width, height, onHexagonClick]
   );
 
   return (
