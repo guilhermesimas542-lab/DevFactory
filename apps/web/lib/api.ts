@@ -420,3 +420,81 @@ export async function checkAlerts(projectId: string): Promise<ApiResponse<{
     method: 'POST',
   });
 }
+
+/**
+ * Get glossary terms for a project
+ * @param projectId - The project ID
+ * @returns Array of glossary terms
+ */
+export async function getGlossaryTerms(projectId: string): Promise<ApiResponse<Array<{
+  id: string;
+  project_id: string;
+  term: string;
+  definition: string;
+  analogy: string | null;
+  relevance: string | null;
+  is_explored: boolean;
+  created_at: string;
+}>>> {
+  return apiCall(`/api/glossary?projectId=${projectId}`);
+}
+
+/**
+ * Get a specific glossary term by ID
+ * @param termId - The term ID
+ * @returns Term details
+ */
+export async function getGlossaryTerm(termId: string): Promise<ApiResponse<any>> {
+  return apiCall(`/api/glossary/${termId}`);
+}
+
+/**
+ * Create a new glossary term
+ * @param term - Term data
+ * @returns Created term
+ */
+export async function createGlossaryTerm(term: {
+  projectId: string;
+  term: string;
+  definition: string;
+  analogy?: string;
+  relevance?: string;
+}): Promise<ApiResponse<any>> {
+  return apiCall('/api/glossary', {
+    method: 'POST',
+    body: JSON.stringify(term),
+  });
+}
+
+/**
+ * Update a glossary term
+ * @param termId - The term ID
+ * @param updates - Fields to update
+ * @returns Updated term
+ */
+export async function updateGlossaryTerm(
+  termId: string,
+  updates: {
+    term?: string;
+    definition?: string;
+    analogy?: string;
+    relevance?: string;
+    isExplored?: boolean;
+  }
+): Promise<ApiResponse<any>> {
+  return apiCall(`/api/glossary/${termId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+}
+
+/**
+ * Delete a glossary term
+ * @param termId - The term ID to delete
+ * @returns Success message
+ */
+export async function deleteGlossaryTerm(termId: string): Promise<ApiResponse<{ message: string }>> {
+  return apiCall(`/api/glossary/${termId}`, {
+    method: 'DELETE',
+  });
+}

@@ -8,6 +8,7 @@ import dbTestRoutes from './routes/db-test'
 import projectsRoutes from './routes/projects'
 import storiesRoutes from './routes/stories'
 import alertsRoutes from './routes/alerts'
+import glossaryRoutes from './routes/glossary'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -54,6 +55,7 @@ app.use('/api/db', dbTestRoutes)
 app.use('/api/projects', projectsRoutes)
 app.use('/api/stories', storiesRoutes)
 app.use('/api/alerts', alertsRoutes)
+app.use('/api/glossary', glossaryRoutes)
 
 // 404 Handler
 app.use((_req, res) => {
