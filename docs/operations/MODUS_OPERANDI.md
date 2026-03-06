@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 5 — ÉPICO 2 COMPLETO + STORY-011/012/013 IMPLEMENTADAS)
+**Data:** 2026-03-06 (Sessão 6 — STORY-014 IMPLEMENTADA)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: integrate force layout with module dependency connections (1d45d88)
-**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ STORY-011-013 IMPLEMENTADAS | Mapa Hexagonal 60% completo
+**Último commit:** feat: add SidePanel component for hexagon module details display (f952ceb)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | ✅ STORY-011-014 IMPLEMENTADAS | Mapa Hexagonal 80% completo
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -48,11 +48,11 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 - ✅ STORY-009: Criar módulos no banco
 - ✅ STORY-010: UI de validação
 
-**Épico 3 — Mapa Hexagonal** 🚀 60% COMPLETO
+**Épico 3 — Mapa Hexagonal** 🚀 80% COMPLETO
 - ✅ STORY-011: Setup D3.js + useD3 hook (COMPLETO)
 - ✅ STORY-012: Hexagon shapes SVG rendering (COMPLETO)
 - ✅ STORY-013: Force simulation + conexões (COMPLETO)
-- ⏳ STORY-014: Interactive panel (PRÓXIMO)
+- ✅ STORY-014: Interactive panel (COMPLETO)
 - ⏳ STORY-015: Zoom/pan/navegação
 
 **Épico 4 — Análise de Progresso** ⏳ PLANEJADO
@@ -929,6 +929,85 @@ Integração de force simulation com d3.forceLink para conectar módulos depende
 
 ---
 
+### [2026-03-06 (Sessão 6)] — @dev — STORY-014 (Painel Lateral Interativo) — IMPLEMENTADA
+
+**Descrição:**
+Criação de componente SidePanel para exibir detalhes do módulo ao clicar em um hexágono. Integração com lista de componentes e barra de progresso.
+
+**O que foi feito:**
+
+1. ✅ **Criado `components/SidePanel.tsx`**
+   - Recebe módulo selecionado + lista de componentes
+   - Exibe:
+     - Nome do módulo com close button (✕)
+     - Badge de hierarquia com cor
+     - Descrição (texto)
+     - Barra de progresso animada (0-100%)
+     - ComponentsList com status dos componentes
+   - Props: `module: HexagonData | null`, `onClose: () => void`, `components?: Component[]`
+   - Layout limpo com spacing adequado
+
+2. ✅ **Reutilizado `components/ComponentsList.tsx`** (criado em sessão anterior)
+   - Exibe componentes com status badges (pending/partial/implemented)
+   - Cores por status: gray/yellow/green
+   - Integrado no SidePanel
+
+3. ✅ **Extendido `lib/hexagon.ts`**
+   - Adicionado campo optional `description?: string` em HexagonData
+   - Permite passar descrição para cada módulo
+
+4. ✅ **Integrado em `pages/test-hexagon.tsx`**
+   - Adicionado SidePanel com props corretas
+   - Mock data agora com descrições para cada módulo
+   - Mock `mockComponentsByModuleId` mapeando modulo ID → lista de componentes
+   - Componentes mock: nomes e status realistas (implemented/partial/pending)
+   - Close button: `() => setSelectedHexagon(null)`
+   - Mantém Legend panel visível simultaneamente
+
+**Arquivos criados:**
+- `apps/web/components/SidePanel.tsx` (NOVO)
+
+**Arquivos modificados:**
+- `apps/web/components/ComponentsList.tsx` (já criado, agora reutilizado)
+- `apps/web/lib/hexagon.ts` (adicionado description field)
+- `apps/web/pages/test-hexagon.tsx` (integração + mock data)
+
+**Verificações:**
+- ✅ TypeScript: npm run typecheck → zero erros
+- ✅ Build: successful
+- ✅ SidePanel renderiza quando módulo selecionado
+- ✅ Close button (✕) funciona
+- ✅ ComponentsList integrado e renderiza corretamente
+- ✅ Progresso bar anima
+- ✅ Hierarquia color badge aparece
+- ✅ Layout mantém Legend + SidePanel lado a lado
+
+**Git Commit:**
+```
+f952ceb feat: add SidePanel component for hexagon module details display
+```
+
+**Status:** ✅ STORY-014 IMPLEMENTADA E PRONTA PARA TESTES
+
+**Épico 3 Progress:**
+```
+1. STORY-011: Setup D3.js (✅ COMPLETO)
+2. STORY-012: Hexagon shapes (✅ COMPLETO)
+3. STORY-013: Force layout + conexões (✅ COMPLETO)
+4. STORY-014: Painel lateral (✅ COMPLETO — AGORA)
+5. [PRÓXIMO] STORY-015: Zoom/pan/navegação avançada
+```
+
+**Próxima ação recomendada:**
+1. Testar página `/test-hexagon` em produção
+   - Clicar em hexágono → SidePanel deve aparecer
+   - Verificar descrição carrega
+   - Verificar componentes aparecem com status correto
+   - Clicar ✕ → painel some
+2. Começar STORY-015 (tooltips + controles avançados de zoom/pan)
+
+---
+
 ## 🔑 DECISÕES CRÍTICAS
 
 ### Infraestrutura (Épico 1)
@@ -972,4 +1051,4 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 ---
 
 **Mantido por:** AIOS Agents
-**Última atualização:** 2026-03-03 (Orion, aios-master) — STORY-007 (A+B) completa
+**Última atualização:** 2026-03-06 (Dex, @dev) — STORY-014 (SidePanel) completa
