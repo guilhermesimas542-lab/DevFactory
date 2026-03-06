@@ -70,6 +70,8 @@ export async function getProject(projectId: string): Promise<ApiResponse<{
   id: string;
   name: string;
   description: string | null;
+  github_repo_url: string | null;
+  github_last_sync: string | null;
   prd_original: any;
   modules: Array<{
     id: string;
@@ -496,5 +498,46 @@ export async function updateGlossaryTerm(
 export async function deleteGlossaryTerm(termId: string): Promise<ApiResponse<{ message: string }>> {
   return apiCall(`/api/glossary/${termId}`, {
     method: 'DELETE',
+  });
+}
+
+/**
+ * Sync project with GitHub commits
+ * @param projectId - The project ID
+ * @returns Sync results with updated stories
+ */
+export async function syncProjectGitHub(projectId: string): Promise<ApiResponse<{
+  synced_at: string;
+  commits_analyzed: number;
+  stories_updated: Array<{
+    story_id: string;
+    title: string;
+    new_status: string;
+    commit_sha: string;
+    commit_message: string;
+  }>;
+}>> {
+  return apiCall(`/api/projects/${projectId}/sync-github`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Update a project
+ * @param projectId - The project ID
+ * @param updates - Fields to update
+ * @returns Updated project
+ */
+export async function updateProject(
+  projectId: string,
+  updates: {
+    name?: string;
+    description?: string;
+    github_repo_url?: string;
+  }
+): Promise<ApiResponse<any>> {
+  return apiCall(`/api/projects/${projectId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
   });
 }

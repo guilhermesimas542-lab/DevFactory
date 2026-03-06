@@ -60,6 +60,52 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
 });
 
 /**
+ * PUT /api/projects/{id}
+ * Update a project
+ */
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { name, description, github_repo_url } = req.body;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
+    const project = await prisma.project.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(description !== undefined && { description }),
+        ...(github_repo_url !== undefined && { github_repo_url }),
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        github_repo_url: true,
+        github_last_sync: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: project,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Update project error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
  * GET /api/projects/{id}
  * Get a specific project by ID
  */
@@ -96,6 +142,8 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
         id: project.id,
         name: project.name,
         description: project.description,
+        github_repo_url: project.github_repo_url,
+        github_last_sync: project.github_last_sync,
         prd_original: project.prd_original,
         modules: project.modules,
         created_at: project.created_at,
@@ -361,6 +409,170 @@ router.get('/:id/progress', async (req: Request, res: Response): Promise<void> =
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Get progress error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
+ * POST /api/projects/:id/sync-github
+ * Sync stories with GitHub commits
+ */
+router.post('/:id/sync-github', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
+    // Get project
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: {
+        stories: {
+          select: { id: true, title: true }
+        }
+      }
+    });
+
+    if (!project) {
+      res.status(404).json({
+        error: 'Project not found',
+      });
+      return;
+    }
+
+    if (!project.github_repo_url) {
+      res.status(400).json({
+        error: 'Project does not have a GitHub repository URL configured',
+      });
+      return;
+    }
+
+    // Parse GitHub URL: https://github.com/owner/repo → owner/repo
+    const repoMatch = project.github_repo_url.match(/github\.com\/([^/]+)\/([^/]+)(?:\.git)?$/i);
+    if (!repoMatch) {
+      res.status(400).json({
+        error: 'Invalid GitHub repository URL format',
+      });
+      return;
+    }
+
+    const [, owner, repo] = repoMatch;
+    const githubApiUrl = `https://api.github.com/repos/${owner}/${repo}/commits?per_page=50`;
+
+    // Fetch commits from GitHub
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'DevFactory',
+    };
+
+    if (process.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+    }
+
+    const githubResponse = await fetch(githubApiUrl, { headers });
+
+    if (!githubResponse.ok) {
+      console.error('GitHub API error:', githubResponse.statusText);
+      res.status(400).json({
+        error: `GitHub API error: ${githubResponse.statusText}`,
+      });
+      return;
+    }
+
+    const commits = await githubResponse.json() as Array<{
+      sha: string;
+      commit: { message: string };
+    }>;
+
+    // Process commits and update stories
+    const storiesUpdated = [];
+    const lastSync = project.github_last_sync;
+
+    for (const commit of commits) {
+      // Skip if commit is before last sync
+      if (lastSync) {
+        const commitDate = new Date(commit.commit.message);
+        if (isNaN(commitDate.getTime()) || commitDate < lastSync) {
+          continue;
+        }
+      }
+
+      const commitMessage = commit.commit.message.toLowerCase();
+      let newStatus: string | null = null;
+
+      // Check for status patterns
+      if (commitMessage.match(/^done:\s*story-(\w+)/i) || commitMessage.match(/^done:\s*story/i)) {
+        newStatus = 'completed';
+      } else if (commitMessage.match(/^fix:\s*story-(\w+)/i) || commitMessage.match(/^fix:\s*story/i)) {
+        newStatus = 'completed';
+      } else if (commitMessage.match(/^feat:\s*story-(\w+)/i) || commitMessage.match(/^feat:\s*story/i)) {
+        newStatus = 'in_progress';
+      }
+
+      if (newStatus) {
+        // Extract story ID from message
+        const storyIdMatch = commitMessage.match(/story-(\w+)/);
+        let matchedStory = null;
+
+        if (storyIdMatch) {
+          // Try to match by story ID
+          matchedStory = project.stories.find(s => s.id === storyIdMatch[1] || s.id.endsWith(storyIdMatch[1]));
+        }
+
+        // If not found by ID, try to match by title (partial, case insensitive)
+        if (!matchedStory) {
+          const storyTitle = commitMessage.replace(/^(feat|fix|done):\s*/i, '').split('\n')[0].trim();
+          matchedStory = project.stories.find(s =>
+            s.title.toLowerCase().includes(storyTitle.toLowerCase()) ||
+            storyTitle.toLowerCase().includes(s.title.toLowerCase())
+          );
+        }
+
+        if (matchedStory) {
+          // Update story status
+          await prisma.story.update({
+            where: { id: matchedStory.id },
+            data: {
+              status: newStatus,
+              ...(newStatus === 'in_progress' && { started_at: new Date() }),
+              ...(newStatus === 'completed' && { completed_at: new Date() }),
+            },
+          });
+
+          storiesUpdated.push({
+            story_id: matchedStory.id,
+            title: matchedStory.title,
+            new_status: newStatus,
+            commit_sha: commit.sha.substring(0, 7),
+            commit_message: commit.commit.message.split('\n')[0],
+          });
+        }
+      }
+    }
+
+    // Update project's last sync time
+    await prisma.project.update({
+      where: { id },
+      data: { github_last_sync: new Date() },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        synced_at: new Date().toISOString(),
+        commits_analyzed: commits.length,
+        stories_updated: storiesUpdated,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('GitHub sync error:', error);
 
     res.status(400).json({
       error: message,

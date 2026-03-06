@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getStories, getStoryTimeline, createStory, updateStory, deleteStory } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
+import KanbanBoard from '@/components/KanbanBoard';
 
 interface Story {
   id: string;
@@ -40,6 +41,10 @@ export default function StoriesList() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState<string>('pending');
 
+  // View mode and polling states
+  const [viewMode, setViewMode] = useState<'lista' | 'kanban'>('lista');
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -50,6 +55,28 @@ export default function StoriesList() {
       loadData();
     }
   }, [router.isReady, status, filterStatus]);
+
+  // Polling interval - refresh data every 30 seconds
+  useEffect(() => {
+    if (!router.isReady || status !== 'authenticated') return;
+
+    const interval = setInterval(() => {
+      loadData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [router.isReady, status]);
+
+  // Update timestamp display every second
+  useEffect(() => {
+    if (!lastUpdate) return;
+
+    const interval = setInterval(() => {
+      setLastUpdate(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastUpdate]);
 
   const loadData = async () => {
     try {
@@ -77,12 +104,24 @@ export default function StoriesList() {
       if (timelineResult.success && timelineResult.data) {
         setTimeline(timelineResult.data);
       }
+
+      // Record last update time
+      setLastUpdate(new Date());
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTimeSince = (date: Date): string => {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    if (seconds < 60) return `há ${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `há ${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    return `há ${hours}h`;
   };
 
   const handleCreateStory = async () => {
@@ -192,13 +231,42 @@ export default function StoriesList() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-6 flex justify-end">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            + Nova Story
-          </button>
+        {/* Top Bar: View toggle + Last update info */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode('lista')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                viewMode === 'lista'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              📋 Lista
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              📊 Kanban
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {lastUpdate && (
+              <span className="text-xs text-gray-500">⏱️ {formatTimeSince(lastUpdate)}</span>
+            )}
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              + Nova Story
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -277,115 +345,128 @@ export default function StoriesList() {
           </div>
         )}
 
-        {/* Filters */}
-        <div className="mb-6 flex gap-2">
-          <button
-            onClick={() => setFilterStatus(undefined)}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              !filterStatus
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Todas
-          </button>
-          <button
-            onClick={() => setFilterStatus('pending')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              filterStatus === 'pending'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Pendentes
-          </button>
-          <button
-            onClick={() => setFilterStatus('in_progress')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              filterStatus === 'in_progress'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Em Progresso
-          </button>
-          <button
-            onClick={() => setFilterStatus('completed')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              filterStatus === 'completed'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Concluídas
-          </button>
-        </div>
-
-        {/* Stories List */}
-        {stories.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg">
-            <p className="text-gray-600">Nenhuma story encontrada</p>
-          </div>
+        {/* VIEW MODE: KANBAN */}
+        {viewMode === 'kanban' ? (
+          <KanbanBoard
+            stories={stories}
+            onUpdateStatus={handleUpdateStatus}
+            onDelete={handleDeleteStory}
+            loading={loading}
+          />
         ) : (
-          <div className="space-y-4">
-            {stories.map(story => (
-              <div
-                key={story.id}
-                className={`border rounded-lg p-4 transition-all ${getStatusColor(story.status)}`}
+          <>
+            {/* VIEW MODE: LISTA */}
+            {/* Filters */}
+            <div className="mb-6 flex gap-2">
+              <button
+                onClick={() => setFilterStatus(undefined)}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  !filterStatus
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{story.title}</h3>
-                    {story.description && (
-                      <p className="text-sm text-gray-600 mt-1">{story.description}</p>
-                    )}
-                  </div>
-                  <div className="ml-4 flex gap-2">
-                    {editingId === story.id ? (
-                      <select
-                        value={editingStatus}
-                        onChange={e => {
-                          setEditingStatus(e.target.value);
-                          handleUpdateStatus(story.id, e.target.value);
-                        }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm"
-                      >
-                        <option value="pending">⏳ Pendente</option>
-                        <option value="in_progress">🔄 Em Progresso</option>
-                        <option value="completed">✅ Concluída</option>
-                      </select>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setEditingId(story.id);
-                          setEditingStatus(story.status);
-                        }}
-                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
-                      >
-                        {getStatusLabel(story.status)}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDeleteStory(story.id)}
-                      className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
+                Todas
+              </button>
+              <button
+                onClick={() => setFilterStatus('pending')}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  filterStatus === 'pending'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Pendentes
+              </button>
+              <button
+                onClick={() => setFilterStatus('in_progress')}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  filterStatus === 'in_progress'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Em Progresso
+              </button>
+              <button
+                onClick={() => setFilterStatus('completed')}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  filterStatus === 'completed'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Concluídas
+              </button>
+            </div>
 
-                <div className="flex gap-4 text-xs text-gray-600 mt-3">
-                  {story.epic && <span>📚 {story.epic}</span>}
-                  {story.started_at && (
-                    <span>🚀 {new Date(story.started_at).toLocaleDateString('pt-BR')}</span>
-                  )}
-                  {story.completed_at && (
-                    <span>✓ {new Date(story.completed_at).toLocaleDateString('pt-BR')}</span>
-                  )}
-                </div>
+            {/* Stories List */}
+            {stories.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg">
+                <p className="text-gray-600">Nenhuma story encontrada</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-4">
+                {stories.map(story => (
+                  <div
+                    key={story.id}
+                    className={`border rounded-lg p-4 transition-all ${getStatusColor(story.status)}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900">{story.title}</h3>
+                        {story.description && (
+                          <p className="text-sm text-gray-600 mt-1">{story.description}</p>
+                        )}
+                      </div>
+                      <div className="ml-4 flex gap-2">
+                        {editingId === story.id ? (
+                          <select
+                            value={editingStatus}
+                            onChange={e => {
+                              setEditingStatus(e.target.value);
+                              handleUpdateStatus(story.id, e.target.value);
+                            }}
+                            className="px-2 py-1 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="pending">⏳ Pendente</option>
+                            <option value="in_progress">🔄 Em Progresso</option>
+                            <option value="completed">✅ Concluída</option>
+                          </select>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setEditingId(story.id);
+                              setEditingStatus(story.status);
+                            }}
+                            className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                          >
+                            {getStatusLabel(story.status)}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteStory(story.id)}
+                          className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-4 text-xs text-gray-600 mt-3">
+                      {story.epic && <span>📚 {story.epic}</span>}
+                      {story.started_at && (
+                        <span>🚀 {new Date(story.started_at).toLocaleDateString('pt-BR')}</span>
+                      )}
+                      {story.completed_at && (
+                        <span>✓ {new Date(story.completed_at).toLocaleDateString('pt-BR')}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
       </main>

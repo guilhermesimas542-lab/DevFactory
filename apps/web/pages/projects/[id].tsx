@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProject } from '@/lib/api';
+import { getProject, updateProject, syncProjectGitHub } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
 
 interface ProjectData {
   id: string;
   name: string;
   description: string | null;
+  github_repo_url: string | null;
+  github_last_sync: string | null;
   prd_original: {
     rawContent: string;
     originalFileName: string;
@@ -25,6 +27,12 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // GitHub integration states
+  const [repoUrl, setRepoUrl] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -65,6 +73,7 @@ export default function ProjectDetail() {
         console.log('✅ Project description:', result.data.description);
         console.log('✅ Project prd_original:', result.data.prd_original);
         setProject(result.data);
+        setRepoUrl(result.data.github_repo_url || '');
       } else {
         console.error('❌ API Error:', result.error);
         setError(result.error || 'Failed to load project');
@@ -124,6 +133,61 @@ export default function ProjectDetail() {
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleString('pt-BR');
+  };
+
+  const handleSaveGitHub = async () => {
+    if (!project) return;
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      const result = await updateProject(project.id, {
+        github_repo_url: repoUrl || undefined,
+      });
+
+      if (result.success) {
+        setProject({ ...project, github_repo_url: repoUrl || null });
+        setSyncMessage('✓ Repositório configurado com sucesso!');
+        setTimeout(() => setSyncMessage(null), 3000);
+      } else {
+        setError(result.error || 'Erro ao salvar repositório');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSyncGitHub = async () => {
+    if (!project) return;
+
+    try {
+      setIsSyncing(true);
+      setSyncMessage(null);
+      setError(null);
+
+      const result = await syncProjectGitHub(project.id);
+
+      if (result.success && result.data) {
+        const updatedCount = result.data.stories_updated.length;
+        setSyncMessage(`✓ ${updatedCount} stories atualizadas com sucesso!`);
+        setProject({
+          ...project,
+          github_last_sync: result.data.synced_at,
+        });
+        setTimeout(() => setSyncMessage(null), 5000);
+      } else {
+        setError(result.error || 'Erro ao sincronizar');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -204,6 +268,77 @@ export default function ProjectDetail() {
             </div>
           </div>
         )}
+
+        {/* GitHub Integration Card */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">🔗 Sincronização com GitHub</h2>
+
+          {!repoUrl ? (
+            <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
+              <p className="text-blue-700 text-sm">
+                📌 Configure um repositório GitHub para sincronizar stories automaticamente com base nas mensagens de commit.
+              </p>
+            </div>
+          ) : null}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">URL do Repositório GitHub</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="https://github.com/usuario/repo"
+                  value={repoUrl}
+                  onChange={(e) => setRepoUrl(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleSaveGitHub}
+                  disabled={isSaving || repoUrl === (project.github_repo_url || '')}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
+                >
+                  {isSaving ? '⏳ Salvando...' : 'Salvar'}
+                </button>
+              </div>
+              {repoUrl && repoUrl !== (project.github_repo_url || '') && (
+                <p className="text-xs text-gray-500 mt-1">Clique em "Salvar" para aplicar as mudanças</p>
+              )}
+            </div>
+
+            {project.github_repo_url && (
+              <div className="border-t pt-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">Última Sincronização</p>
+                    <p className="text-sm text-gray-900">
+                      {project.github_last_sync
+                        ? formatDate(project.github_last_sync)
+                        : 'Nunca sincronizado'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium">Status</p>
+                    <p className="text-sm text-green-600">✓ Configurado</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSyncGitHub}
+                  disabled={isSyncing}
+                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
+                >
+                  {isSyncing ? '⏳ Sincronizando...' : '🔄 Sincronizar Agora'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {syncMessage && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
+              {syncMessage}
+            </div>
+          )}
+        </div>
 
       </main>
     </div>

@@ -22,6 +22,8 @@ model Project {
   repository_url    String?
   local_folder      String?
   prd_original      Json?    // Stores original PRD content
+  github_repo_url   String?  // GitHub repository URL for sync (e.g., https://github.com/owner/repo)
+  github_last_sync  DateTime? // Last time GitHub repo was synchronized
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
