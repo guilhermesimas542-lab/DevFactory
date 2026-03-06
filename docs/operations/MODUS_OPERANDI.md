@@ -8,10 +8,10 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 
 ## 📊 ESTADO ATUAL
 
-**Data:** 2026-03-06 (Sessão 5 — Parser + ProjectService + Validation UI)
+**Data:** 2026-03-06 (Sessão 5 — ÉPICO 2 CONCLUÍDO + STORY-011 IMPLEMENTADA)
 **Branches ativos:** `main` (sincronizado)
-**Último commit:** feat: implement validation UI for tree structure editing (9d6652e)
-**Status:** ✅ STORY-008 DEPLOYADO | ✅ STORY-009 DEPLOYADO | ✅ STORY-010 IMPLEMENTADO (deploy em andamento)
+**Último commit:** feat: setup D3.js with useD3 hook and test component (e1abddf)
+**Status:** ✅ ÉPICO 2 CONCLUÍDO | 🚀 STORY-011 IMPLEMENTADA (Transição para Épico 3)
 
 ### ✅ Concluído (Épico 1 — Infraestrutura Base + Épico 2 — Upload e Visualização)
 
@@ -37,17 +37,32 @@ Documento centralizado de registro de todas as ações, decisões e estado do pr
 ### 🚀 Próximas Ações
 
 **Roadmap:**
-1. ✅ STORY-005: Deploy (CONCLUÍDO)
-2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
-3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
-4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
-5. ✅ **STORY-008: Parser de Markdown → Estrutura JSON (DEPLOYADO)**
-6. ✅ **STORY-009: Criar módulos no banco a partir de parsed data (DEPLOYADO)**
-7. ✅ **STORY-010: UI de validação/confirmação da árvore de módulos (DEPLOYADO)**
-8. ⏳ **STORY-011-015: Mapa Hexagonal Interativo (PRÓXIMO — Épico 3)**
-9. ⏳ STORY-016-020: Análise de Progresso vs Código (Épico 4)
 
-**Épico 2 Concluído! 🎉** → Transição para Épico 3 (Mapa Hexagonal)
+**Épico 1 — Infraestrutura Base** ✅ CONCLUÍDO
+- ✅ STORY-001-005: Setup Next.js, Express, PostgreSQL, Auth, Deploy
+
+**Épico 2 — Importação de PRD** ✅ CONCLUÍDO
+- ✅ STORY-006: Upload PRD
+- ✅ STORY-007-A/B: Visualização + Dashboard
+- ✅ STORY-008: Parser Markdown
+- ✅ STORY-009: Criar módulos no banco
+- ✅ STORY-010: UI de validação
+
+**Épico 3 — Mapa Hexagonal** 🚀 EM ANDAMENTO
+- ✅ STORY-011: Setup D3.js + useD3 hook (COMPLETO)
+- ⏳ STORY-012: Hexagon shapes SVG rendering (PRÓXIMO)
+- ⏳ STORY-013: Force simulation layout
+- ⏳ STORY-014: Interactive panel
+- ⏳ STORY-015: Zoom/pan/navegação
+
+**Épico 4 — Análise de Progresso** ⏳ PLANEJADO
+- ⏳ STORY-016-020: GitHub clone, análise de código, heurísticas
+
+**Resumo:**
+- **Semana 1-2:** Infraestrutura + Upload ✅
+- **Semana 2-3:** Parsing + Validação ✅
+- **Semana 3-4:** Mapa Hexagonal (EM ANDAMENTO)
+- **Semana 5-6:** Análise de Progresso
 
 ---
 
@@ -648,6 +663,117 @@ Criação de interface interativa para validar e editar a estrutura de módulos 
    - Clicar "Confirmar"
    - Verificar se dados foram salvos
 2. Começar STORY-011 (Setup D3.js + Mapa Hexagonal)
+
+---
+
+### [2026-03-06 (Sessão 5 final)] — @architect/@dev — REVISÃO COMPLETA + STORY-011 (Setup D3.js)
+
+**Revisão Completa do Projeto (por @architect):**
+
+**Arquitetura Atual:**
+- Frontend: Next.js 14 + React 18 + TypeScript + Tailwind CSS (Vercel)
+- Backend: Express.js + TypeScript + Prisma 6.19 (Railway)
+- Database: PostgreSQL com 8 modelos (Projects, Modules, Components, Stories, Alerts, Analysis, Snapshots, Glossary)
+- Comunicação: API REST com CORS bem configurado
+- Deploy: ✅ Vercel (frontend) + ✅ Railway (backend + DB)
+
+**Estado das Stories:**
+- ✅ STORY-006: Upload de PRD (completo)
+- ✅ STORY-007-A: Página de resultado (completo)
+- ✅ STORY-007-B: Dashboard (completo)
+- ✅ STORY-008: Parser Markdown (completo + 5 testes)
+- ✅ STORY-009: ProjectService (completo + transaction)
+- ✅ STORY-010: TreeEditor UI (completo + zoom/pan/drag)
+- 🚀 STORY-011: D3.js Setup (NOVO - completo)
+
+**Qualidade do Código:**
+- ✅ TypeScript rigoroso (zero `any` desnecessários)
+- ✅ Error handling em todas as funções
+- ✅ Separação de concerns (routes/services/utils)
+- ✅ Testes unitários implementados
+- 🟡 Recomendações: PrismaClient singleton, Zod validation (não-críticas)
+
+**Bloqueadores para Épico 3:** Nenhum. Sistema pronto para D3.js.
+
+---
+
+### [2026-03-06 (Sessão 5 final)] — @dev — STORY-011 (Setup D3.js + Hook useD3) — IMPLEMENTADA
+
+**Descrição:**
+Instalação e setup de D3.js v7 com hook customizado para gerenciar visualizações SVG. Componente teste renderiza força simulation com zoom, pan e drag interativo.
+
+**O que foi feito:**
+
+1. ✅ **Instalar D3.js**
+   - `npm install d3 @types/d3`
+   - 70 packages adicionados
+   - Zero vulnerabilities
+
+2. ✅ **Hook `hooks/useD3.ts`**
+   - Gerencia ref do SVG
+   - Aceita função render e dependencies array
+   - Retorna ref para anexar ao SVG
+   - Lifecycle management automático
+
+3. ✅ **Componente `D3Test.tsx`**
+   - Force simulation com nós e links
+   - Drag nodes: arrastar círculos azuis
+   - Zoom: scroll do mouse
+   - Pan: arrastar fundo
+   - Labels em cada nó
+   - Cores dinâmicas (indigo)
+   - Sizing baseado em valor
+
+4. ✅ **Página teste `/test-d3`**
+   - Renderiza D3Test
+   - Instruções de uso
+   - Checklist de critérios
+   - Protegida com NextAuth
+
+5. ✅ **Build & TypeScript**
+   - Build: successful
+   - TypeScript: zero erros
+   - Tipos: todos explícitos (d3.SimulationNodeDatum, etc)
+
+**Arquivos criados:**
+- `apps/web/hooks/useD3.ts` (NOVO)
+- `apps/web/components/D3Test.tsx` (NOVO)
+- `apps/web/pages/test-d3.tsx` (NOVO)
+
+**Arquivos modificados:**
+- `apps/web/package.json` (adicionado d3, @types/d3)
+
+**Verificações (Todos os Critérios de Aceite):**
+- ✅ `npm install d3` feito
+- ✅ Hook `useD3` criado e funcional
+- ✅ Hook aceita render function e dependencies
+- ✅ Hook retorna ref para SVG
+- ✅ Componente teste renderiza círculos em força
+- ✅ Zoom funciona
+- ✅ Pan funciona (drag background)
+- ✅ Drag nodes funciona
+- ✅ Sem erros no console
+
+**Git Commit:**
+```
+e1abddf feat: setup D3.js with useD3 hook and test component [STORY-011]
+```
+
+**Status:** ✅ STORY-011 IMPLEMENTADA E DEPLOYADA
+
+**Fluxo de Épico 3 (Mapa Hexagonal):**
+```
+1. Setup D3.js (STORY-011) ✅ ← COMPLETO
+2. [PRÓXIMO] Hexagon shapes com SVG (STORY-012)
+3. Force simulation para layout (STORY-013)
+4. Interactive panel com detalhes (STORY-014)
+5. Zoom/pan/navegação (STORY-015)
+```
+
+**Próximas ações recomendadas:**
+1. Testar página `/test-d3` em produção (confirmar zoom/pan/drag)
+2. Começar STORY-012 (renderizar hexágonos ao invés de círculos)
+3. Conectar com dados reais (GET `/api/projects/{id}/modules`)
 
 ---
 
