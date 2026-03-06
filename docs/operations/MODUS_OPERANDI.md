@@ -427,7 +427,18 @@ Criação de parser determinístico usando regex + string manipulation para extr
 - ✅ Build: npm run build → sucesso
 - ✅ Imports: Sem extensões `.js` (problema de módulos resolvido)
 
-**Status:** ✅ STORY-008 PRONTO (sem commit — aguardando validação)
+**Status:** ✅ STORY-008 VALIDADO E DEPLOYADO
+
+**Teste em produção:**
+- ✅ Upload de PRD.md com H1 título
+- ✅ Nome do projeto extraído corretamente (H1 em vez de data genérica)
+- ✅ Estrutura `prd_original.parsed` salva no banco
+- ✅ Parser funcionando end-to-end
+
+**Git Commit:**
+```
+f6a07f3 feat: implement PRD markdown parser with automatic title extraction [STORY-008]
+```
 
 **Exemplo de saída do parser:**
 ```json
