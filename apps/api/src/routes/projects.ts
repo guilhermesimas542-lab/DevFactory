@@ -580,4 +580,134 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
   }
 });
 
+/**
+ * POST /api/projects/:id/extract-architecture
+ * Extract architecture from PRD using Gemini AI and save to database
+ */
+router.post('/:id/extract-architecture', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
+    // Get project with PRD
+    const project = await prisma.project.findUnique({
+      where: { id },
+      include: { modules: { include: { components: true } } },
+    });
+
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    if (!project.prd_original) {
+      res.status(400).json({ error: 'Project does not have a PRD' });
+      return;
+    }
+
+    // Extract PRD content
+    const prdContent = typeof project.prd_original === 'string'
+      ? project.prd_original
+      : (project.prd_original as any).rawContent || JSON.stringify(project.prd_original);
+
+    // Import ArchitectureService dynamically to avoid circular imports
+    const { ArchitectureService } = await import('../services/ArchitectureService');
+
+    // Extract architecture from PRD using Gemini
+    const architecture = await ArchitectureService.extractArchitecture(prdContent);
+
+    // Save architecture to database
+    const savedModules = [];
+
+    for (const node of architecture.nodes) {
+      // Find or create module
+      let module = await prisma.module.findFirst({
+        where: {
+          project_id: id,
+          name: node.label,
+        },
+      });
+
+      if (module) {
+        // Update existing module
+        module = await prisma.module.update({
+          where: { id: module.id },
+          data: {
+            description: node.description,
+            architecture_type: node.type,
+            why_chosen: node.why,
+            parent_module_id: node.parentId || null,
+          },
+        });
+      } else {
+        // Create new module
+        module = await prisma.module.create({
+          data: {
+            project_id: id,
+            name: node.label,
+            description: node.description,
+            hierarchy: 'necessary',
+            architecture_type: node.type,
+            why_chosen: node.why,
+            parent_module_id: node.parentId || null,
+          },
+        });
+      }
+
+      savedModules.push(module);
+
+      // Create/update components for this module
+      for (const component of node.components) {
+        const existingComponent = await prisma.component.findFirst({
+          where: {
+            module_id: module.id,
+            name: component.name,
+          },
+        });
+
+        if (existingComponent) {
+          await prisma.component.update({
+            where: { id: existingComponent.id },
+            data: {
+              description: component.description,
+              status: component.status,
+              type: 'architecture_component',
+            },
+          });
+        } else {
+          await prisma.component.create({
+            data: {
+              module_id: module.id,
+              name: component.name,
+              description: component.description,
+              status: component.status,
+              type: 'architecture_component',
+            },
+          });
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        architecture,
+        modulesCreated: savedModules.length,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Extract architecture error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
 export default router;

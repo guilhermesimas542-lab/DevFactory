@@ -112,7 +112,7 @@ setInterval(async () => {
         })
 
         if (response.ok) {
-          const result = await response.json()
+          const result = await response.json() as any
           console.log(`✅ Synced project ${project.id}: ${result.data.stories_updated.length} stories updated`)
         } else {
           console.error(`⚠️ Failed to sync project ${project.id}: ${response.statusText}`)

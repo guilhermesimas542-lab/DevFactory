@@ -42,6 +42,7 @@ export default function ProjectLayout({ children }: ProjectLayoutProps) {
   const menuItems = [
     { label: '🏠 Visão Geral', path: `/projects/${router.query.id}` },
     { label: '📊 Progresso', path: `/projects/${router.query.id}/progress` },
+    { label: '🌐 Mapa', path: `/projects/${router.query.id}/map` },
     { label: '📝 Stories', path: `/projects/${router.query.id}/stories` },
     { label: '📅 Timeline', path: `/projects/${router.query.id}/timeline` },
     { label: '⚠️ Alertas', path: `/projects/${router.query.id}/alerts` },

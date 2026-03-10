@@ -46,6 +46,10 @@ model Module {
   parent_module_id   String?
   progress_percentage Decimal  @default(0) @db.Decimal(5, 2)
 
+  // Architecture extraction fields
+  architecture_type  String?  // frontend, backend, database, auth, infra, integration, other
+  why_chosen         String?  // Explicação leiga de por que foi escolhido
+
   created_at         DateTime @default(now())
 
   components         Component[]

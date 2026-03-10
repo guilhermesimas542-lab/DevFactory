@@ -21,6 +21,7 @@
   "dependencies": {
     "@babel/parser": "^7.29.0",
     "@babel/traverse": "^7.29.0",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.2",
     "@types/babel__parser": "^7.0.0",
     "@types/express": "^5.0.6",

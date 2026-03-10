@@ -541,3 +541,36 @@ export async function updateProject(
     body: JSON.stringify(updates),
   });
 }
+
+/**
+ * Extract architecture from PRD using Gemini AI
+ * @param projectId - The project ID
+ * @returns Architecture data with nodes and connections
+ */
+export async function extractArchitecture(projectId: string): Promise<ApiResponse<{
+  architecture: {
+    nodes: Array<{
+      id: string;
+      label: string;
+      type: string;
+      description: string;
+      why: string;
+      parentId: string | null;
+      components: Array<{
+        name: string;
+        description: string;
+        status: string;
+      }>;
+    }>;
+    connections: Array<{
+      from: string;
+      to: string;
+    }>;
+  };
+  modulesCreated: number;
+  timestamp: string;
+}>> {
+  return apiCall(`/api/projects/${projectId}/extract-architecture`, {
+    method: 'POST',
+  });
+}

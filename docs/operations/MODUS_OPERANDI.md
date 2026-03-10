@@ -1496,3 +1496,57 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 
 **Mantido por:** AIOS Agents + @devops
 **Última atualização:** 2026-03-07 (Gage, @devops) — Push e documentação completos
+
+---
+
+## 2026-03-10 — TypeScript Fixes & Compilation Resolution
+
+**O que foi feito:**
+- ✅ Resolvido: TypeScript compilation errors na feature HexagonMap/ArchitectureVisualization
+
+  **Erros corrigidos:**
+  1. Removido import React não utilizado de `ArchitectureDrawer.tsx` (linha 1)
+  2. Removido import React não utilizado de `ArchitectureModal.tsx` (linha 1)
+  3. Adicionado type casting para `result.data.architecture` em `map.tsx` (linha 144)
+  4. Adicionado type annotation `(conn: any)` em `map.tsx` (linha 171)
+  5. Criada função de mapeamento `typeToHierarchy()` para transformar:
+     - `architecture_type` (frontend/backend/database/auth/infra/integration/other)
+     - → em `HierarchyType` (critico/importante/necessario/desejavel/opcional)
+
+- ✅ Regenerado Prisma Client
+  - Executado: `npx prisma generate`
+  - Resultado: Tipos Prisma atualizados com campos `architecture_type` e `why_chosen`
+
+- ✅ Verificação de compilação
+  - API TypeScript: ✅ PASS (`npm run typecheck`)
+  - Web TypeScript: ✅ PASS (`npm run typecheck`)
+  - Build API: ✅ PASS
+  - Build Web: ✅ PASS (Next.js production build)
+
+**Decisões técnicas:**
+- Type mapping `architecture_type` → `HierarchyType`:
+  - frontend → importante
+  - backend → critico
+  - database → critico
+  - auth → critico
+  - infra → importante
+  - integration → necessario
+  - other → desejavel
+  - (default) → necessario
+
+  Esta é uma classificação lógica baseada em criticidade, não em função.
+
+**Próximas ações:**
+- Testar fluxo completo em modo development:
+  1. Upload PRD
+  2. Gerar arquitetura (POST /api/projects/:id/extract-architecture)
+  3. Visualizar no mapa com 3 modos: sub-hexagons, drawer, modal
+- Implementar botão "Centralizar" para navegação do mapa
+- Validar estado da localStorage com view mode persistence
+
+**Estado:** ✅ Ready para testes de integração completos
+
+---
+
+**Mantido por:** AIOS Agents
+**Última atualização:** 2026-03-10 (Orion, @aios-master) — TypeScript fixes e build verification
