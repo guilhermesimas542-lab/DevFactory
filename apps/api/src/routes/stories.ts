@@ -138,6 +138,25 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       },
     });
 
+    // Log activity
+    try {
+      await prisma.activityLog.create({
+        data: {
+          project_id: projectId,
+          type: 'story_created',
+          description: `Story '${title}' criada com status '${status}'`,
+          metadata: {
+            storyId: story.id,
+            title,
+            status,
+            epic: epic || null,
+          },
+        },
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+    }
+
     res.status(201).json({
       success: true,
       data: story,
@@ -201,6 +220,27 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       where: { id },
       data: updateData,
     });
+
+    // Log activity if status changed
+    if (status !== undefined && status !== story.status) {
+      try {
+        await prisma.activityLog.create({
+          data: {
+            project_id: story.project_id,
+            type: 'story_updated',
+            description: `Story '${story.title}' movida para '${status}'`,
+            metadata: {
+              storyId: id,
+              oldStatus: story.status,
+              newStatus: status,
+              title: story.title,
+            },
+          },
+        });
+      } catch (logError) {
+        console.error('Failed to log activity:', logError);
+      }
+    }
 
     res.status(200).json({
       success: true,

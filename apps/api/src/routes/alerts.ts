@@ -299,6 +299,25 @@ router.post('/check/:projectId', async (req: Request, res: Response): Promise<vo
       createdAlerts.push(newAlert);
     }
 
+    // Log activity if alerts were generated
+    if (createdAlerts.length > 0) {
+      try {
+        await prisma.activityLog.create({
+          data: {
+            project_id: projectId,
+            type: 'alert_generated',
+            description: `${createdAlerts.length} alertas gerados na verificação`,
+            metadata: {
+              alertsCount: createdAlerts.length,
+              alertTypes: createdAlerts.map(a => a.type),
+            },
+          },
+        });
+      } catch (logError) {
+        console.error('Failed to log activity:', logError);
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: {

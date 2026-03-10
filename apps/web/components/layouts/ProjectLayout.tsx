@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getProject } from '@/lib/api';
+import AIPanel from '@/components/panels/AIPanel';
 
 interface ProjectData {
   id: string;
@@ -14,6 +15,7 @@ interface ProjectLayoutProps {
 export default function ProjectLayout({ children }: ProjectLayoutProps) {
   const router = useRouter();
   const [project, setProject] = useState<ProjectData | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   useEffect(() => {
     if (router.isReady) {
@@ -102,6 +104,24 @@ export default function ProjectLayout({ children }: ProjectLayoutProps) {
           {children}
         </main>
       </div>
+
+      {/* Floating AI Panel Button */}
+      <button
+        onClick={() => setIsPanelOpen(true)}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors"
+        title="Chat IA & Atividades"
+      >
+        💬
+      </button>
+
+      {/* AI Panel */}
+      {isPanelOpen && router.query.id && (
+        <AIPanel
+          projectId={router.query.id as string}
+          isOpen={isPanelOpen}
+          onClose={() => setIsPanelOpen(false)}
+        />
+      )}
     </div>
   );
 }

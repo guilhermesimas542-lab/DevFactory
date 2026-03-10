@@ -574,3 +574,40 @@ export async function extractArchitecture(projectId: string): Promise<ApiRespons
     method: 'POST',
   });
 }
+
+/**
+ * Send a chat message to AI and get response
+ * @param projectId - The project ID
+ * @param message - The user's message
+ * @param history - Previous chat messages for context
+ * @returns AI response message
+ */
+export async function sendChatMessage(
+  projectId: string,
+  message: string,
+  history: Array<{ role: 'user' | 'model'; content: string }>
+): Promise<ApiResponse<{ message: string }>> {
+  return apiCall('/api/chat', {
+    method: 'POST',
+    body: JSON.stringify({ projectId, message, history }),
+  });
+}
+
+/**
+ * Get activity log for a project
+ * @param projectId - The project ID
+ * @param limit - Maximum number of entries to return (default 50, max 100)
+ * @returns Array of activity log entries
+ */
+export async function getActivityLog(
+  projectId: string,
+  limit: number = 50
+): Promise<ApiResponse<Array<{
+  id: string;
+  type: string;
+  description: string;
+  metadata: Record<string, any> | null;
+  created_at: string;
+}> & { total: number }>> {
+  return apiCall(`/api/activity?projectId=${projectId}&limit=${limit}`);
+}

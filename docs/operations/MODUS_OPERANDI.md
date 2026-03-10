@@ -1548,5 +1548,109 @@ Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com
 
 ---
 
+---
+
+### 2026-03-10 14:45 — @dev (Dex) — Implementação de AI Panel + Activity Log
+
+**O que foi feito:**
+
+**Fase 1 — Schema + Migration:**
+- ✅ Adicionado modelo `ActivityLog` ao `schema.prisma`
+  - Campos: id, project_id, type, description, metadata, created_at
+  - Relação: `activity_logs ActivityLog[]` no Project
+- ✅ Executado: `npx prisma migrate dev --name add_activity_log`
+  - Migration criada: `20260310160214_add_activity_log`
+
+**Fase 2-3 — Activity Logging + Endpoint GET:**
+- ✅ Adicionado logging automático em rotas principais:
+  - `POST /api/projects/import-prd` → log type: `prd_uploaded`
+  - `POST /api/projects/:id/extract-architecture` → log type: `architecture_extracted`
+  - `POST /api/stories` → log type: `story_created`
+  - `PUT /api/stories/:id` (quando status muda) → log type: `story_updated`
+  - `POST /api/alerts/check/:projectId` → log type: `alert_generated`
+- ✅ Criado arquivo `routes/activity.ts`:
+  - Endpoint: `GET /api/activity?projectId=X&limit=50`
+  - Retorna: Array de ActivityLog ordenado por `created_at DESC`
+- ✅ Registrado endpoint em `index.ts`
+
+**Fase 4 — ChatService + Endpoint POST /api/chat:**
+- ✅ Criado `services/ChatService.ts`:
+  - Método estático: `chat(projectId, message, history, prisma)`
+  - Integração Gemini 1.5 Flash com contexto do projeto
+  - Sistema prompt inclui: PRD (2000 chars), módulos, stories por status, alertas não lidos
+  - Suporta histórico de conversa
+- ✅ Criado arquivo `routes/chat.ts`:
+  - Endpoint: `POST /api/chat`
+  - Body: `{ projectId, message, history }`
+  - Response: `{ success, data: { message } }`
+- ✅ Registrado endpoint em `index.ts`
+
+**Fase 7 — lib/api.ts (Frontend):**
+- ✅ Adicionadas funções:
+  - `sendChatMessage(projectId, message, history)` → envia mensagem à IA
+  - `getActivityLog(projectId, limit=50)` → busca log de atividades
+- ✅ Ambas integradas com padrão existente de `apiCall<T>`
+
+**Fase 5 — Componente AIPanel.tsx:**
+- ✅ Criado componente React em `components/panels/AIPanel.tsx`:
+  - Props: `projectId`, `isOpen`, `onClose`
+  - State: activeTab (chat | activities), messages, inputValue, activities, loading states
+  - Aba Chat:
+    - Histórico de mensagens (user=direita/azul, model=esquerda/cinza)
+    - Input + botão Enviar (desabilitado durante loading)
+    - Botão "Limpar conversa"
+    - Suporte a Enter para enviar
+    - Scroll automático para última mensagem
+  - Aba Atividades:
+    - Lista de ActivityLog com ícones (emoji) por tipo
+    - Tempo relativo (ex: "há 5 minutos")
+    - Botão "Atualizar"
+    - Auto-refresh ao trocar aba
+  - Layout: 384px (w-96) + overlay fixo
+  - Animações: suave (smooth scrolling, transitions)
+
+**Fase 6 — Integração no ProjectLayout:**
+- ✅ Importado AIPanel
+- ✅ Adicionado estado: `isPanelOpen`
+- ✅ Adicionado botão flutuante: posição `fixed bottom-6 right-6 z-50`
+  - Emoji: 💬
+  - Estilos: bg-blue-600, hover:bg-blue-700, rounded-full, shadow-lg
+- ✅ Renderizado componente com projectId do router.query.id
+
+**Verificação:**
+- ✅ TypeScript (`npm run typecheck` em apps/api e apps/web) — SEM ERROS
+- ✅ Build Web (`npm run build`) — SUCCESS ✓
+- ✅ Build API (`npm run build`) — Prisma generate + tsc ✓
+
+**Arquivos criados:**
+- `apps/api/src/services/ChatService.ts` (novo)
+- `apps/api/src/routes/activity.ts` (novo)
+- `apps/api/src/routes/chat.ts` (novo)
+- `apps/web/components/panels/AIPanel.tsx` (novo)
+
+**Arquivos modificados:**
+- `apps/api/prisma/schema.prisma` — +ActivityLog model, +activity_logs relation
+- `apps/api/src/index.ts` — +activityRoutes, +chatRoutes
+- `apps/api/src/routes/projects.ts` — +logging em import-prd e extract-architecture
+- `apps/api/src/routes/stories.ts` — +logging em create e update
+- `apps/api/src/routes/alerts.ts` — +logging em check
+- `apps/web/lib/api.ts` — +sendChatMessage, +getActivityLog
+- `apps/web/components/layouts/ProjectLayout.tsx` — +AIPanel import, +isPanelOpen state, +button, +component
+
+**Próximas ações:**
+- [ ] Testar em dev server (npm run dev):
+  1. Abrir qualquer página de projeto
+  2. Clicar botão 💬 → painel abre
+  3. Aba Chat: enviar mensagem → receber resposta IA
+  4. Aba Atividades: verificar logs após create/update story
+  5. Upload PRD → verificar log "PRD enviado"
+- [ ] Validar localStorage persistence se implementado
+- [ ] Performance testing com PRDs grandes
+- [ ] QA testing com múltiplos cenários
+
+**Estado:** ✅ Ready para testes em dev
+
+---
+
 **Mantido por:** AIOS Agents
-**Última atualização:** 2026-03-10 (Orion, @aios-master) — TypeScript fixes e build verification
+**Última atualização:** 2026-03-10 16:45 (Dex, @dev) — AI Panel + Activity Log implementation complete

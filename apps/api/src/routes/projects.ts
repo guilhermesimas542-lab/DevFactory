@@ -252,6 +252,25 @@ router.post('/import-prd', upload.single('file'), async (req: Request, res: Resp
     // Clean up temporary file
     await fs.unlink(req.file.path);
 
+    // Log activity
+    try {
+      await prisma.activityLog.create({
+        data: {
+          project_id: projectId.toString(),
+          type: 'prd_uploaded',
+          description: `PRD enviado: '${req.file.originalname}' com ${parsedPRD.modules.length} módulos extraídos`,
+          metadata: {
+            fileName: req.file.originalname,
+            modulesCount: parsedPRD.modules.length,
+            fileSize: size,
+          },
+        },
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+      // Don't throw - activity logging should not fail the main operation
+    }
+
     res.status(200).json({
       projectId: projectId.toString(),
       status: 'modules_created',
@@ -690,6 +709,23 @@ router.post('/:id/extract-architecture', async (req: Request, res: Response): Pr
           });
         }
       }
+    }
+
+    // Log activity
+    try {
+      await prisma.activityLog.create({
+        data: {
+          project_id: id,
+          type: 'architecture_extracted',
+          description: `Arquitetura extraída: ${savedModules.length} módulos criados/atualizados`,
+          metadata: {
+            modulesCount: savedModules.length,
+            componentCount: architecture.nodes.reduce((sum: number, node: any) => sum + (node.components?.length || 0), 0),
+          },
+        },
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
     }
 
     res.status(200).json({
