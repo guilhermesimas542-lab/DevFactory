@@ -29,6 +29,26 @@
 
 ---
 
+### 2026-03-10 @dev (Dex) — STORY-001 validada e concluída
+
+- ESLint migrado para flat config (ESLint 9 + Next.js 16)
+- Corrigido: variáveis `module` → `mod` no TreeEditor.tsx
+- Lint: ✅ 0 erros | TypeScript: ✅ 0 erros
+- Todos os critérios de aceite da STORY-001 verificados
+- Arquivos: `eslint.config.js`, `package.json`, `TreeEditor.tsx`
+- Status: ✅ Concluído
+
+### 2026-03-10 @devops (Gage) — Git inicializado e código enviado ao GitHub
+
+- Git local inicializado (`git init`)
+- Remote configurado: `https://github.com/guilhermesimas542-lab/DevFactory.git`
+- 1316 arquivos commitados — commit inicial
+- Push realizado com sucesso para `main`
+- Conta GitHub ativa: `guilhermesimas542-lab`
+- Status: ✅ Concluído
+
+---
+
 ### 2026-03-10 — @aiox-master (Orion) — Setup inicial do projeto
 
 **O que foi feito:**

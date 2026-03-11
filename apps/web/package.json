@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint pages components lib hooks constants",
     "typecheck": "tsc --noEmit",
     "test": "echo \"Test suite not yet configured\""
   },
@@ -35,5 +35,12 @@
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^10.0.1",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "typescript-eslint": "^8.57.0"
   }
 }

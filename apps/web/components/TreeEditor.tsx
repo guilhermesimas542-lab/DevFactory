@@ -36,30 +36,30 @@ export default function TreeEditor({ modules, onUpdate, loading = false }: TreeE
 
   const updateModuleName = (moduleId: string, newName: string) => {
     const updated = new Map(edited);
-    const module = updated.get(moduleId);
-    if (module) {
-      updated.set(moduleId, { ...module, name: newName });
+    const mod = updated.get(moduleId);
+    if (mod) {
+      updated.set(moduleId, { ...mod, name: newName });
       setEdited(updated);
     }
   };
 
   const updateModuleHierarchy = (moduleId: string, newHierarchy: string) => {
     const updated = new Map(edited);
-    const module = updated.get(moduleId);
-    if (module) {
-      updated.set(moduleId, { ...module, hierarchy: newHierarchy });
+    const mod = updated.get(moduleId);
+    if (mod) {
+      updated.set(moduleId, { ...mod, hierarchy: newHierarchy });
       setEdited(updated);
     }
   };
 
   const updateComponentName = (moduleId: string, componentId: string, newName: string) => {
     const updated = new Map(edited);
-    const module = updated.get(moduleId);
-    if (module) {
-      const newComponents = module.components.map(c =>
+    const mod = updated.get(moduleId);
+    if (mod) {
+      const newComponents = mod.components.map(c =>
         c.componentId === componentId ? { ...c, name: newName } : c
       );
-      updated.set(moduleId, { ...module, components: newComponents });
+      updated.set(moduleId, { ...mod, components: newComponents });
       setEdited(updated);
     }
   };
