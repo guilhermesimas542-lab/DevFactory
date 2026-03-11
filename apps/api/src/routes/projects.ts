@@ -746,4 +746,76 @@ router.post('/:id/extract-architecture', async (req: Request, res: Response): Pr
   }
 });
 
+/**
+ * POST /api/projects/:id/analyze
+ * Trigger full code analysis via AnalysisEngine
+ */
+router.post('/:id/analyze', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
+    // Get project to check if github_repo_url is set
+    const project = await prisma.project.findUnique({
+      where: { id },
+      select: { id: true, name: true, github_repo_url: true },
+    });
+
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    if (!project.github_repo_url) {
+      res.status(400).json({ error: 'Project does not have a GitHub repository URL configured. Please add a repository URL first.' });
+      return;
+    }
+
+    const githubToken = process.env.GITHUB_TOKEN || req.headers['x-github-token'] as string || '';
+
+    // Import AnalysisEngine dynamically
+    const { analysisEngine } = await import('../services/AnalysisEngine');
+
+    const result = await analysisEngine.analyze(id, project.github_repo_url, githubToken);
+
+    // Log activity
+    try {
+      await prisma.activityLog.create({
+        data: {
+          project_id: id,
+          type: 'analysis_run',
+          description: `Análise de código executada: ${Object.keys(result.moduleProgress).length} módulos analisados`,
+          metadata: {
+            patternsFound: result.patterns.length,
+            alertsGenerated: result.alerts.length,
+            moduleProgress: result.moduleProgress,
+          },
+        },
+      });
+    } catch (logError) {
+      console.error('Failed to log activity:', logError);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        projectId: result.projectId,
+        patternsFound: result.patterns.length,
+        moduleProgress: result.moduleProgress,
+        alerts: result.alerts,
+        timestamp: result.timestamp,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Analysis error:', error);
+    res.status(500).json({ error: message });
+  }
+});
+
 export default router;
+

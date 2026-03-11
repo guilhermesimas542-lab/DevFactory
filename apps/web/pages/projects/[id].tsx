@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProject, updateProject, syncProjectGitHub } from '@/lib/api';
+import { getProject, updateProject, syncProjectGitHub, analyzeProject } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
 import PRDViewer from '@/components/PRDViewer';
 
@@ -35,6 +35,8 @@ export default function ProjectDetail() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [showPRDModal, setShowPRDModal] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzeMessage, setAnalyzeMessage] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -163,6 +165,28 @@ export default function ProjectDetail() {
     }
   };
 
+  const handleAnalyze = async () => {
+    if (!project) return;
+    try {
+      setIsAnalyzing(true);
+      setAnalyzeMessage(null);
+      setError(null);
+      const result = await analyzeProject(project.id);
+      if (result.success && result.data) {
+        const moduleCount = Object.keys(result.data.moduleProgress).length;
+        setAnalyzeMessage(`✓ Análise concluída! ${moduleCount} módulos analisados, ${result.data.patternsFound} padrões encontrados.`);
+        setTimeout(() => setAnalyzeMessage(null), 8000);
+      } else {
+        setError(result.error || 'Erro na análise');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleSyncGitHub = async () => {
     if (!project) return;
 
@@ -274,6 +298,30 @@ export default function ProjectDetail() {
             </button>
           </div>
         )}
+
+        {/* Analysis Card */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">🔍 Análise de Código</h2>
+          {!project.github_repo_url ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
+              <p className="text-yellow-700 text-sm">Configure um repositório GitHub abaixo para habilitar a análise de código.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-gray-600 text-sm">Analisa o repositório GitHub e atualiza automaticamente o progresso de cada módulo.</p>
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
+              >
+                {isAnalyzing ? '⏳ Analisando código... (pode levar 1-2 min)' : '🔍 Analisar Código Agora'}
+              </button>
+              {analyzeMessage && (
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded text-purple-700 text-sm">{analyzeMessage}</div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* GitHub Integration Card */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">

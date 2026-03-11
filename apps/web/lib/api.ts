@@ -611,3 +611,26 @@ export async function getActivityLog(
 }> & { total: number }>> {
   return apiCall(`/api/activity?projectId=${projectId}&limit=${limit}`);
 }
+
+export async function analyzeProject(projectId: string): Promise<ApiResponse<{
+  projectId: string;
+  patternsFound: number;
+  moduleProgress: Record<string, number>;
+  alerts: string[];
+  timestamp: string;
+}>> {
+  try {
+    const response = await fetch(`${API_URL}/api/projects/${projectId}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Analysis failed' };
+    }
+    return { success: true, data: data.data };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Network error';
+    return { success: false, error: message };
+  }
+}
