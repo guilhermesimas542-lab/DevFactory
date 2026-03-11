@@ -1,148 +1,274 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useModel, type AIModel } from '@/contexts/ModelContext';
 
 interface ModelInfo {
   id: AIModel;
   name: string;
-  description: string;
+  emoji: string;
 }
 
 const MODELS: ModelInfo[] = [
   {
     id: 'groq',
-    name: 'Mixtral 8x7B (Groq)',
-    description: 'Fast, free tier, no quota limits',
+    name: 'Mixtral 8x7B',
+    emoji: '⚡',
   },
   {
     id: 'gemini',
-    name: 'Gemini 2.0 Flash',
-    description: 'Google\'s latest model',
+    name: 'Gemini 2.0',
+    emoji: '✨',
   },
 ];
 
-export default function ModelSelector() {
+export default function ModeSelector() {
   const { selectedModel, setSelectedModel, autoMode, setAutoMode } = useModel();
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // Close modal when pressing Escape
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const filteredModels = MODELS.filter(model =>
-    model.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    if (isOpen) document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
 
   const currentModel = MODELS.find(m => m.id === selectedModel);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <>
       {/* Trigger Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200"
-        title="Select AI Model"
+        onClick={() => setIsOpen(true)}
+        style={{
+          padding: '8px 12px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--bg-border)',
+          borderRadius: 8,
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          transition: 'all 150ms',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.background = 'var(--bg-surface)';
+        }}
       >
-        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-        <span>{currentModel?.name || 'Select Model'}</span>
-        <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
+        <span style={{ fontSize: 14 }}>{currentModel?.emoji}</span>
+        <span>{currentModel?.name}</span>
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Modal */}
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
-          {/* Search Box */}
-          <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-            <input
-              type="text"
-              placeholder="Search models"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-              autoFocus
-            />
-          </div>
+        <>
+          {/* Overlay */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 999,
+            }}
+            onClick={() => setIsOpen(false)}
+          />
 
-          {/* Options */}
-          <div className="py-2">
+          {/* Modal Content */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--bg-border)',
+              borderRadius: 12,
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              zIndex: 1000,
+              width: '90%',
+              maxWidth: 400,
+              padding: 24,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ marginBottom: 24 }}>
+              <h2 style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                margin: 0,
+                marginBottom: 4,
+              }}>
+                Mode Selector
+              </h2>
+              <p style={{
+                fontSize: 13,
+                color: 'var(--text-tertiary)',
+                margin: 0,
+              }}>
+                Choose your preferred AI model
+              </p>
+            </div>
+
             {/* Auto Mode Toggle */}
-            <div className="px-3 py-2">
-              <label className="flex items-center gap-3 cursor-pointer">
+            <div style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--bg-border)',
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 16,
+              cursor: 'pointer',
+            }}
+              onClick={() => setAutoMode(!autoMode)}
+            >
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                cursor: 'pointer',
+              }}>
                 <input
                   type="checkbox"
                   checked={autoMode}
-                  onChange={(e) => setAutoMode(e.target.checked)}
-                  className="w-4 h-4 rounded"
+                  onChange={() => {}}
+                  style={{
+                    width: 18,
+                    height: 18,
+                    cursor: 'pointer',
+                    accentColor: 'var(--accent)',
+                  }}
                 />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Auto</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">Choose best available</span>
+                <div>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: 'var(--text-primary)',
+                  }}>
+                    🤖 Auto Mode
+                  </div>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'var(--text-tertiary)',
+                    marginTop: 2,
+                  }}>
+                    Chooses best available model
+                  </div>
+                </div>
               </label>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-
-            {/* Model List */}
-            {filteredModels.length > 0 ? (
-              filteredModels.map((model) => (
-                <div
-                  key={model.id}
-                  onClick={() => {
-                    setSelectedModel(model.id);
-                    setAutoMode(false);
-                    setIsOpen(false);
-                  }}
-                  className="px-3 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors flex items-start justify-between"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {model.name}
-                      </span>
-                      {selectedModel === model.id && !autoMode && (
-                        <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {model.description}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                No models found
+            {/* Models */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--text-tertiary)',
+                textTransform: 'uppercase',
+                marginBottom: 8,
+                letterSpacing: '0.05em',
+              }}>
+                Available Models
               </div>
-            )}
-
-            <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-
-            {/* Footer */}
-            <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
-              💡 Using {autoMode ? 'Auto mode' : selectedModel} for all AI requests
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {MODELS.map((model) => (
+                  <div
+                    key={model.id}
+                    onClick={() => {
+                      setSelectedModel(model.id);
+                      setAutoMode(false);
+                      setIsOpen(false);
+                    }}
+                    style={{
+                      padding: 12,
+                      background: selectedModel === model.id && !autoMode ? 'var(--accent)' : 'var(--bg-elevated)',
+                      border: '1px solid var(--bg-border)',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      transition: 'all 150ms',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedModel !== model.id || autoMode) {
+                        (e.currentTarget as HTMLElement).style.background = 'var(--bg-border)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background =
+                        selectedModel === model.id && !autoMode ? 'var(--accent)' : 'var(--bg-elevated)';
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>{model.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: selectedModel === model.id && !autoMode ? 'white' : 'var(--text-primary)',
+                      }}>
+                        {model.name}
+                      </div>
+                    </div>
+                    {selectedModel === model.id && !autoMode && (
+                      <span style={{ fontSize: 16 }}>✓</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Status */}
+            <div style={{
+              padding: 12,
+              background: 'var(--bg-elevated)',
+              borderRadius: 8,
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              textAlign: 'center',
+            }}>
+              {autoMode ? '🤖 Auto mode active' : `📍 Using ${currentModel?.name}`}
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{
+                width: '100%',
+                marginTop: 16,
+                padding: '10px 12px',
+                background: 'transparent',
+                border: '1px solid var(--bg-border)',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 500,
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all 150ms',
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)';
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
+              }}
+            >
+              Close (Esc)
+            </button>
           </div>
-        </div>
+        </>
       )}
-    </div>
+    </>
   );
 }
