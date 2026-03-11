@@ -29,6 +29,35 @@
 
 ---
 
+### 2026-03-11 @dev (Dex) — Model Selector UI (tipo Cursor) implementado ✅
+
+- Criado `ModelContext.tsx` para gerenciar estado global de seleção
+- Criado `ModelSelector.tsx` com interface Cursor-style (dropdown search + toggles)
+- Integrado ModelSelector na topbar do ProjectLayout
+- ModelProvider envolvendo toda a aplicação em `_app.tsx`
+- AIPanel atualizado para usar modelo selecionado no chat
+- Página do mapa (map.tsx) atualizada para usar modelo selecionado na extração
+- Auto mode implementado (seleciona melhor provider disponível)
+- Preferência de modelo persistida em localStorage
+- UI features:
+  - ✅ Busca de modelos
+  - ✅ Toggle "Auto mode"
+  - ✅ Lista de modelos com checkmark no selecionado
+  - ✅ Indicador visual de status (ponto verde)
+  - ✅ Dark mode support
+- TypeScript: ✅ 0 erros
+- Commits: 1 (feat: add model selector UI for LLM switching)
+- Status: ✅ Concluído
+
+**Como funciona:**
+1. Clica no botão do modelo no topbar (ex: "Mixtral 8x7B (Groq)")
+2. Abre dropdown com opções
+3. Seleciona o modelo desejado
+4. Próximas chamadas de IA usam o modelo selecionado
+5. Auto mode opcional para deixar o sistema escolher
+
+---
+
 ### 2026-03-11 @dev (Dex) — Multi-LLM Support (Groq + Gemini) implementado ✅
 
 - Criado `AIProviderFactory.ts` com suporte a múltiplos providers
