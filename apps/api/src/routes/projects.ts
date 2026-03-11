@@ -38,7 +38,11 @@ router.get('/', async (_req: Request, res: Response): Promise<void> => {
         id: true,
         name: true,
         description: true,
+        github_repo_url: true,
         created_at: true,
+        _count: {
+          select: { modules: true },
+        },
       },
       orderBy: {
         created_at: 'desc',

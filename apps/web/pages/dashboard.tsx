@@ -8,7 +8,9 @@ interface Project {
   id: string;
   name: string;
   description: string | null;
+  github_repo_url: string | null;
   created_at: string;
+  _count: { modules: number };
 }
 
 export default function Dashboard() {
@@ -137,7 +139,15 @@ export default function Dashboard() {
                   <p className="text-blue-100 text-sm mt-1">{formatDate(project.created_at)}</p>
                 </div>
                 <div className="p-4">
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-4">{project.description || 'Sem descrição'}</p>
+                  <p className="text-gray-600 text-sm line-clamp-2 mb-3">{project.description || 'Sem descrição'}</p>
+                  <div className="flex flex-col gap-1 mb-4 text-sm">
+                    <span className="text-gray-500">📦 {project._count?.modules || 0} módulos</span>
+                    {project.github_repo_url ? (
+                      <span className="text-green-600 font-medium">🔗 GitHub configurado</span>
+                    ) : (
+                      <span className="text-yellow-600 font-medium">⚠️ Sem GitHub</span>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Link href={`/projects/${project.id}`} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-center text-sm">
                       Ver Detalhes

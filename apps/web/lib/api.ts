@@ -56,7 +56,9 @@ export async function getProjects(): Promise<ApiResponse<Array<{
   id: string;
   name: string;
   description: string | null;
+  github_repo_url: string | null;
   created_at: string;
+  _count: { modules: number };
 }>>> {
   return apiCall('/api/projects');
 }

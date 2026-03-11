@@ -57,34 +57,22 @@ export default function ProjectDetail() {
       setError(null);
 
       const { id } = router.query;
-      console.log('🔍 Router query:', router.query);
-      console.log('🔍 ID:', id);
 
       if (!id || typeof id !== 'string') {
-        console.error('❌ Invalid ID:', id);
         setError('Invalid project ID');
         return;
       }
 
-      console.log('📡 Fetching project:', id);
       const result = await getProject(id);
-      console.log('📡 API Response:', result);
-      console.log('📡 Response Data:', JSON.stringify(result.data, null, 2));
 
       if (result.success && result.data) {
-        console.log('✅ Project loaded:', result.data);
-        console.log('✅ Project name:', result.data.name);
-        console.log('✅ Project description:', result.data.description);
-        console.log('✅ Project prd_original:', result.data.prd_original);
         setProject(result.data);
         setRepoUrl(result.data.github_repo_url || '');
       } else {
-        console.error('❌ API Error:', result.error);
         setError(result.error || 'Failed to load project');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.error('❌ Exception:', message, err);
       setError(message);
     } finally {
       setLoading(false);
@@ -219,11 +207,6 @@ export default function ProjectDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Success Message */}
-        <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-700">✓ Arquivo importado com sucesso!</p>
-        </div>
-
         {/* Project Info Card */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Projeto</h2>
