@@ -1,3 +1,14 @@
 {
-  "language": "portuguese"
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "MultiEdit(*)",
+      "NotebookRead(*)",
+      "NotebookEdit(*)"
+    ],
+    "deny": []
+  }
 }
