@@ -34,6 +34,8 @@ model Project {
   snapshots         Snapshot[]
   glossary_terms    GlossaryTerm[]
   activity_logs     ActivityLog[]
+
+  @@index([name])
 }
 
 model Module {
@@ -54,7 +56,9 @@ model Module {
   created_at         DateTime @default(now())
 
   components         Component[]
+
   @@unique([project_id, name])
+  @@index([project_id])
 }
 
 model Component {
@@ -69,6 +73,8 @@ model Component {
   code_reference String? // File path where found
 
   created_at  DateTime @default(now())
+
+  @@index([module_id])
 }
 
 model Story {
@@ -86,6 +92,8 @@ model Story {
   started_at        DateTime?
   completed_at      DateTime?
   created_at        DateTime @default(now())
+
+  @@index([project_id])
 }
 
 model Alert {
@@ -100,6 +108,9 @@ model Alert {
 
   is_read     Boolean  @default(false)
   created_at  DateTime @default(now())
+
+  @@index([project_id])
+  @@index([is_read])
 }
 
 model AnalysisResult {
@@ -114,6 +125,8 @@ model AnalysisResult {
   analysis_data     Json?
 
   created_at        DateTime @default(now())
+
+  @@index([project_id, module_id])
 }
 
 model Snapshot {

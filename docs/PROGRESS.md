@@ -29,6 +29,14 @@
 
 ---
 
+### 2026-03-11 @dev (Dex) — STORY-002 e STORY-003 concluídas
+
+- STORY-002: Express + Prisma + middleware + rota /health validados (já implementados)
+- STORY-003: Indexes adicionados ao schema Prisma conforme ARCHITECTURE.md
+- Migration `add_indexes` aplicada no Railway PostgreSQL
+- Prisma Client regenerado (v6.19.2)
+- Status: ✅ Concluído
+
 ### 2026-03-10 @dev (Dex) — STORY-001 validada e concluída
 
 - ESLint migrado para flat config (ESLint 9 + Next.js 16)
