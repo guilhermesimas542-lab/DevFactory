@@ -48,7 +48,7 @@ export class ArchitectureService {
         throw new Error('GEMINI_API_KEY environment variable is not set');
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
       const prompt = `Analise este PRD de projeto de software e extraia a arquitetura técnica.
 Retorne APENAS um JSON válido, sem markdown, sem explicações, neste formato exato:
