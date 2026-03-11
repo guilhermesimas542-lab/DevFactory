@@ -38,7 +38,7 @@ export default function TreeEditor({ modules, onUpdate, loading = false }: TreeE
     const updated = new Map(edited);
     const mod = updated.get(moduleId);
     if (mod) {
-      updated.set(moduleId, { ...module, name: newName });
+      updated.set(moduleId, { ...mod, name: newName });
       setEdited(updated);
     }
   };
@@ -47,7 +47,7 @@ export default function TreeEditor({ modules, onUpdate, loading = false }: TreeE
     const updated = new Map(edited);
     const mod = updated.get(moduleId);
     if (mod) {
-      updated.set(moduleId, { ...module, hierarchy: newHierarchy });
+      updated.set(moduleId, { ...mod, hierarchy: newHierarchy });
       setEdited(updated);
     }
   };
@@ -59,7 +59,7 @@ export default function TreeEditor({ modules, onUpdate, loading = false }: TreeE
       const newComponents = mod.components.map(c =>
         c.componentId === componentId ? { ...c, name: newName } : c
       );
-      updated.set(moduleId, { ...module, components: newComponents });
+      updated.set(moduleId, { ...mod, components: newComponents });
       setEdited(updated);
     }
   };

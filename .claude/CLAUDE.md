@@ -2,6 +2,19 @@
 
 You are working with Synkra AIOX, an AI-Orchestrated System for Full Stack Development.
 
+## Framework de Resolução de Problemas — OBRIGATÓRIO
+
+Ao encontrar qualquer erro, bug ou falha, seguir este framework antes de agir:
+
+1. **Pensar** — Entender o que está acontecendo. Ler os logs reais, não assumir.
+2. **Planejar 3 soluções** — Listar 3 abordagens possíveis com prós e contras.
+3. **Revisar e escolher** — Avaliar qual solução faz mais sentido para o projeto (menor risco, mais alinhada com a stack atual).
+4. **Executar** — Implementar a melhor opção diretamente, sem hesitação.
+
+> Nunca tentar a primeira coisa que vier à cabeça. Sempre diagnosticar antes de agir.
+
+---
+
 ## Modus Operandi — Como agir com o usuário
 
 ### Autonomia de execução
