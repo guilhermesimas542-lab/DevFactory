@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { ParsedPRD } from '../types/index';
 
 const prisma = new PrismaClient();
@@ -38,7 +38,7 @@ export async function createProjectFromParsedPRD(
             description: moduleData.description,
             hierarchy: moduleData.hierarchy,
             // Normalize hierarchy names to match schema defaults
-            progress_percentage: new Prisma.Decimal(0),
+            progress_percentage: 0,
           },
         });
 

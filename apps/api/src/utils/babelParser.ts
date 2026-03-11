@@ -17,12 +17,12 @@ function parseFile(file: GitHubFile): CodePattern[] {
       plugins: [
         'typescript',
         'jsx',
-        ['decorators', { decoratorsBeforeExport: false }],
+        ['decorators', { version: '2023-11' }],
         'classProperties',
         'classPrivateProperties',
         'classPrivateMethods',
       ],
-    });
+    } as any);
 
     // Traverse AST para encontrar padrões
     traverse(ast, {
