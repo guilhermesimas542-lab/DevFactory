@@ -29,6 +29,19 @@
 
 ---
 
+### 2026-03-11 @devops (Gage) — Deploy Vercel CORRIGIDO E FUNCIONANDO ✅
+
+- `vercel.json` simplificado para apenas `{ "framework": "nextjs" }`
+- Removido: `buildCommand` customizado (causava conflito com monorepo)
+- Removido: `outputDirectory` customizado (Vercel detecta automaticamente)
+- Root Directory já estava configurado em `apps/web` no dashboard Vercel
+- `git push` realizado com vercel.json atualizado
+- Redeploy executado — **Status: READY** 🚀
+- DevFactory está **ONLINE** no Vercel!
+- Status: ✅ COMPLETO — Deploy funcionando
+
+---
+
 ### 2026-03-11 @ux-design-expert (Uma) — Design System Migration completa
 
 - Sistema de tokens implementado em `globals.css` (CSS custom properties completas)
