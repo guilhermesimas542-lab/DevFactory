@@ -21,7 +21,7 @@ export default function ModuleCard({ name, hierarchy, progress, componentCount, 
     opcional: { label: '⚪ Opcional', color: 'border-gray-400 bg-gray-50', target: 20 },
   };
 
-  const config = hierarchyConfig[hierarchy];
+  const config = hierarchyConfig[hierarchy] ?? hierarchyConfig['necessario'];
   const isDeviated = deviations && deviations.length > 0;
   const deviation = deviations?.[0];
 

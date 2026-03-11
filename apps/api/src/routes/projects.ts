@@ -673,7 +673,7 @@ router.post('/:id/extract-architecture', async (req: Request, res: Response): Pr
             project_id: id,
             name: node.label,
             description: node.description,
-            hierarchy: 'necessary',
+            hierarchy: 'necessario',
             architecture_type: node.type,
             why_chosen: node.why,
             parent_module_id: node.parentId || null,
