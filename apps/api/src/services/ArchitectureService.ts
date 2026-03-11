@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { AIProviderFactory, AIProvider } from './AIProviderFactory';
 
 /**
- * Architecture node returned by Gemini
+ * Architecture node returned by LLM
  */
 export interface ArchitectureNode {
   id: string;
@@ -31,24 +31,20 @@ export interface ArchitectureConnection {
 export interface ArchitectureData {
   nodes: ArchitectureNode[];
   connections: ArchitectureConnection[];
+  provider: AIProvider;
 }
 
 /**
- * Service for extracting architecture from PRD using Gemini
+ * Service for extracting architecture from PRD using any AI provider
  */
 export class ArchitectureService {
-  private static genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
   /**
-   * Extract architecture from PRD content using Gemini
+   * Extract architecture from PRD content using specified AI provider
    */
-  static async extractArchitecture(prdContent: string): Promise<ArchitectureData> {
+  static async extractArchitecture(prdContent: string, provider?: AIProvider): Promise<ArchitectureData> {
     try {
-      if (!process.env.GEMINI_API_KEY) {
-        throw new Error('GEMINI_API_KEY environment variable is not set');
-      }
-
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const selectedProvider = provider || AIProviderFactory.getDefaultProvider();
+      const llmProvider = AIProviderFactory.createProvider(selectedProvider);
 
       const prompt = `Analise este PRD de projeto de software e extraia a arquitetura técnica.
 Retorne APENAS um JSON válido, sem markdown, sem explicações, neste formato exato:
@@ -78,8 +74,7 @@ Retorne APENAS um JSON válido, sem markdown, sem explicações, neste formato e
 PRD:
 ${prdContent}`;
 
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const responseText = await llmProvider.generateText(prompt);
 
       // Remove markdown code blocks if present
       let jsonText = responseText.trim();
@@ -113,7 +108,10 @@ ${prdContent}`;
         components: Array.isArray(node.components) ? node.components : [],
       }));
 
-      return architecture;
+      return {
+        ...architecture,
+        provider: selectedProvider,
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Architecture extraction error:', error);

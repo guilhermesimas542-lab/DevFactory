@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI, Content } from '@google/generative-ai';
+import { AIProviderFactory, AIProvider, AIMessage } from './AIProviderFactory';
 import { PrismaClient } from '@prisma/client';
 
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -10,8 +10,6 @@ export interface ChatMessage {
  * Service for AI-powered chat about project context
  */
 export class ChatService {
-  private static genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
   /**
    * Send a chat message and get AI response
    */
@@ -19,14 +17,12 @@ export class ChatService {
     projectId: string,
     message: string,
     history: ChatMessage[],
-    prisma: PrismaClient
+    prisma: PrismaClient,
+    provider?: AIProvider
   ): Promise<string> {
     try {
-      if (!process.env.GEMINI_API_KEY) {
-        throw new Error('GEMINI_API_KEY environment variable is not set');
-      }
-
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const selectedProvider = provider || AIProviderFactory.getDefaultProvider();
+      const llmProvider = AIProviderFactory.createProvider(selectedProvider);
 
       // Get project data for context
       const project = await prisma.project.findUnique({
@@ -91,25 +87,20 @@ ${project.alerts.map(a => `- [${a.severity.toUpperCase()}] ${a.message}`).join('
 
 Responda perguntas sobre o projeto de forma concisa, útil e em português. Se a pergunta não estiver relacionada ao projeto, redirecione para o escopo do projeto.`;
 
-      // Convert history to Gemini format
-      const contents: Content[] = history.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }],
-      }));
-
-      // Add current message
-      contents.push({
-        role: 'user',
-        parts: [{ text: message }],
-      });
+      // Convert history to AIMessage format
+      const messages: AIMessage[] = [
+        ...history.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        })),
+        {
+          role: 'user' as const,
+          content: message,
+        },
+      ];
 
       // Get response
-      const result = await model.generateContent({
-        contents,
-        systemInstruction: systemPrompt,
-      });
-
-      const responseText = result.response.text();
+      const responseText = await llmProvider.chat(messages, systemPrompt);
 
       return responseText;
     } catch (error) {

@@ -10,7 +10,7 @@ interface AIPanelProps {
 }
 
 interface ChatMessage {
-  role: 'user' | 'model';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -107,7 +107,7 @@ export default function AIPanel({
       const response = await sendChatMessage(projectId, userMessage, [...messages, newUserMessage]);
       if (response.success && response.data) {
         const aiMessage: ChatMessage = {
-          role: 'model',
+          role: 'assistant',
           content: response.data.message,
         };
         setMessages(prev => [...prev, aiMessage]);

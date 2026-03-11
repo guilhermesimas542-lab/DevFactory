@@ -545,11 +545,26 @@ export async function updateProject(
 }
 
 /**
- * Extract architecture from PRD using Gemini AI
+ * Get available AI providers
+ * @returns List of available providers and default provider
+ */
+export async function getAIProviders(): Promise<ApiResponse<{
+  available: string[];
+  default: string;
+}>> {
+  return apiCall('/api/chat/providers');
+}
+
+/**
+ * Extract architecture from PRD using specified AI provider
  * @param projectId - The project ID
+ * @param provider - Optional AI provider (gemini or groq, default is best available)
  * @returns Architecture data with nodes and connections
  */
-export async function extractArchitecture(projectId: string): Promise<ApiResponse<{
+export async function extractArchitecture(
+  projectId: string,
+  provider?: string
+): Promise<ApiResponse<{
   architecture: {
     nodes: Array<{
       id: string;
@@ -568,12 +583,14 @@ export async function extractArchitecture(projectId: string): Promise<ApiRespons
       from: string;
       to: string;
     }>;
+    provider: string;
   };
   modulesCreated: number;
   timestamp: string;
 }>> {
   return apiCall(`/api/projects/${projectId}/extract-architecture`, {
     method: 'POST',
+    body: JSON.stringify({ provider }),
   });
 }
 
@@ -582,16 +599,18 @@ export async function extractArchitecture(projectId: string): Promise<ApiRespons
  * @param projectId - The project ID
  * @param message - The user's message
  * @param history - Previous chat messages for context
+ * @param provider - Optional AI provider (gemini or groq, default is best available)
  * @returns AI response message
  */
 export async function sendChatMessage(
   projectId: string,
   message: string,
-  history: Array<{ role: 'user' | 'model'; content: string }>
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  provider?: string
 ): Promise<ApiResponse<{ message: string }>> {
   return apiCall('/api/chat', {
     method: 'POST',
-    body: JSON.stringify({ projectId, message, history }),
+    body: JSON.stringify({ projectId, message, history, provider }),
   });
 }
 

@@ -640,8 +640,11 @@ router.post('/:id/extract-architecture', async (req: Request, res: Response): Pr
     // Import ArchitectureService dynamically to avoid circular imports
     const { ArchitectureService } = await import('../services/ArchitectureService');
 
-    // Extract architecture from PRD using Gemini
-    const architecture = await ArchitectureService.extractArchitecture(prdContent);
+    // Extract provider from request body or use default
+    const { provider } = req.body;
+
+    // Extract architecture from PRD using selected provider
+    const architecture = await ArchitectureService.extractArchitecture(prdContent, provider);
 
     // Save architecture to database
     const savedModules = [];
