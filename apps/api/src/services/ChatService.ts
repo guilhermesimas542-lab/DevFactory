@@ -26,7 +26,7 @@ export class ChatService {
         throw new Error('GEMINI_API_KEY environment variable is not set');
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
       // Get project data for context
       const project = await prisma.project.findUnique({
