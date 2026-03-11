@@ -1,66 +1,56 @@
 interface ProgressBarProps {
-  current: number; // 0-100
-  target?: number; // Optional target percentage
+  current: number;
+  target?: number;
   showLabel?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  color?: string;
   className?: string;
 }
 
-export default function ProgressBar({ current, target, showLabel = true, size = 'md', className = '' }: ProgressBarProps) {
-  const normalizedCurrent = Math.min(Math.max(current, 0), 100);
-  const normalizedTarget = target ? Math.min(Math.max(target, 0), 100) : undefined;
+const getColor = (pct: number) => {
+  if (pct >= 80) return 'var(--status-done)';
+  if (pct >= 60) return 'var(--accent)';
+  if (pct >= 40) return 'var(--status-progress)';
+  return 'var(--status-alert)';
+};
 
-  // Determine color based on progress
-  const getColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-500';
-    if (percentage >= 60) return 'bg-blue-500';
-    if (percentage >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
+const heights = { sm: 4, md: 6, lg: 8 };
+const labelSizes = { sm: 11, md: 12, lg: 13 };
 
-  const getBackgroundColor = (percentage: number) => {
-    if (percentage >= 80) return 'bg-green-100';
-    if (percentage >= 60) return 'bg-blue-100';
-    if (percentage >= 40) return 'bg-yellow-100';
-    return 'bg-red-100';
-  };
-
-  const heightClass = {
-    sm: 'h-2',
-    md: 'h-3',
-    lg: 'h-4',
-  }[size];
-
-  const labelClass = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-  }[size];
+export default function ProgressBar({ current, target, showLabel = true, size = 'md', color, className = '' }: ProgressBarProps) {
+  const pct = Math.min(Math.max(current, 0), 100);
+  const fill = color || getColor(pct);
+  const h = heights[size];
+  const ls = labelSizes[size];
 
   return (
     <div className={className}>
-      <div className={`relative w-full ${getBackgroundColor(normalizedCurrent)} rounded-full overflow-hidden`}>
-        {/* Target line (if provided) */}
-        {normalizedTarget && (
-          <div
-            className="absolute top-0 bottom-0 w-1 bg-gray-400 opacity-70"
-            style={{ left: `${normalizedTarget}%` }}
-            title={`Target: ${normalizedTarget}%`}
-          />
+      <div style={{
+        position: 'relative', width: '100%',
+        height: h, background: 'var(--bg-elevated)',
+        borderRadius: 999, overflow: 'hidden',
+      }}>
+        {target != null && (
+          <div style={{
+            position: 'absolute', top: 0, bottom: 0,
+            width: 1, background: 'var(--text-tertiary)', opacity: 0.5,
+            left: `${Math.min(Math.max(target, 0), 100)}%`,
+          }} title={`Meta: ${target}%`} />
         )}
-
-        {/* Progress fill */}
-        <div
-          className={`${heightClass} ${getColor(normalizedCurrent)} rounded-full transition-all duration-300 ease-out`}
-          style={{ width: `${normalizedCurrent}%` }}
-        />
+        <div style={{
+          height: '100%', width: `${pct}%`,
+          background: fill, borderRadius: 999,
+          transition: 'width 600ms ease',
+        }} />
       </div>
 
       {showLabel && (
-        <div className={`mt-1 flex items-center justify-between ${labelClass}`}>
-          <span className="font-medium text-gray-700">{normalizedCurrent}%</span>
-          {normalizedTarget && (
-            <span className="text-gray-600">Meta: {normalizedTarget}%</span>
+        <div style={{ marginTop: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: ls }}>
+          <span style={{ fontWeight: 600, color: fill }}>{pct}%</span>
+          {target != null && (
+            <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+              meta: {target}%
+            </span>
           )}
         </div>
       )}

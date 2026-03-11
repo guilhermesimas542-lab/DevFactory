@@ -13,14 +13,8 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
+      const result = await signIn('credentials', { email, password, redirect: false })
       if (result?.error) {
         setError('Email ou senha incorretos')
       } else if (result?.ok) {
@@ -34,44 +28,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
+    <div style={{
+      minHeight: '100vh', background: 'var(--bg-base)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+    }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            width: 48, height: 48, background: 'var(--accent)', borderRadius: 12,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, fontWeight: 700, color: 'white', marginBottom: 16,
+          }}>D</div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-primary)', marginBottom: 4 }}>
             DevFactory
           </h1>
+          <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>
+            Orquestração de desenvolvimento com IA
+          </p>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Card */}
+        <div style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--bg-border)',
+          borderRadius: 14, padding: 28,
+        }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>
                 Email
               </label>
               <input
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={e => setEmail(e.target.value)}
+                className="df-input"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 6 }}>
                 Senha
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={e => setPassword(e.target.value)}
+                className="df-input"
                 disabled={loading}
               />
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              <div style={{ padding: '10px 12px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-alert)' }}>
                 {error}
               </div>
             )}
@@ -79,18 +93,28 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition font-medium"
+              className="df-btn-primary"
+              style={{ width: '100%', justifyContent: 'center', padding: '10px 14px', fontSize: 14, marginTop: 4 }}
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded border border-blue-200">
-            <p className="text-sm text-gray-600 font-medium">Demo Credentials:</p>
-            <p className="text-sm text-gray-500 mt-1">Email: test@example.com</p>
-            <p className="text-sm text-gray-500">Senha: 123456</p>
+          {/* Demo credentials */}
+          <div style={{
+            marginTop: 20, padding: '10px 14px',
+            background: 'var(--bg-elevated)', borderRadius: 8,
+            border: '1px solid var(--bg-border)',
+          }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Credenciais demo
+            </p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-code)' }}>
+              test@example.com · 123456
+            </p>
           </div>
         </div>
+
       </div>
     </div>
   )

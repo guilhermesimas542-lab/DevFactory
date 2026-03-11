@@ -22,149 +22,194 @@ export default function Dashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-      return;
-    }
-
-    if (status === 'authenticated') {
-      loadProjects();
-    }
+    if (status === 'unauthenticated') { router.push('/login'); return; }
+    if (status === 'authenticated') loadProjects();
   }, [status]);
 
   const loadProjects = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const result = await getProjects();
-
       if (result.success && result.data) {
         setProjects(result.data);
       } else {
         setError(result.error || 'Failed to load projects');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (projectId: string) => {
-    if (!confirm('Tem certeza que quer deletar este projeto?')) {
-      return;
-    }
-
+    if (!confirm('Tem certeza que quer deletar este projeto?')) return;
     try {
       setDeletingId(projectId);
       const result = await deleteProject(projectId);
-
       if (result.success) {
         setProjects(projects.filter(p => p.id !== projectId));
       } else {
-        setError(result.error || 'Failed to delete project');
+        setError(result.error || 'Failed to delete');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setDeletingId(null);
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleString('pt-BR');
-  };
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin inline-block h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
-          <p className="mt-4 text-gray-600">Carregando projetos...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="df-spinner" />
+          <p style={{ marginTop: 16, fontSize: 13, color: 'var(--text-secondary)' }}>Carregando projetos...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-2">Bem-vindo, {session?.user?.name}!</p>
-            </div>
-            <Link
-              href="/projects"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-            >
-              + Novo Projeto
-            </Link>
-          </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)' }}>
+
+      {/* Topbar */}
+      <header style={{
+        height: 56, background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--bg-border)',
+        display: 'flex', alignItems: 'center', padding: '0 28px',
+        position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 28, height: 28, background: 'var(--accent)', borderRadius: 7,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 700, color: 'white',
+          }}>D</div>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>DevFactory</span>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+            {session?.user?.name}
+          </span>
+          <Link href="/projects" className="df-btn-primary" style={{ textDecoration: 'none' }}>
+            + Novo Projeto
+          </Link>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px' }}>
+
+        {/* Page header */}
+        <div className="animate-fade-up animate-delay-1" style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-primary)', marginBottom: 4 }}>
+            Dashboard
+          </h1>
+          <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>
+            Bem-vindo de volta, {session?.user?.name}
+          </p>
+        </div>
+
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">⚠️ {error}</p>
+          <div style={{ marginBottom: 20, padding: '10px 14px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-alert)' }}>
+            ⚠️ {error}
           </div>
         )}
 
-        {projects.length === 0 && !error && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Nenhum projeto importado</h2>
-            <p className="text-gray-600 mb-6">Comece importando seu primeiro documento PRD</p>
-            <Link href="/projects" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition-colors">
-              Importar PRD
-            </Link>
-          </div>
-        )}
-
+        {/* Stats row */}
         {projects.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map(project => (
-              <div key={project.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
-                  <h3 className="text-lg font-bold truncate">{project.name}</h3>
-                  <p className="text-blue-100 text-sm mt-1">{formatDate(project.created_at)}</p>
-                </div>
-                <div className="p-4">
-                  <p className="text-gray-600 text-sm line-clamp-2 mb-3">{project.description || 'Sem descrição'}</p>
-                  <div className="flex flex-col gap-1 mb-4 text-sm">
-                    <span className="text-gray-500">📦 {project._count?.modules || 0} módulos</span>
-                    {project.github_repo_url ? (
-                      <span className="text-green-600 font-medium">🔗 GitHub configurado</span>
-                    ) : (
-                      <span className="text-yellow-600 font-medium">⚠️ Sem GitHub</span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href={`/projects/${project.id}`} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-md transition-colors text-center text-sm">
-                      Ver Detalhes
-                    </Link>
-                    <button onClick={() => handleDelete(project.id)} disabled={deletingId === project.id} className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium py-2 px-3 rounded-md transition-colors text-sm">
-                      {deletingId === project.id ? 'Deletando...' : 'Deletar'}
-                    </button>
-                  </div>
-                </div>
+          <div className="animate-fade-up animate-delay-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
+            {[
+              { label: 'Projetos', value: projects.length, color: 'var(--accent)' },
+              { label: 'Com GitHub', value: projects.filter(p => p.github_repo_url).length, color: 'var(--status-done)' },
+              { label: 'Módulos Totais', value: projects.reduce((s, p) => s + (p._count?.modules || 0), 0), color: 'var(--type-frontend)' },
+            ].map((s, i) => (
+              <div key={i} className="df-card" style={{ padding: '18px 20px' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 8 }}>{s.label}</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: s.color, letterSpacing: '-0.03em' }}>{s.value}</div>
               </div>
             ))}
           </div>
         )}
 
+        {/* Empty state */}
+        {projects.length === 0 && !error && (
+          <div className="animate-fade-up animate-delay-2" style={{ textAlign: 'center', padding: '64px 0' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+              Nenhum projeto ainda
+            </h2>
+            <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', marginBottom: 24 }}>
+              Comece importando seu primeiro documento PRD
+            </p>
+            <Link href="/projects" className="df-btn-primary" style={{ textDecoration: 'none' }}>
+              Importar PRD
+            </Link>
+          </div>
+        )}
+
+        {/* Projects grid */}
         {projects.length > 0 && (
-          <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-700">📊 Total de projetos: <strong>{projects.length}</strong></p>
+          <div className="animate-fade-up animate-delay-3">
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: 12 }}>
+              Projetos
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+              {projects.map(project => (
+                <div key={project.id} className="df-card" style={{ cursor: 'pointer', overflow: 'hidden' }}>
+                  {/* Card top stripe */}
+                  <div style={{ height: 3, background: 'var(--accent)' }} />
+
+                  <div style={{ padding: '16px 18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                        {project.name}
+                      </h3>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-tertiary)', marginLeft: 8, flexShrink: 0 }}>
+                        {formatDate(project.created_at)}
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.5 }}>
+                      {project.description || 'Sem descrição'}
+                    </p>
+
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-tertiary)', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: 4 }}>
+                        {project._count?.modules || 0} módulos
+                      </span>
+                      {project.github_repo_url ? (
+                        <span className="df-badge df-badge-done">GitHub</span>
+                      ) : (
+                        <span className="df-badge df-badge-pending">Sem GitHub</span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="df-btn-primary"
+                        style={{ flex: 1, textDecoration: 'none', justifyContent: 'center', padding: '6px 12px' }}
+                      >
+                        Ver Projeto
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        disabled={deletingId === project.id}
+                        className="df-btn-ghost"
+                        style={{ padding: '6px 12px', borderColor: 'rgba(239,68,68,0.3)', color: 'var(--status-alert)' }}
+                      >
+                        {deletingId === project.id ? '...' : '🗑'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </main>

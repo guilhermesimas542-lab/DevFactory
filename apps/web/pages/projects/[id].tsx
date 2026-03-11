@@ -22,15 +22,37 @@ interface ProjectData {
   updated_at: string;
 }
 
+function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="df-card" style={{ marginBottom: 16 }}>
+      <div className="df-card-header">
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
+      </div>
+      <div className="df-card-body">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+        {label}
+      </div>
+      <p style={{ fontSize: 13.5, color: 'var(--text-primary)', fontFamily: mono ? 'var(--font-mono)' : undefined }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export default function ProjectDetail() {
   const router = useRouter();
   const { status } = useSession();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // GitHub integration states
-  const [repoUrl, setRepoUrl] = useState<string>('');
+  const [repoUrl, setRepoUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -39,32 +61,16 @@ export default function ProjectDetail() {
   const [analyzeMessage, setAnalyzeMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect if not authenticated
-    if (status === 'unauthenticated') {
-      router.push('/login');
-      return;
-    }
-
-    // Load project data
-    if (router.isReady && status === 'authenticated') {
-      loadProject();
-    }
+    if (status === 'unauthenticated') { router.push('/login'); return; }
+    if (router.isReady && status === 'authenticated') loadProject();
   }, [router.isReady, status]);
 
   const loadProject = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
+      setLoading(true); setError(null);
       const { id } = router.query;
-
-      if (!id || typeof id !== 'string') {
-        setError('Invalid project ID');
-        return;
-      }
-
+      if (!id || typeof id !== 'string') { setError('Invalid project ID'); return; }
       const result = await getProject(id);
-
       if (result.success && result.data) {
         setProject(result.data);
         setRepoUrl(result.data.github_repo_url || '');
@@ -72,312 +78,197 @@ export default function ProjectDetail() {
         setError(result.error || 'Failed to load project');
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   };
 
+  const formatDate = (d: string) => new Date(d).toLocaleString('pt-BR');
+  const formatSize = (b: number) => {
+    if (!b) return '0 B';
+    const i = Math.floor(Math.log(b) / Math.log(1024));
+    return `${(b / Math.pow(1024, i)).toFixed(1)} ${['B','KB','MB'][i]}`;
+  };
+
+  const handleSaveGitHub = async () => {
+    if (!project) return;
+    try {
+      setIsSaving(true);
+      const result = await updateProject(project.id, { github_repo_url: repoUrl || undefined });
+      if (result.success) {
+        setProject({ ...project, github_repo_url: repoUrl || null });
+        setSyncMessage('✓ Repositório configurado!');
+        setTimeout(() => setSyncMessage(null), 3000);
+      } else setError(result.error || 'Erro ao salvar');
+    } catch (err) { setError(err instanceof Error ? err.message : 'Erro'); }
+    finally { setIsSaving(false); }
+  };
+
+  const handleAnalyze = async () => {
+    if (!project) return;
+    try {
+      setIsAnalyzing(true); setAnalyzeMessage(null);
+      const result = await analyzeProject(project.id);
+      if (result.success && result.data) {
+        setAnalyzeMessage(`✓ ${Object.keys(result.data.moduleProgress).length} módulos analisados, ${result.data.patternsFound} padrões.`);
+        setTimeout(() => setAnalyzeMessage(null), 8000);
+      } else setError(result.error || 'Erro na análise');
+    } catch (err) { setError(err instanceof Error ? err.message : 'Erro'); }
+    finally { setIsAnalyzing(false); }
+  };
+
+  const handleSyncGitHub = async () => {
+    if (!project) return;
+    try {
+      setIsSyncing(true); setSyncMessage(null);
+      const result = await syncProjectGitHub(project.id);
+      if (result.success && result.data) {
+        setSyncMessage(`✓ ${result.data.stories_updated.length} stories atualizadas`);
+        setProject({ ...project, github_last_sync: result.data.synced_at });
+        setTimeout(() => setSyncMessage(null), 5000);
+      } else setError(result.error || 'Erro ao sincronizar');
+    } catch (err) { setError(err instanceof Error ? err.message : 'Erro'); }
+    finally { setIsSyncing(false); }
+  };
+
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin inline-block h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
-          <p className="mt-4 text-gray-600">Carregando projeto...</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="df-spinner" />
+          <p style={{ marginTop: 16, fontSize: 13, color: 'var(--text-secondary)' }}>Carregando projeto...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !project) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Erro</h1>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <button
-            onClick={() => router.push('/projects')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            Voltar para Importar
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-base)', padding: 16 }}>
+        <div className="df-card" style={{ maxWidth: 400, width: '100%', padding: 24 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--status-alert)', marginBottom: 12 }}>Erro</h1>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>{error || 'Projeto não encontrado'}</p>
+          <button onClick={() => router.push('/projects')} className="df-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+            Voltar
           </button>
         </div>
       </div>
     );
   }
 
-  if (!project) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Projeto não encontrado</p>
-      </div>
-    );
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleString('pt-BR');
-  };
-
-  const handleSaveGitHub = async () => {
-    if (!project) return;
-
-    try {
-      setIsSaving(true);
-      setError(null);
-
-      const result = await updateProject(project.id, {
-        github_repo_url: repoUrl || undefined,
-      });
-
-      if (result.success) {
-        setProject({ ...project, github_repo_url: repoUrl || null });
-        setSyncMessage('✓ Repositório configurado com sucesso!');
-        setTimeout(() => setSyncMessage(null), 3000);
-      } else {
-        setError(result.error || 'Erro ao salvar repositório');
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleAnalyze = async () => {
-    if (!project) return;
-    try {
-      setIsAnalyzing(true);
-      setAnalyzeMessage(null);
-      setError(null);
-      const result = await analyzeProject(project.id);
-      if (result.success && result.data) {
-        const moduleCount = Object.keys(result.data.moduleProgress).length;
-        setAnalyzeMessage(`✓ Análise concluída! ${moduleCount} módulos analisados, ${result.data.patternsFound} padrões encontrados.`);
-        setTimeout(() => setAnalyzeMessage(null), 8000);
-      } else {
-        setError(result.error || 'Erro na análise');
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(message);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleSyncGitHub = async () => {
-    if (!project) return;
-
-    try {
-      setIsSyncing(true);
-      setSyncMessage(null);
-      setError(null);
-
-      const result = await syncProjectGitHub(project.id);
-
-      if (result.success && result.data) {
-        const updatedCount = result.data.stories_updated.length;
-        setSyncMessage(`✓ ${updatedCount} stories atualizadas com sucesso!`);
-        setProject({
-          ...project,
-          github_last_sync: result.data.synced_at,
-        });
-        setTimeout(() => setSyncMessage(null), 5000);
-      } else {
-        setError(result.error || 'Erro ao sincronizar');
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(message);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Project Info Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Informações do Projeto</h2>
+    <div style={{ padding: '28px 28px', maxWidth: 760 }}>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Nome do Projeto</label>
-              <p className="text-gray-900">{project.name}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
-              <p className="text-gray-900">{project.description || 'Sem descrição'}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">ID do Projeto</label>
-              <p className="text-gray-600 font-mono text-sm">{project.id}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Criado em</label>
-              <p className="text-gray-900">{formatDate(project.created_at)}</p>
-            </div>
-          </div>
+      {error && (
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-alert)' }}>
+          ⚠ {error}
         </div>
+      )}
 
-        {/* PRD Info Card */}
-        {project.prd_original && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Documento Importado</h2>
+      {/* Project info */}
+      <InfoCard title="Informações do Projeto">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <Field label="Nome" value={project.name} />
+          <Field label="Descrição" value={project.description || 'Sem descrição'} />
+          <Field label="ID" value={project.id} mono />
+          <Field label="Criado em" value={formatDate(project.created_at)} />
+        </div>
+      </InfoCard>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Arquivo</label>
-                <p className="text-gray-900">{project.prd_original.originalFileName}</p>
+      {/* PRD info */}
+      {project.prd_original && (
+        <InfoCard title="Documento Importado">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <Field label="Arquivo" value={project.prd_original.originalFileName} />
+            <Field label="Importado em" value={formatDate(project.prd_original.uploadedAt)} />
+            <Field label="Tamanho" value={formatSize(project.prd_original.fileSize)} />
+            <Field label="Tipo" value={project.prd_original.mimeType} />
+          </div>
+          <div style={{ padding: 12, background: 'var(--bg-elevated)', borderRadius: 8, fontSize: 12.5, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', lineHeight: 1.6, marginBottom: 14, maxHeight: 80, overflow: 'hidden' }}>
+            {project.prd_original.rawContent.substring(0, 280)}
+            {project.prd_original.rawContent.length > 280 && '...'}
+          </div>
+          <button onClick={() => setShowPRDModal(true)} className="df-btn-ghost">
+            Ver PRD Completo
+          </button>
+        </InfoCard>
+      )}
+
+      {/* Code analysis */}
+      <InfoCard title="Análise de Código">
+        {!project.github_repo_url ? (
+          <div style={{ padding: '10px 14px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-progress)' }}>
+            Configure um repositório GitHub abaixo para habilitar a análise.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              Analisa o código no repositório GitHub e atualiza o progresso de cada módulo.
+            </p>
+            <button onClick={handleAnalyze} disabled={isAnalyzing} className="df-btn-primary" style={{ alignSelf: 'flex-start' }}>
+              {isAnalyzing ? '⏳ Analisando... (1-2 min)' : '🔍 Analisar Código'}
+            </button>
+            {analyzeMessage && (
+              <div style={{ padding: '8px 12px', background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--accent)' }}>
+                {analyzeMessage}
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tamanho</label>
-                  <p className="text-gray-900">{formatFileSize(project.prd_original.fileSize)}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                  <p className="text-gray-900">{project.prd_original.mimeType}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Importado em</label>
-                <p className="text-gray-900">{formatDate(project.prd_original.uploadedAt)}</p>
-              </div>
-            </div>
+            )}
           </div>
         )}
+      </InfoCard>
 
-        {/* Preview Card */}
-        {project.prd_original && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Visualização do Documento</h2>
-            <p className="text-sm text-gray-500 mb-3">
-              {project.prd_original.rawContent.substring(0, 300)}
-              {project.prd_original.rawContent.length > 300 && '...'}
-            </p>
-            <button
-              onClick={() => setShowPRDModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors text-sm"
-            >
-              Ver PRD Completo
+      {/* GitHub sync */}
+      <InfoCard title="Sincronização GitHub">
+        {!repoUrl && (
+          <div style={{ marginBottom: 14, padding: '10px 14px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 8, fontSize: 13, color: 'var(--accent)' }}>
+            Configure um repositório para sincronizar stories via commits.
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <input
+            type="text"
+            placeholder="https://github.com/usuario/repo"
+            value={repoUrl}
+            onChange={e => setRepoUrl(e.target.value)}
+            className="df-input"
+            style={{ flex: 1 }}
+          />
+          <button
+            onClick={handleSaveGitHub}
+            disabled={isSaving || repoUrl === (project.github_repo_url || '')}
+            className="df-btn-primary"
+          >
+            {isSaving ? '⏳' : 'Salvar'}
+          </button>
+        </div>
+
+        {project.github_repo_url && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>Última Sync</div>
+                <p style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+                  {project.github_last_sync ? formatDate(project.github_last_sync) : 'Nunca'}
+                </p>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>Status</div>
+                <span className="df-badge df-badge-done">Configurado</span>
+              </div>
+            </div>
+            <button onClick={handleSyncGitHub} disabled={isSyncing} className="df-btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
+              {isSyncing ? '⏳ Sincronizando...' : '↺ Sincronizar Agora'}
             </button>
           </div>
         )}
 
-        {/* Analysis Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">🔍 Análise de Código</h2>
-          {!project.github_repo_url ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
-              <p className="text-yellow-700 text-sm">Configure um repositório GitHub abaixo para habilitar a análise de código.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-gray-600 text-sm">Analisa o repositório GitHub e atualiza automaticamente o progresso de cada módulo.</p>
-              <button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing}
-                className="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
-              >
-                {isAnalyzing ? '⏳ Analisando código... (pode levar 1-2 min)' : '🔍 Analisar Código Agora'}
-              </button>
-              {analyzeMessage && (
-                <div className="p-3 bg-purple-50 border border-purple-200 rounded text-purple-700 text-sm">{analyzeMessage}</div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* GitHub Integration Card */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">🔗 Sincronização com GitHub</h2>
-
-          {!repoUrl ? (
-            <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
-              <p className="text-blue-700 text-sm">
-                📌 Configure um repositório GitHub para sincronizar stories automaticamente com base nas mensagens de commit.
-              </p>
-            </div>
-          ) : null}
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">URL do Repositório GitHub</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="https://github.com/usuario/repo"
-                  value={repoUrl}
-                  onChange={(e) => setRepoUrl(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleSaveGitHub}
-                  disabled={isSaving || repoUrl === (project.github_repo_url || '')}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
-                >
-                  {isSaving ? '⏳ Salvando...' : 'Salvar'}
-                </button>
-              </div>
-              {repoUrl && repoUrl !== (project.github_repo_url || '') && (
-                <p className="text-xs text-gray-500 mt-1">Clique em "Salvar" para aplicar as mudanças</p>
-              )}
-            </div>
-
-            {project.github_repo_url && (
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Última Sincronização</p>
-                    <p className="text-sm text-gray-900">
-                      {project.github_last_sync
-                        ? formatDate(project.github_last_sync)
-                        : 'Nunca sincronizado'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Status</p>
-                    <p className="text-sm text-green-600">✓ Configurado</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSyncGitHub}
-                  disabled={isSyncing}
-                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
-                >
-                  {isSyncing ? '⏳ Sincronizando...' : '🔄 Sincronizar Agora'}
-                </button>
-              </div>
-            )}
+        {syncMessage && (
+          <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-done)' }}>
+            {syncMessage}
           </div>
-
-          {syncMessage && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
-              {syncMessage}
-            </div>
-          )}
-        </div>
-
-      </main>
+        )}
+      </InfoCard>
 
       {showPRDModal && project.prd_original && (
         <PRDViewer

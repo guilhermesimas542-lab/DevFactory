@@ -29,6 +29,20 @@
 
 ---
 
+### 2026-03-11 @ux-design-expert (Uma) — Design System Migration completa
+
+- Sistema de tokens implementado em `globals.css` (CSS custom properties completas)
+- `tailwind.config.ts` estendido com cores `df-*` mapeadas para variáveis CSS
+- Tema dark aplicado em **10 arquivos**: globals.css, tailwind.config, ProjectLayout, dashboard, login, [id].tsx, progress.tsx, stories.tsx, alerts.tsx, glossary.tsx
+- Componentes `ProgressBar` e `ModuleCard` redesenhados com dark theme
+- Utilitários criados: `.df-card`, `.df-badge-*`, `.df-btn-primary`, `.df-btn-ghost`, `.df-input`, `.df-spinner`
+- Fontes: DM Sans (sans) + JetBrains Mono (mono) via Google Fonts
+- Sidebar redesenhada no `ProjectLayout` com nav items, logo, breadcrumb topbar
+- Animações: fadeUp com delays escalonados
+- Status: ✅ Concluído
+
+---
+
 ### 2026-03-11 @dev (Dex) — Épicos 2, 3 e 4 validados — TODAS as stories concluídas
 
 - STORY-006: Página /projects + UploadForm ✅
