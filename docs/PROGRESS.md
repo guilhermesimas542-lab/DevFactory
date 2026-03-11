@@ -128,6 +128,26 @@
 - TypeScript: 0 erros em web e api
 - Status: ✅ MVP COMPLETO
 
+### 2026-03-11 @devops (Gage) — Package-lock.json Regenerado — Railway Ready
+
+- **Problema:** Railway build falhava com erro "Missing: groq-sdk@1.1.1 from lock file"
+- **Causa raiz:** package-lock.json estava desincronizado com a estrutura do monorepo
+- **Solução executada (Opção A):**
+  - Deletado: `package-lock.json` (raiz)
+  - Deletado: `node_modules` (raiz)
+  - Executado: `npm install` (regenera lock file completo)
+  - Resultado: ✅ 552 packages adicionados, 676 packages auditados, 0 vulnerabilities
+- **Verificação:**
+  - ✅ package-lock.json criado com 337K
+  - ✅ groq-sdk@1.1.1 presente no lock file
+  - ✅ Commit `d81e825` (fix: regenerate root package-lock.json with groq-sdk) já estava pushing
+  - ✅ Local e remote branches sincronizados (HEAD @ 4b640ec)
+- **Próximo passo:** Aguardar redeploy automático do Railway com novo lock file
+- **Opção B (para depois):** `npm install groq-sdk@1.1.1 -w apps/api` (para lock file mais correto a longo prazo)
+- **Status:** ✅ Opção A Concluída — Aguardando Railway build
+
+---
+
 ### 2026-03-11 @devops (Gage) — STORY-005 concluída — Deploy configurado
 
 - Vercel (frontend) + Railway (backend) já conectados e em produção
