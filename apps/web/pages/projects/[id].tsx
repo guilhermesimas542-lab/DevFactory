@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getProject, updateProject, syncProjectGitHub } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
+import PRDViewer from '@/components/PRDViewer';
 
 interface ProjectData {
   id: string;
@@ -33,6 +34,7 @@ export default function ProjectDetail() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [showPRDModal, setShowPRDModal] = useState(false);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -260,12 +262,16 @@ export default function ProjectDetail() {
         {project.prd_original && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Visualização do Documento</h2>
-            <div className="bg-gray-50 rounded p-4 max-h-96 overflow-y-auto border border-gray-200">
-              <pre className="text-sm text-gray-700 whitespace-pre-wrap break-words font-mono">
-                {project.prd_original.rawContent.substring(0, 1000)}
-                {project.prd_original.rawContent.length > 1000 && '\n\n... (documento contém mais conteúdo)'}
-              </pre>
-            </div>
+            <p className="text-sm text-gray-500 mb-3">
+              {project.prd_original.rawContent.substring(0, 300)}
+              {project.prd_original.rawContent.length > 300 && '...'}
+            </p>
+            <button
+              onClick={() => setShowPRDModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors text-sm"
+            >
+              Ver PRD Completo
+            </button>
           </div>
         )}
 
@@ -341,6 +347,14 @@ export default function ProjectDetail() {
         </div>
 
       </main>
+
+      {showPRDModal && project.prd_original && (
+        <PRDViewer
+          content={project.prd_original.rawContent}
+          fileName={project.prd_original.originalFileName}
+          onClose={() => setShowPRDModal(false)}
+        />
+      )}
     </div>
   );
 }
