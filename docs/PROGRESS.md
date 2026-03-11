@@ -29,6 +29,14 @@
 
 ---
 
+### 2026-03-11 @devops (Gage) — STORY-005 concluída — Deploy configurado
+
+- Vercel (frontend) + Railway (backend) já conectados e em produção
+- Criado `vercel.json` com config de build
+- Criado `railway.toml` com config de deploy e healthcheck
+- Criado `.github/workflows/ci.yml` — CI automático no push
+- Status: ✅ Concluído — Épico 1 COMPLETO
+
 ### 2026-03-11 @dev (Dex) — STORY-002 e STORY-003 concluídas
 
 - STORY-002: Express + Prisma + middleware + rota /health validados (já implementados)
