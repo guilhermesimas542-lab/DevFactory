@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getProject } from '@/lib/api';
 import AIPanel from '@/components/panels/AIPanel';
+import ModelSelector from '@/components/ModelSelector';
 
 interface ProjectData {
   id: string;
@@ -177,6 +178,7 @@ export default function ProjectLayout({ children }: ProjectLayoutProps) {
           </div>
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ModelSelector />
             <button
               onClick={() => setIsPanelOpen(true)}
               className="df-btn-ghost"

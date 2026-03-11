@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app'
 import type { NextPage } from 'next'
 import { SessionProvider } from 'next-auth/react'
+import { ModelProvider } from '@/contexts/ModelContext'
 import '@/styles/globals.css'
 
 type NextPageWithLayout = NextPage & {
@@ -19,7 +20,9 @@ export default function App({
 
   return (
     <SessionProvider session={session}>
-      {getLayout(<Component {...pageProps} />)}
+      <ModelProvider>
+        {getLayout(<Component {...pageProps} />)}
+      </ModelProvider>
     </SessionProvider>
   )
 }

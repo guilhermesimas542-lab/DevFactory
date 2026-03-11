@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { sendChatMessage, getActivityLog } from '@/lib/api';
+import { useModel } from '@/contexts/ModelContext';
 
 interface AIPanelProps {
   projectId: string;
@@ -59,6 +60,7 @@ export default function AIPanel({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { selectedModel, autoMode } = useModel();
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -104,7 +106,8 @@ export default function AIPanel({
 
     setIsLoading(true);
     try {
-      const response = await sendChatMessage(projectId, userMessage, [...messages, newUserMessage]);
+      const provider = autoMode ? undefined : selectedModel;
+      const response = await sendChatMessage(projectId, userMessage, [...messages, newUserMessage], provider);
       if (response.success && response.data) {
         const aiMessage: ChatMessage = {
           role: 'assistant',

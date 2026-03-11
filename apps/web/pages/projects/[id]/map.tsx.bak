@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useModel } from '@/contexts/ModelContext';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { getProject, extractArchitecture } from '@/lib/api';
@@ -36,7 +35,6 @@ type ViewMode = 'sub-hexagons' | 'drawer' | 'modal';
 
 export default function MapPage() {
   const router = useRouter();
-  const { selectedModel, autoMode } = useModel();
   const { status } = useSession();
   const [architecture, setArchitecture] = useState<ArchitectureData | null>(null);
   const [hexagons, setHexagons] = useState<HexagonData[]>([]);
@@ -138,8 +136,7 @@ export default function MapPage() {
         return;
       }
 
-      const provider = autoMode ? undefined : selectedModel;
-      const result = await extractArchitecture(id, provider);
+      const result = await extractArchitecture(id);
       if (!result.success || !result.data) {
         setError(result.error || 'Failed to generate architecture');
         return;
