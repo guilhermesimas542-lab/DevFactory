@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProgress } from '@/lib/api';
+import { getProgress, analyzeProject } from '@/lib/api';
 import ProgressBar from '@/components/ProgressBar';
 import ModuleCard from '@/components/ModuleCard';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
@@ -35,6 +35,8 @@ export default function ProjectProgress() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzeMessage, setAnalyzeMessage] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -90,6 +92,28 @@ export default function ProjectProgress() {
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    const { id } = router.query;
+    if (!id || typeof id !== 'string') return;
+    try {
+      setIsAnalyzing(true);
+      setAnalyzeMessage(null);
+      const result = await analyzeProject(id);
+      if (result.success && result.data) {
+        setAnalyzeMessage(`✓ Análise concluída! ${result.data.patternsFound} padrões encontrados.`);
+        await loadProgress(); // reload progress after analysis
+        setTimeout(() => setAnalyzeMessage(null), 8000);
+      } else {
+        setAnalyzeMessage(`❌ ${result.error || 'Erro na análise'}`);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      setAnalyzeMessage(`❌ ${msg}`);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -164,7 +188,19 @@ export default function ProjectProgress() {
               ▶️ Iniciar Polling
             </button>
           )}
+          <button
+            onClick={handleAnalyze}
+            disabled={isAnalyzing}
+            className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors"
+          >
+            {isAnalyzing ? '⏳ Analisando...' : '🔍 Analisar Código'}
+          </button>
         </div>
+        {analyzeMessage && (
+          <div className={`mb-4 p-3 rounded text-sm ${analyzeMessage.startsWith('❌') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-purple-50 text-purple-700 border border-purple-200'}`}>
+            {analyzeMessage}
+          </div>
+        )}
         {/* Overall Progress Card */}
         <div className="bg-white rounded-lg shadow p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Progresso Geral</h2>

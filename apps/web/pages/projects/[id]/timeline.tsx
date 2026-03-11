@@ -6,9 +6,13 @@ import ProjectLayout from '@/components/layouts/ProjectLayout';
 
 interface Story {
   id: string;
+  project_id: string;
+  module_id: string | null;
   title: string;
+  description: string | null;
   epic: string | null;
   status: string;
+  agent_responsible: string | null;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
@@ -60,7 +64,7 @@ export default function Timeline() {
       ]);
 
       if (storiesResult.success && storiesResult.data) {
-        setStories(storiesResult.data as any);
+        setStories(storiesResult.data);
       } else {
         setError(storiesResult.error || 'Failed to load stories');
       }
