@@ -29,6 +29,29 @@
 
 ---
 
+### 2026-03-11 @dev (Dex) — Multi-LLM Support (Groq + Gemini) implementado ✅
+
+- Criado `AIProviderFactory.ts` com suporte a múltiplos providers
+- Refatorado `ArchitectureService` para usar providers plugáveis
+- Refatorado `ChatService` para usar providers plugáveis
+- Adicionado endpoint GET `/api/chat/providers` para listar providers disponíveis
+- Atualizado frontend `lib/api.ts` com funções para alternar entre LLMs
+- Groq SDK instalado e integrado (mixtral-8x7b-32768)
+- Groq configurado como provider padrão (free tier sem quota limit)
+- Fallback automático para Gemini se Groq indisponível
+- Componente `AIPanel` atualizado para suportar escolha de LLM
+- TypeScript: ✅ 0 erros em ambas as apps
+- Commit push realizado na branch `chore/mvp-complete`
+- Status: ✅ Concluído
+
+**Como usar:**
+- Backend: `/api/projects/{id}/extract-architecture` + `{ provider: "groq" }` (POST)
+- Backend: `/api/chat` + `{ provider: "groq", ...}` (POST)
+- Frontend: `extractArchitecture(projectId, "groq")` ou `extractArchitecture(projectId)` (default)
+- Frontend: `sendChatMessage(projectId, msg, history, "groq")`
+
+---
+
 ### 2026-03-11 @devops (Gage) — Deploy Vercel CORRIGIDO E FUNCIONANDO ✅
 
 - `vercel.json` simplificado para apenas `{ "framework": "nextjs" }`
