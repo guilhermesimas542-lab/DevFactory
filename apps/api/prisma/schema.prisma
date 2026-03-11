@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  repository_url    String?
+  local_folder      String?
+  prd_original      Json?    // Stores original PRD content
+  github_repo_url   String?  // GitHub repository URL for sync (e.g., https://github.com/owner/repo)
+  github_last_sync  DateTime? // Last time GitHub repo was synchronized
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  modules           Module[]
+  stories           Story[]
+  alerts            Alert[]
+  analysis_results  AnalysisResult[]
+  snapshots         Snapshot[]
+  glossary_terms    GlossaryTerm[]
+  activity_logs     ActivityLog[]
+}
+
+model Module {
+  id                 String   @id @default(cuid())
+  project_id         String
+  project            Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  name               String
+  description        String?
+  hierarchy          String   @default("necessary") // critical, important, necessary, desirable, optional
+  parent_module_id   String?
+  progress_percentage Decimal  @default(0) @db.Decimal(5, 2)
+
+  // Architecture extraction fields
+  architecture_type  String?  // frontend, backend, database, auth, infra, integration, other
+  why_chosen         String?  // Explicação leiga de por que foi escolhido
+
+  created_at         DateTime @default(now())
+
+  components         Component[]
+  @@unique([project_id, name])
+}
+
+model Component {
+  id          String   @id @default(cuid())
+  module_id   String
+  module      Module   @relation(fields: [module_id], references: [id], onDelete: Cascade)
+
+  name        String
+  type        String?  // function, component, route, model
+  description String?
+  status      String   @default("pending") // pending, partial, implemented
+  code_reference String? // File path where found
+
+  created_at  DateTime @default(now())
+}
+
+model Story {
+  id                String   @id @default(cuid())
+  project_id        String
+  project           Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  module_id         String?
+
+  title             String
+  description       String?
+  epic              String?  // epic-1, epic-2, etc
+  status            String   @default("pending") // pending, in_progress, completed
+  agent_responsible String?
+
+  started_at        DateTime?
+  completed_at      DateTime?
+  created_at        DateTime @default(now())
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  project_id  String
+  project     Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  type        String   // story_without_code, code_without_story, stagnation
+  severity    String   // low, medium, high
+  message     String
+  module_id   String?
+
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now())
+}
+
+model AnalysisResult {
+  id                String   @id @default(cuid())
+  project_id        String
+  project           Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  module_id         String?
+
+  analyzed_function String?
+  prd_item          String?
+  match_confidence  Decimal  @db.Decimal(3, 2) // 0.0 - 1.0
+  analysis_data     Json?
+
+  created_at        DateTime @default(now())
+}
+
+model Snapshot {
+  id               String   @id @default(cuid())
+  project_id       String
+  project          Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  overall_progress Decimal  @db.Decimal(5, 2)
+  snapshot_data    Json?
+
+  created_at       DateTime @default(now())
+}
+
+model GlossaryTerm {
+  id          String   @id @default(cuid())
+  project_id  String
+  project     Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  term        String
+  definition  String
+  analogy     String?
+  relevance   String?
+  is_explored Boolean  @default(false)
+
+  created_at  DateTime @default(now())
+  @@unique([project_id, term])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  project_id  String
+  project     Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  type        String   // prd_uploaded, story_created, story_updated, alert_generated
+  description String
+  metadata    Json?
+
+  created_at  DateTime @default(now())
+}

@@ -1,0 +1,39 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "description": "DevFactory Frontend - Next.js 14 with TypeScript and Tailwind",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Test suite not yet configured\""
+  },
+  "keywords": [
+    "nextjs",
+    "react",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "autoprefixer": "^10.4.27",
+    "d3": "^7.9.0",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "^16.1.6",
+    "next": "^16.1.6",
+    "next-auth": "^4.24.13",
+    "postcss": "^8.5.6",
+    "prettier": "^3.8.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3"
+  }
+}

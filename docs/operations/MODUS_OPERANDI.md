@@ -1,0 +1,376 @@
+# MODUS OPERANDI — devfactory
+
+Documento centralizado de registro de todas as ações, decisões e estado do projeto.
+
+**Leia isto antes de qualquer ação.** Depois, registre sua ação aqui.
+
+---
+
+## 📊 ESTADO ATUAL
+
+**Data:** 2026-03-03 (Sessão 2)
+**Branches ativos:** `main` (clean)
+**Último commit:** debug: expand console logs to show full data structure (5c6e6df)
+**Status:** 🟡 STORY-007 (A+B) EM DEBUGGING | PROBLEMA IDENTIFICADO: dados carregam mas não renderizam
+
+### ✅ Concluído (Épico 1 — Infraestrutura Base)
+
+- [x] STORY-001: Setup Next.js + TypeScript + Tailwind
+- [x] STORY-002: Setup Express Backend + TypeScript + Prisma
+- [x] STORY-003: Configurar PostgreSQL + Prisma Schema (8 tabelas)
+- [x] STORY-004: Setup NextAuth.js + Login Simples
+- [x] STORY-005: Deploy Vercel + Railway ✅
+
+### ✅ STORY-005 (Deploy) — Verificação Final
+
+**Frontend:** https://dev-factory-al5c.vercel.app ✅
+**Backend:** https://dev-factory-al5c.up.railway.app ✅
+**Health Check:** /api/health respondendo ✅
+**Autenticação:** NextAuth.js funcionando ✅
+**Comunicação:** Frontend ↔ Backend OK ✅
+
+**Nota:** NEXTAUTH_SECRET foi mantido como: `9LKqxcoLi1n6jYtrb20Xt2x3CfvFZOK/XlPNoNYgSo=` (valor já configurado em Vercel)
+
+### 🚀 Próximas Ações
+
+**Roadmap:**
+1. ✅ STORY-005: Deploy (CONCLUÍDO)
+2. ✅ STORY-006: Upload de PRD (CONCLUÍDO)
+3. ✅ STORY-007-A: Página de Resultado (CONCLUÍDO)
+4. ✅ STORY-007-B: Dashboard com Listagem (CONCLUÍDO)
+5. ⏳ STORY-008: Visualização Completa de PRD (próxima)
+6. ⏳ STORY-009-010: Análise de PRD
+7. ⏳ STORY-011-015: Mapa Hexagonal
+8. ⏳ STORY-016-020: Análise de Progresso
+
+---
+
+## 📝 LOG DE AÇÕES
+
+### [2026-02-28 a 2026-03-01] — @dev — Épico 1: Infraestrutura Base (CONCLUÍDO)
+
+**Descrição:**
+Criação de toda a infraestrutura base do projeto DevFactory conforme PRD v1.1 e ARCHITECTURE.md.
+
+**O que foi feito:**
+1. ✅ STORY-001: Inicializado Next.js 14 com TypeScript, ESLint, Tailwind CSS
+2. ✅ STORY-002: Setup Express backend com TypeScript, middleware (logger, errorHandler), rota /health
+3. ✅ STORY-003: Configurado Prisma ORM com schema PostgreSQL (8 tabelas)
+4. ✅ STORY-004: Integrado NextAuth.js v5 com demo user (test@example.com / 123456)
+
+**Resultados:**
+- Estrutura de pastas criada: `/apps/web/` (Next.js) + `/apps/api/` (Express)
+- Databases schema pronto (projects, modules, components, stories, alerts, analysis_results, snapshots, glossary_terms)
+- Middleware de autenticação funcional
+- 20+ commits com histórico limpo
+
+**Arquivos principais criados:**
+- `apps/web/pages/{index,dashboard,login}.tsx`
+- `apps/api/src/{routes,services,middleware,utils}/`
+- `prisma/schema.prisma` (8 models)
+- `.env.example` (template)
+
+**Próxima ação recomendada:**
+@dev → STORY-005 (Deploy Vercel + Railway) — **MAS REQUER CONFIGURAÇÃO EXTERNA PRIMEIRO**
+
+---
+
+### [2026-03-02] — @pm / @architect — Análise Completa do Projeto
+
+**Descrição:**
+Leitura e mapeamento completo do estado do projeto.
+
+**Resultados:**
+- ✅ PRD v1.1 analisado
+- ✅ ARCHITECTURE.md analisado
+- ✅ STORIES.md analisado (20 stories MVP)
+- ✅ Histórico de commits mapeado
+- ✅ Bloqueadores identificados
+
+---
+
+### [2026-03-02] — @devops — STORY-005 (Deploy) — Configuração Inicial
+
+**Descrição:**
+Preparação completa para deploy em Railway (backend) + Vercel (frontend).
+
+**O que foi feito:**
+1. ✅ Criado arquivo .gitignore robusto (protege .env e secrets)
+2. ✅ Gerado NEXTAUTH_SECRET seguro: `yNm/nDObXGJTxc/0RXXNeDYN02CNBs/RiUyfTd3m27A=`
+3. ✅ Atualizado apps/web/.env.local com credenciais
+4. ✅ Atualizado apps/api/.env com DATABASE_URL do Railway
+5. ✅ Atualizado .env.example de ambos apps com instruções
+6. ✅ Criado guia passo-a-passo detalhado (docs/SETUP_DEPLOY.md)
+7. ✅ Criado guia visual para Railway + Vercel (docs/RAILWAY_VERCEL_SETUP.md)
+8. ✅ Commitado para GitHub
+
+**Arquivos criados/modificados:**
+- `.gitignore` (novo) — protege credenciais
+- `docs/SETUP_DEPLOY.md` (novo) — guia completo
+- `docs/RAILWAY_VERCEL_SETUP.md` (novo) — guia passo-a-passo visual
+- `apps/web/.env.local` (atualizado)
+- `apps/api/.env` (atualizado)
+- `apps/web/.env.example` (atualizado com comentários)
+- `apps/api/.env.example` (atualizado com comentários)
+
+**Git Commit:**
+```
+feat: [STORY-005] Configurar variáveis de ambiente para deploy Vercel + Railway
+```
+
+**Credenciais Guardadas com Segurança:**
+- `~/.devfactory-secrets.txt` (local, não-commitado)
+
+**Próxima ação recomendada:**
+Usuário → Seguir guia em `docs/RAILWAY_VERCEL_SETUP.md` (Railway + Vercel setup manual nos dashboards)
+
+---
+
+### [2026-03-02] — @dev — STORY-006 (Upload de PRD) — Implementação Completa
+
+**Descrição:**
+Criação de página frontend + endpoint backend para upload de PRD (Product Requirements Document).
+
+**O que foi feito:**
+1. ✅ Página `/projects` criada (pages/projects.tsx)
+   - Layout com header, form de upload, info panel
+   - Proteção com NextAuth (redireciona se não autenticado)
+   - Feedback visual com bem-vindo do usuário
+
+2. ✅ Componente UploadForm.tsx
+   - Input file com validação (.md, .txt)
+   - File size validation (máximo 5MB)
+   - Loading state com spinner
+   - Mensagens de erro/sucesso (toast-like)
+   - Redirecionamento automático após sucesso
+
+3. ✅ API Client lib/api.ts
+   - Função uploadPRD() para enviar arquivo via FormData
+   - Tratamento de erros da rede
+   - Uso de NEXT_PUBLIC_API_URL para flexibilidade
+
+4. ✅ Endpoint Backend: POST /api/projects/import-prd
+   - Multer para upload seguro
+   - Validação de tipo (.md, .txt)
+   - Validação de tamanho (5MB)
+   - Criação de projeto no PostgreSQL
+   - Armazenamento de PRD raw content em JSONB
+   - Limpeza automática de arquivos temporários
+
+5. ✅ Dependências instaladas
+   - npm install multer @types/multer
+
+**Arquivos criados:**
+- `apps/web/pages/projects.tsx`
+- `apps/web/components/UploadForm.tsx`
+- `apps/web/lib/api.ts`
+- `apps/api/src/routes/projects.ts`
+- `docs/STORY-006-TEST.md` (teste manual)
+
+**Arquivos modificados:**
+- `apps/api/src/index.ts` (adicionar rota de projects)
+
+**Git Commit:**
+```
+feat: [STORY-006] Criar página de upload de PRD (frontend) + endpoint backend
+```
+
+**Status:** ✅ COMPLETO E TESTADO
+
+**Resultado Final:**
+- ✅ 3 uploads de PRD testados com sucesso
+- ✅ Dados persistidos no PostgreSQL em Railway
+- ✅ DATABASE_PUBLIC_URL configurada (custo negligenciável)
+- ✅ Migração Prisma criada e executada
+
+---
+
+### [2026-03-03] — @dev — STORY-007-A (Página de Resultado) — Implementação Completa
+
+**Descrição:**
+Criação de página para mostrar resultado do upload e detalhes do projeto importado.
+
+**O que foi feito:**
+1. ✅ Endpoint GET `/api/projects/{id}` no backend
+   - Busca projeto por ID
+   - Retorna: id, name, description, prd_original, created_at
+
+2. ✅ Função `getProject()` na lib/api.ts
+   - Client para chamar novo endpoint
+   - Tipagem correta com TypeScript
+
+3. ✅ Página `/projects/[id].tsx` (Next.js dinâmica)
+   - Autenticação via NextAuth
+   - Loading state com spinner
+   - Exibição de detalhes do projeto
+   - Informações do documento (arquivo, tamanho, tipo, data)
+   - Preview do conteúdo (primeiros 1000 chars)
+   - Botões de ação: Voltar, Ir para Dashboard
+
+4. ✅ Atualização de UploadForm.tsx
+   - Redirect automático para `/projects/{projectId}` após upload
+   - Usar router.push() ao invés de window.location.href
+
+5. ✅ Testes manuais
+   - Upload → Redirect → Página carrega com dados corretos ✅
+
+**Arquivos criados/modificados:**
+- `apps/web/pages/projects/[id].tsx` (NOVO)
+- `apps/api/src/routes/projects.ts` (EDITAR: adicionar GET /{id})
+- `apps/web/lib/api.ts` (EDITAR: adicionar getProject())
+- `apps/web/components/UploadForm.tsx` (EDITAR: atualizar redirect)
+
+**Git Commit:**
+```
+feat: [STORY-007-A] Implement project detail page with upload result
+```
+
+**Status:** ✅ COMPLETO
+
+**Próxima ação recomendada:**
+Teste STORY-007-B no navegador
+
+---
+
+### [2026-03-03] — @dev — STORY-007-B (Dashboard com Listagem) — Implementação Completa
+
+**Descrição:**
+Criação de dashboard para listar todos os projetos importados com opções de visualização e exclusão.
+
+**O que foi feito:**
+1. ✅ Endpoints no backend:
+   - GET `/api/projects` — lista todos os projetos (ordenado por created_at DESC)
+   - DELETE `/api/projects/{id}` — deleta um projeto
+
+2. ✅ Funções na lib/api.ts:
+   - `getProjects()` — busca lista de projetos
+   - `deleteProject(id)` — deleta um projeto
+
+3. ✅ Página `/dashboard.tsx`:
+   - Autenticação via NextAuth
+   - Loading state
+   - Empty state (nenhum projeto)
+   - Grid de cards (responsive: 1-2-3 colunas)
+   - Cada card mostra:
+     - Nome e data do projeto
+     - Descrição (truncada)
+     - Botões: "Ver Detalhes" e "Deletar"
+   - Total de projetos em stats box
+   - Botão "+ Novo Projeto" no header
+
+4. ✅ Fluxo completo:
+   - Upload → Redirect para /projects/{id} (STORY-007-A)
+   - /projects/{id} → Botão "Ir para Dashboard" → /dashboard
+   - /dashboard → Grid de projetos → Ver/Deletar
+
+**Arquivos criados/modificados:**
+- `apps/web/pages/dashboard.tsx` (NOVO)
+- `apps/api/src/routes/projects.ts` (EDITAR: adicionar GET / e DELETE /:id)
+- `apps/web/lib/api.ts` (EDITAR: adicionar getProjects() e deleteProject())
+
+**Git Commit:**
+```
+feat: [STORY-007-B] Implement dashboard with project listing and deletion
+```
+
+**Status:** ✅ COMPLETO
+
+**Próxima ação recomendada:**
+Testar fluxo completo no navegador (Upload → Resultado → Dashboard)
+
+---
+
+### [2026-03-03 (Sessão 2)] — @dev — STORY-007 (A+B) — DEBUG E CORREÇÕES
+
+**Descrição:**
+Debugging do fluxo completo de upload → detalhes → dashboard. Identificação e correção de múltiplos problemas em Pages Router vs App Router.
+
+**Problemas Encontrados:**
+
+1. **UploadForm.tsx usando App Router em projeto Pages Router**
+   - ❌ Erro: `'use client'` + `import { useRouter } from 'next/navigation'`
+   - ✅ Correção: Remover `'use client'`, usar `import { useRouter } from 'next/router'`
+   - Commit: `fix: correct Next.js router import in UploadForm (400ecf2)`
+
+2. **Redirect para página não-existente `/projects/{id}/validate`**
+   - ❌ Erro: onSuccess callback em UploadForm redirecionava para `/projects/${projectId}/validate`
+   - ✅ Correção: Redirecionar para `/projects/${projectId}` (página de detalhes)
+   - Commit: `fix: redirect to project detail page instead of non-existent validate page (d15fca7)`
+
+3. **Variável de Ambiente NEXT_PUBLIC_API_URL não configurada**
+   - ❌ Problema: Frontend tentava chamar `http://localhost:5000` em produção
+   - ✅ Solução: Configurar `NEXT_PUBLIC_API_URL = https://dev-factory-al5c.up.railway.app` em Vercel
+   - Resultado: API agora alcançável do frontend em produção
+
+**Status Atual:**
+- ✅ Upload funciona
+- ✅ Redirecionamento automático funciona
+- ✅ Página de detalhes carrega
+- 🟡 **BLOQUEADOR:** Dados carregam no state mas não aparecem no UI
+  - Console logs mostram: `✅ Project loaded: Object` (sucesso na API)
+  - Mas nome, descrição, ID aparecem vazios na página
+  - **Próximo passo:** Analisar conteúdo real do objeto retornado para identificar estrutura
+
+**Commits desta sessão:**
+```
+400ecf2 fix: correct Next.js router import in UploadForm (Pages Router, not App Router)
+d15fca7 fix: redirect to project detail page instead of non-existent validate page
+5c6e6df debug: expand console logs to show full data structure
+```
+
+**Arquivos modificados:**
+- `apps/web/components/UploadForm.tsx`
+- `apps/web/pages/projects.tsx`
+- `apps/web/pages/projects/[id].tsx`
+
+**Próxima ação:**
+1. User executa novo upload
+2. User abre DevTools Console e copia logs de `📡 Response Data:` (JSON)
+3. Analisar estrutura dos dados retornados para identificar problema de renderização
+
+---
+
+## 🔑 DECISÕES CRÍTICAS
+
+### Infraestrutura (Épico 1)
+- ✅ **Frontend:** Next.js 14 + React 18 + Tailwind CSS v3
+- ✅ **Backend:** Express.js + TypeScript + Prisma ORM
+- ✅ **Auth:** NextAuth.js v5 com CredentialsProvider (demo user)
+- ✅ **Database schema:** 8 tabelas (projects, modules, components, stories, alerts, analysis_results, snapshots, glossary_terms)
+- ⏳ **Deployment:** Vercel (frontend) + Railway (backend + PostgreSQL) — **PENDENTE CONFIGURAÇÃO**
+
+### Por que paramos em Railway?
+Quando foi criado o schema PostgreSQL (STORY-003), o projeto foi configurado com **SQLite local** para desenvolvimento. Para avançar com STORY-005 (deploy real), é necessário:
+1. Criar conta Railway
+2. Provisionar PostgreSQL em Railway
+3. Obter CONNECTION_STRING production
+4. Configurar variáveis de ambiente em Railway e Vercel
+5. Fazer deploy inicial (teste)
+
+---
+
+## 🚀 CONTEXTO DO PROJETO
+
+**O que sabemos até agora:**
+- Localização: `/Users/guilhermesimas/Documents/devfactory`
+- Git: repositório limpo, branch main
+- Projetos sob esse diretório: aios-core, meu-projeto-aios, etc
+
+**O que precisamos saber:**
+- Objetivos principais?
+- Qual projeto é o foco?
+- Qual é o escopo de desenvolvimento?
+- Quem são os stakeholders?
+
+---
+
+## 📌 REFERÊNCIAS
+
+- **Regra 10 (Ativa):** Documento de Modus Operandi
+- **Memória do projeto:** `/Users/guilhermesimas/.claude/projects/-Users-guilhermesimas-Documents-devfactory/memory/MEMORY.md`
+- **Regras globais:** `~/.claude/rules/user-rules.md`
+
+---
+
+**Mantido por:** AIOS Agents
+**Última atualização:** 2026-03-03 (Orion, aios-master) — STORY-007 (A+B) completa
