@@ -44,6 +44,7 @@ export default function MapPage() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('sub-hexagons');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [centerMapFn, setCenterMapFn] = useState<(() => void) | null>(null);
 
   // Load view mode from localStorage
   useEffect(() => {
@@ -243,11 +244,9 @@ export default function MapPage() {
               {generating ? '⏳ Gerando...' : '🔄 Regenerar'}
             </button>
             <button
-              onClick={() => {
-                // Centralizar mapa (implementar depois)
-                console.log('Centralizar mapa');
-              }}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors"
+              onClick={() => centerMapFn && centerMapFn()}
+              disabled={!centerMapFn}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
             >
               📌 Centralizar
             </button>
@@ -294,6 +293,7 @@ export default function MapPage() {
                   // Modal will open automatically via state
                 }
               }}
+              onReady={(fn) => setCenterMapFn(() => fn)}
             />
           </div>
         )}

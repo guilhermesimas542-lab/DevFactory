@@ -13,6 +13,7 @@ interface HexagonMapProps {
   width?: number;
   height?: number;
   onHexagonClick?: (d: HexagonData) => void;
+  onReady?: (centerFn: () => void) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function HexagonMap({
   width = 900,
   height = 700,
   onHexagonClick,
+  onReady,
 }: HexagonMapProps) {
   const [tooltip, setTooltip] = useState<{ visible: boolean; content: string; x: number; y: number }>({
     visible: false,
@@ -97,6 +99,42 @@ export default function HexagonMap({
       svgRefD3.current = svg;
       svg.call(zoom as any);
 
+      // Expose center function via onReady callback
+      if (onReady) {
+        const centerFn = () => {
+          const svgNode = svg.node();
+          if (!svgNode) return;
+
+          try {
+            const zoomGroup = svgNode.querySelector('.zoom-group') as SVGGElement | null;
+            if (zoomGroup) {
+              const bbox = zoomGroup.getBBox();
+              if (bbox.width > 0 && bbox.height > 0) {
+                const svgWidth = svgNode.clientWidth || width;
+                const svgHeight = svgNode.clientHeight || height;
+                const scale = Math.min(
+                  svgWidth / (bbox.width + 80),
+                  svgHeight / (bbox.height + 80),
+                  2
+                );
+                const tx = svgWidth / 2 - (bbox.x + bbox.width / 2) * scale;
+                const ty = svgHeight / 2 - (bbox.y + bbox.height / 2) * scale;
+                const transform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+                svg.transition().duration(500).call(zoom.transform as any, transform);
+                return;
+              }
+            }
+          } catch (_e) {
+            // fallback below
+          }
+
+          // Fallback: reset to identity
+          svg.transition().duration(500).call(zoom.transform as any, d3.zoomIdentity);
+        };
+
+        onReady(centerFn);
+      }
+
       // Reset zoom on double-click
       svg.on('dblclick.zoom', () => {
         svg
@@ -111,7 +149,7 @@ export default function HexagonMap({
         simulation.stop();
       };
     },
-    [data, links, width, height, onHexagonClick]
+    [data, links, width, height, onHexagonClick, onReady]
   );
 
   const handleResetZoom = () => {
