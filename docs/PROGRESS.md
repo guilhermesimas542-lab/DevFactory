@@ -29,6 +29,26 @@
 
 ---
 
+### 2026-03-11 @dev (Dex) — Épicos 2, 3 e 4 validados — TODAS as stories concluídas
+
+- STORY-006: Página /projects + UploadForm ✅
+- STORY-007: POST /api/projects/import-prd + multer ✅
+- STORY-008: parsePRDMarkdown() ✅
+- STORY-009: createProjectFromParsedPRD() com transação Prisma ✅
+- STORY-010: /projects/[id]/validate + TreeEditor ✅
+- STORY-011: useD3 hook ✅
+- STORY-012: drawHexagons() + HexagonMap ✅
+- STORY-013: forceLayout + links ✅
+- STORY-014: SidePanel + click handler ✅
+- STORY-015: zoom/pan (HexagonMap) ✅
+- STORY-016: cloneGitHubRepo() ✅
+- STORY-017: parseFiles() com Babel ✅
+- STORY-018: scoreMatch() com fuzzy/substring ✅
+- STORY-019: AnalysisEngine.analyze() ✅
+- STORY-020: GET /progress + dashboard ✅
+- TypeScript: 0 erros em web e api
+- Status: ✅ MVP COMPLETO
+
 ### 2026-03-11 @devops (Gage) — STORY-005 concluída — Deploy configurado
 
 - Vercel (frontend) + Railway (backend) já conectados e em produção
