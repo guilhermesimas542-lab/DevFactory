@@ -13,6 +13,7 @@ import activityRoutes from './routes/activity'
 import chatRoutes from './routes/chat'
 import learningRoutes from './routes/learning'
 import webhooksRoutes from './routes/webhooks'
+import { WebhookService } from './services/WebhookService'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -135,6 +136,28 @@ setInterval(async () => {
     console.error('❌ GitHub sync job failed:', error)
   }
 }, 5 * 60 * 1000) // 5 minutes
+
+// Webhook retry worker - runs every 2 minutes
+setInterval(async () => {
+  try {
+    console.log('⏰ Webhook retry worker started')
+    const retriedCount = await WebhookService.processRetries()
+    console.log(`✅ Webhook retry worker completed: ${retriedCount} retries processed`)
+  } catch (error) {
+    console.error('❌ Webhook retry worker failed:', error)
+  }
+}, 2 * 60 * 1000) // 2 minutes
+
+// Webhook cleanup job - runs every 24 hours
+setInterval(async () => {
+  try {
+    console.log('🗑️ Webhook cleanup job started')
+    const cleanedCount = await WebhookService.cleanupOldLogs(30)
+    console.log(`✅ Webhook cleanup completed: ${cleanedCount} logs deleted`)
+  } catch (error) {
+    console.error('❌ Webhook cleanup job failed:', error)
+  }
+}, 24 * 60 * 60 * 1000) // 24 hours
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

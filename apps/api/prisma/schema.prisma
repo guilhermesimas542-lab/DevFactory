@@ -37,6 +37,7 @@ model Project {
   snapshots         Snapshot[]
   glossary_terms    GlossaryTerm[]
   activity_logs     ActivityLog[]
+  webhook_logs      WebhookLog[]
 }
 
 model Module {
@@ -183,4 +184,43 @@ model LearningEntry {
 
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
+}
+
+model WebhookLog {
+  id            String   @id @default(cuid())
+  project_id    String
+  project       Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  // GitHub webhook metadata
+  github_event_id    String  // GitHub's X-GitHub-Delivery header
+  github_event_type  String  // push, pull_request, issues, etc
+  github_repository  String  // owner/repo format
+
+  // Processing status
+  status             String  @default("pending") // pending, processing, success, failed, retry
+  attempts           Int     @default(0)
+  last_attempt_at    DateTime?
+  next_retry_at      DateTime?
+
+  // Request/Response data
+  payload_size       Int?    // Size of webhook payload in bytes
+  processing_time_ms Int?    // Time to process webhook in milliseconds
+  http_status_code   Int?    // Response status from our API
+  error_message      String?
+
+  // Retry tracking
+  retry_count        Int     @default(0)
+  max_retries        Int     @default(5)
+
+  // Stories affected
+  stories_updated    Int     @default(0) // Number of stories updated
+  commits_processed  Int     @default(0) // Number of commits processed
+
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@unique([project_id, github_event_id])
+  @@index([project_id])
+  @@index([status])
+  @@index([created_at])
 }

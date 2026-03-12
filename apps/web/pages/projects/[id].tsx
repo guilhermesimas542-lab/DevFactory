@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProject, updateProject, syncProjectGitHub, analyzeProject, connectGitHub, disconnectGitHub } from '@/lib/api';
+import { getProject, updateProject, syncProjectGitHub, analyzeProject, connectGitHub, disconnectGitHub, getWebhookHealth, getWebhookLogs, getWebhookStats } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
 import PRDViewer from '@/components/PRDViewer';
 
@@ -65,11 +65,49 @@ export default function ProjectDetail() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [githubMessage, setGithubMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [webhookHealth, setWebhookHealth] = useState<any>(null);
+  const [webhookLogs, setWebhookLogs] = useState<any[]>([]);
+  const [webhookStats, setWebhookStats] = useState<any>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') { router.push('/login'); return; }
     if (router.isReady && status === 'authenticated') loadProject();
   }, [router.isReady, status]);
+
+  // Load webhook data (health, logs, stats)
+  const loadWebhookData = async () => {
+    if (!project?.github_webhook_id) return;
+    const projectId = project.id;
+
+    try {
+      const [healthRes, logsRes, statsRes] = await Promise.all([
+        getWebhookHealth(projectId),
+        getWebhookLogs(projectId, 10),
+        getWebhookStats(projectId),
+      ]);
+
+      if (healthRes.success && healthRes.data) setWebhookHealth(healthRes.data);
+      if (logsRes.success && logsRes.data) setWebhookLogs(logsRes.data.logs);
+      if (statsRes.success && statsRes.data) setWebhookStats(statsRes.data);
+    } catch (err) {
+      console.error('Failed to load webhook data:', err);
+    }
+  };
+
+  // Polling: reload webhook data every 30 seconds if webhook is configured
+  useEffect(() => {
+    if (!project?.github_webhook_id) return;
+
+    // Load immediately
+    loadWebhookData();
+
+    // Then poll every 30 seconds
+    const interval = setInterval(() => {
+      loadWebhookData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [project?.github_webhook_id, project?.id]);
 
   const loadProject = async () => {
     try {
@@ -420,6 +458,97 @@ export default function ProjectDetail() {
           </div>
         )}
       </InfoCard>
+
+      {/* Webhook Monitor */}
+      {project?.github_webhook_id && webhookHealth && (
+        <InfoCard title="📊 Monitor de Webhook">
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                Status:
+              </span>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 12px',
+                borderRadius: 6,
+                fontSize: 13,
+                background: webhookHealth.health_status === 'healthy' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                color: webhookHealth.health_status === 'healthy' ? 'var(--status-done)' : 'var(--status-alert)',
+              }}>
+                <span style={{ fontSize: 16 }}>
+                  {webhookHealth.health_status === 'healthy' ? '●' : '●'}
+                </span>
+                {webhookHealth.health_status === 'healthy' ? 'Saudável' : 'Problemas'}
+              </span>
+              {webhookStats && (
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)', marginLeft: 'auto' }}>
+                  {webhookStats.total} entregas
+                </span>
+              )}
+            </div>
+
+            {/* Recent Logs */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>
+                Últimas Entregas:
+              </div>
+              {webhookLogs.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {webhookLogs.slice(0, 5).map((log, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: 8,
+                        background: 'var(--bg-elevated)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 6,
+                        fontSize: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      <span style={{
+                        color: log.status === 'success' ? 'var(--status-done)' : log.status === 'failed' ? 'var(--status-alert)' : 'var(--text-secondary)',
+                      }}>
+                        {log.status === 'success' ? '✅' : log.status === 'failed' ? '❌' : '⏳'}
+                      </span>
+                      <span style={{ flex: 1, color: 'var(--text-secondary)' }}>
+                        {log.github_event_type} • {log.stories_updated || 0} stories • {log.processing_time_ms || 0}ms
+                      </span>
+                      <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                        {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} atrás
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Nenhum log de entrega ainda</p>
+              )}
+            </div>
+
+            {/* Stats */}
+            {webhookStats && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 4 }}>ENTREGAS BEM-SUCEDIDAS</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--status-done)' }}>
+                    {webhookStats.successful}/{webhookStats.total}
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 4 }}>TEMPO MÉDIO</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent)' }}>
+                    {Math.round(webhookStats.averageProcessingTime)}ms
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </InfoCard>
+      )}
 
       {showPRDModal && project.prd_original && (
         <PRDViewer

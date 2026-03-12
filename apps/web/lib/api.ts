@@ -717,3 +717,73 @@ export async function disconnectGitHub(
     return { success: false, error: message };
   }
 }
+
+/**
+ * Get webhook logs for a project
+ * @param projectId - The project ID
+ * @param limit - Maximum number of logs to return (default 50)
+ * @param offset - Number of logs to skip (default 0)
+ * @returns Array of webhook logs
+ */
+export async function getWebhookLogs(
+  projectId: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<ApiResponse<{
+  total: number;
+  limit: number;
+  offset: number;
+  logs: Array<{
+    id: string;
+    github_event_id: string;
+    github_event_type: string;
+    github_repository: string;
+    status: string;
+    processing_time_ms: number | null;
+    stories_updated: number;
+    commits_processed: number;
+    created_at: string;
+    error_message: string | null;
+  }>;
+}>> {
+  return apiCall(`/api/webhooks/${projectId}/logs?limit=${limit}&offset=${offset}`);
+}
+
+/**
+ * Get webhook statistics for a project
+ * @param projectId - The project ID
+ * @returns Webhook delivery statistics
+ */
+export async function getWebhookStats(projectId: string): Promise<ApiResponse<{
+  total: number;
+  successful: number;
+  failed: number;
+  pending: number;
+  retrying: number;
+  averageProcessingTime: number;
+  lastDelivery: string | null;
+  recentErrors: Array<{
+    time: string;
+    error: string;
+  }>;
+}>> {
+  return apiCall(`/api/webhooks/${projectId}/stats`);
+}
+
+/**
+ * Get webhook health status for a project
+ * @param projectId - The project ID
+ * @returns Webhook health information
+ */
+export async function getWebhookHealth(projectId: string): Promise<ApiResponse<{
+  connected: boolean;
+  webhook_configured: boolean;
+  last_delivery: string | null;
+  consecutive_failures: number;
+  total_deliveries: number;
+  failed_recent: number;
+  health_status: 'healthy' | 'unhealthy';
+  last_sync: string | null;
+}>> {
+  return apiCall(`/api/webhooks/${projectId}/health`);
+}
