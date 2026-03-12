@@ -29,6 +29,30 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — Feature 2A: Expandable child nodes com conexões pai-filho ✅
+
+- Adicionado estado `expandedNodes` (Set<string>) para rastrear nós parentais expandidos
+- Implementada função `getChildPosition()` que posiciona nós filhos em coluna abaixo do pai
+- Nós filhos renderizados em cards compactos (140px) com fontes menores
+- Footer com botão "▶/▼ X componentes" para toggle expand/collapse (apenas em nós com componentes)
+- SVG edges conectando pai a filhos com linhas finas (strokeWidth 0.5, opacity 0.3)
+- Nós filhos animam com fade-up ao expandir
+- Click handlers nos nós filhos suportam seleção e abertura no painel de detalhes
+- Styled CSS para nós filhos: `.node.child`, `.node-footer` com hover effects
+- TypeScript: ✅ 0 erros (corrigido parâmetro não utilizado `totalChildren`)
+- Build: ✅ Sucesso — Next.js 16.1.6 compilou sem erros
+- Commit: dc3436b (feat: add expandable child nodes (Feature 2A) with parent-child connections)
+- Status: ✅ Concluído e testado
+
+**Comportamento implementado:**
+1. Nó com componentes mostra footer "▶ 4 componentes"
+2. Click no footer expande/collapsa filhos
+3. Nós filhos aparecem em coluna vertical abaixo do pai
+4. Linhas SVG finas conectam centro do pai ao centro de cada filho
+5. Cada nó filho mostra: status icon (✓ ou ◉), nome, status (done/progress/pending)
+
+---
+
 ### 2026-03-11 @dev (Dex) — Model Selector UI (tipo Cursor) implementado ✅
 
 - Criado `ModelContext.tsx` para gerenciar estado global de seleção
