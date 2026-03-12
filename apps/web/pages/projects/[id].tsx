@@ -154,7 +154,7 @@ export default function ProjectDetail() {
     if (!project) return;
     try {
       setIsSaving(true);
-      const result = await updateProject(project.id, { github_repo_url: undefined });
+      const result = await updateProject(project.id, { github_repo_url: null as any });
       if (result.success) {
         await loadProject();
         setRepoUrl('');

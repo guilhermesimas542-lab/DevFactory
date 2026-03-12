@@ -83,7 +83,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
-        ...(github_repo_url !== undefined && { github_repo_url }),
+        ...(github_repo_url !== undefined && { github_repo_url: github_repo_url || null }),
       },
       select: {
         id: true,
