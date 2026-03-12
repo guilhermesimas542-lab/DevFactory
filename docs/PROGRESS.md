@@ -29,6 +29,72 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — Feature 3: Learning/Knowledge base system ✅
+
+**Backend (API):**
+- Adicionados models Prisma: `LearningCategory` e `LearningEntry`
+- Migration executada: `20260312041429_add_learning_category_and_entry`
+- Endpoints implementados em `/api/learning`:
+  * GET `/categories` - lista categorias com contagem de entries
+  * GET `/categories/:id` - retorna categoria com entries
+  * POST `/categories` - cria nova categoria
+  * PUT `/categories/:id` - atualiza categoria
+  * DELETE `/categories/:id` - deleta categoria (cascade)
+  * POST `/categories/:id/entries` - cria entry em categoria
+  * PUT `/entries/:id` - atualiza entry
+  * DELETE `/entries/:id` - deleta entry
+- Criado `seed.ts` com 6 categorias pré-configuradas:
+  * 📚 Next.js Essentials (2 entries)
+  * 🗄️ Database Design (2 entries)
+  * 🏗️ Architecture Patterns (1 entry)
+  * 🚀 DevOps & Deployment (1 entry)
+  * 🔗 API Design (1 entry)
+  * ✅ Testing & QA (1 entry)
+- Cada entry contém markdown com conteúdo educacional real
+- Rotas registradas em Express app (src/index.ts)
+- Banco de dados seeded com `npm run seed`
+
+**Frontend (Learning Pages):**
+- Criada página `/learn` (listagem de categorias)
+  * Grid responsivo de cards de categorias
+  * Cada card mostra: ícone, título, descrição, contagem de entries
+  * Cards clicáveis para navegar a detalhe
+  * Requer autenticação
+- Criada página `/learn/[id]` (detalhe de categoria)
+  * Layout: sidebar esquerda + conteúdo à direita
+  * Sidebar lista todas as entries da categoria
+  * Entries mostram tipo de conteúdo (artigo, dica, guia, etc)
+  * Conteúdo renderizado em markdown com ReactMarkdown
+  * Click em entry muda o conteúdo exibido
+  * Headers mostram metadados: tipo de entry e data
+  * Design dark-mode consistente com resto do app
+- Adicionado link "📚 Aprendizado" ao sidebar do ProjectLayout
+- Seção "Global" adicionada ao footer do sidebar
+
+**Styling & UX:**
+- Cards com hover effects e transições suaves
+- Breadcrumb visual mostrando categoria atual
+- Entry list com type badges coloridos
+- Markdown content com styling para headings, code blocks, lists
+- Responsive design (mobile-first)
+- Dark theme consistente
+
+**TypeScript & Build:**
+- ✅ 0 erros TypeScript (web app)
+- ✅ 0 erros TypeScript (api app)
+- Build verificado em ambas as apps
+- Commit: efebc2f (feat: add learning/knowledge base system)
+- Status: ✅ Concluído e testado
+
+**Próximos passos possíveis (fora do escopo Feature 3):**
+- Busca de entries por texto
+- Tags/categorização cruzada de entries
+- Admin page para gerenciar categorias e entries
+- Histórico de leitura do usuário
+- "Leia depois" / bookmarks de entries
+
+---
+
 ### 2026-03-12 @dev (Dex) — Feature 2B: Cascading detail panel com breadcrumb ✅
 
 - Refatorado sistema de seleção: de single `selected` node para `selectionPath` array
