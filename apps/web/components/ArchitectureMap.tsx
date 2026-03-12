@@ -235,16 +235,34 @@ function getCenter(node: ArchNode) {
   return { x: node.x + 90, y: node.y + 54 };
 }
 
-export default function ArchitectureMap({ nodes, edges }: ArchitectureMapProps) {
+export default function ArchitectureMap({ nodes: initialNodes, edges }: ArchitectureMapProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Node dragging state
+  const [nodeDragStart, setNodeDragStart] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [nodeMoved, setNodeMoved] = useState(false);
+  const DRAG_THRESHOLD = 5;
+
+  // Node positions (can be updated by dragging)
+  const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>(
+    Object.fromEntries(initialNodes.map(n => [n.id, { x: n.x, y: n.y }]))
+  );
+
+  // Update nodes with current positions
+  const nodes = initialNodes.map(n => ({
+    ...n,
+    x: nodePositions[n.id]?.x || n.x,
+    y: nodePositions[n.id]?.y || n.y,
+  }));
 
   const selectedNode = nodes.find(n => n.id === selected);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Canvas pan handlers
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.node') ||
         (e.target as HTMLElement).closest('.detail-panel') ||
         (e.target as HTMLElement).closest('.toolbar')) return;
@@ -252,22 +270,67 @@ export default function ArchitectureMap({ nodes, edges }: ArchitectureMapProps) 
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    // Handle node dragging
+    if (nodeDragStart) {
+      const deltaX = e.clientX - nodeDragStart.x;
+      const deltaY = e.clientY - nodeDragStart.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      if (distance > DRAG_THRESHOLD) {
+        if (!nodeMoved) {
+          setNodeMoved(true); // Mark that we've moved past threshold
+        }
+        // Update node position
+        setNodePositions(prev => ({
+          ...prev,
+          [nodeDragStart.nodeId]: {
+            x: prev[nodeDragStart.nodeId].x + deltaX,
+            y: prev[nodeDragStart.nodeId].y + deltaY,
+          },
+        }));
+        // Update drag start for next frame
+        setNodeDragStart({ ...nodeDragStart, x: e.clientX, y: e.clientY });
+      }
+      return;
+    }
+
+    // Handle canvas panning
     if (!dragging || !dragStart) return;
     setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
 
-  const handleMouseUp = () => setDragging(false);
+  const handleCanvasMouseUp = () => {
+    setDragging(false);
+    setNodeDragStart(null);
+    setNodeMoved(false);
+  };
+
+  // Node drag handlers
+  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId });
+  };
+
+  const handleNodeClick = (e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    // Only toggle selection if this wasn't actually a drag
+    if (nodeMoved) {
+      return; // Was a drag, don't select
+    }
+    const isSelected = selected === nodeId;
+    setSelected(isSelected ? null : nodeId);
+  };
 
   return (
     <>
       <style>{STYLES}</style>
       <div
         className={`canvas-wrap ${dragging ? 'dragging' : ''}`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseDown={handleCanvasMouseDown}
+        onMouseMove={handleCanvasMouseMove}
+        onMouseUp={handleCanvasMouseUp}
+        onMouseLeave={handleCanvasMouseUp}
       >
         {/* CANVAS (pan) */}
         <div
@@ -310,6 +373,7 @@ export default function ArchitectureMap({ nodes, edges }: ArchitectureMapProps) 
           {nodes.map(node => {
             const typeInfo = TYPE_MAP[node.type];
             const isSelected = selected === node.id;
+            const isDragging = nodeDragStart?.nodeId === node.id && nodeMoved;
             const statusColor = STATUS_COLOR[node.status];
 
             return (
@@ -320,11 +384,15 @@ export default function ArchitectureMap({ nodes, edges }: ArchitectureMapProps) 
                   left: node.x,
                   top: node.y,
                   '--accent': typeInfo.color,
+                  cursor: isDragging ? 'grabbing' : 'pointer',
+                  transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+                  boxShadow: isDragging
+                    ? `0 0 0 1px ${typeInfo.color}, 0 0 30px ${typeInfo.color}40, 0 12px 48px rgba(0,0,0,0.8)`
+                    : undefined,
+                  transition: isDragging ? 'none' : 'transform 150ms, box-shadow 150ms',
                 } as React.CSSProperties}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelected(isSelected ? null : node.id);
-                }}
+                onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+                onClick={(e) => handleNodeClick(e, node.id)}
               >
                 <div className="node-header">
                   <div
