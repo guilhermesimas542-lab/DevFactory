@@ -134,6 +134,23 @@ export default function ProjectLayout({ children }: ProjectLayoutProps) {
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--bg-border)', padding: '10px 8px' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)', padding: '4px 8px 8px' }}>
+            Global
+          </div>
+          <button
+            onClick={() => router.push('/learn')}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+              padding: '7px 10px', borderRadius: 8, fontSize: 12.5,
+              color: 'var(--text-secondary)', background: 'transparent',
+              border: 'none', cursor: 'pointer', transition: 'all 150ms', textAlign: 'left',
+              marginBottom: 6,
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-elevated)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            📚 Aprendizado
+          </button>
           <button
             onClick={() => router.push('/dashboard')}
             style={{

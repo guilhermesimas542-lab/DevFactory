@@ -153,3 +153,31 @@ model ActivityLog {
 
   created_at  DateTime @default(now())
 }
+
+model LearningCategory {
+  id          String   @id @default(cuid())
+  title       String   @unique
+  description String
+  icon        String   // emoji or icon name
+  color       String   // hex color for UI
+  order       Int      @default(0) // for sorting
+
+  entries     LearningEntry[]
+
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+model LearningEntry {
+  id          String   @id @default(cuid())
+  category_id String
+  category    LearningCategory @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  title       String
+  content     String   // markdown content
+  type        String   @default("article") // article, tip, guide, example, faq
+  order       Int      @default(0) // for sorting within category
+
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
