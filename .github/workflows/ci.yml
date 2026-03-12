@@ -16,8 +16,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: package-lock.json
-      - run: npm ci --workspaces
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci
       - run: npm run typecheck -w apps/web
       - run: npm run lint -w apps/web
 
@@ -30,8 +30,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: package-lock.json
-      - run: npm ci --workspaces
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci
       - run: cd apps/api && npx prisma generate
         env:
           DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
