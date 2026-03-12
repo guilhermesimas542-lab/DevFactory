@@ -29,6 +29,83 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — GitHub Webhook Integration implementado ✅
+
+**Backend (API):**
+- **Schema Prisma:** Adicionados 3 novos campos ao Project:
+  * `github_token` (String, base64 encoded PAT)
+  * `github_webhook_id` (Int, ID do webhook no GitHub)
+  * `github_webhook_secret` (String, chave para validar assinatura HMAC)
+- **Migration:** `20260312043522_add_github_webhook_fields` criada e aplicada
+- **Endpoints novos em `/api/projects`:**
+  * `POST /:id/connect-github` - Registra webhook no GitHub
+    - Valida PAT com GET /api/github (rate_limit check)
+    - Gera webhook_secret aleatório (crypto.randomBytes(32))
+    - Faz POST para https://api.github.com/repos/owner/repo/hooks
+    - Armazena credentials encriptadas (base64) no DB
+    - Retorna: { connected: true, webhook_id, repository, webhook_url }
+  * `DELETE /:id/disconnect-github` - Remove webhook do GitHub
+    - Valida existência de credenciais
+    - Faz DELETE para https://api.github.com/repos/owner/repo/hooks/:webhook_id
+    - Limpa credentials do DB (seta github_token, webhook_id, secret como NULL)
+    - Retorna: { disconnected: true, repository }
+- **Novo arquivo: `/api/routes/webhooks.ts`**
+  * `POST /api/webhooks/github` - Endpoint PÚBLICO para receber eventos do GitHub
+  * Sem autenticação de sessão (chamado pelo GitHub, não pelo browser)
+  * Verifica assinatura HMAC-SHA256 usando `X-Hub-Signature-256` header
+  * Filtra apenas eventos "push" (ignora "ping", etc)
+  * Processa commits: extrai story-* refs das mensagens
+  * Atualiza status de stories (feat: → in_progress, done:/fix: → completed)
+  * Atualiza `github_last_sync` no projeto
+  * Retorna 200 imediatamente (GitHub espera resposta < 10s)
+- **Atualizado sync-github endpoint:**
+  * Agora usa token do projeto (`project.github_token`) se disponível
+  * Fallback para `process.env.GITHUB_TOKEN` (token global) se projeto não tiver token
+  * Decodifica token de base64 antes de usar na API do GitHub
+- **Registrado no Express:** Importado webhooksRoutes em src/index.ts e registrado em `/api/webhooks`
+- **Variável de ambiente:** `API_PUBLIC_URL` adicionada ao .env (necessária para configurar URL do webhook no GitHub)
+
+**Frontend (Web):**
+- **Novas funções em `/lib/api.ts`:**
+  * `connectGitHub(projectId, githubToken)` - POST /api/projects/:id/connect-github
+    - Envía token e recebe webhook_id, repository, webhook_url
+  * `disconnectGitHub(projectId)` - DELETE /api/projects/:id/disconnect-github
+    - Sem parâmetros (tudo vem do projeto)
+    - Retorna status de desconexão
+
+**TypeScript & Build:**
+- ✅ Prisma client regenerado (`npx prisma generate`)
+- ✅ 0 erros TypeScript em apps/api
+- ✅ 0 erros TypeScript em apps/web
+
+**Fluxo completo de webhook:**
+1. Usuário entra em projeto → vê seção GitHub no painel
+2. Cola URL do repo + PAT (Personal Access Token)
+3. Clica "Conectar com GitHub"
+4. DevFactory valida token → registra webhook no GitHub
+5. Dev faz `git push` com mensagem contendo "story-001"
+6. GitHub envia POST para `/api/webhooks/github` (assinado com HMAC)
+7. DevFactory verifica assinatura → processa commits
+8. Stories são atualizadas no banco de dados
+9. Dashboard reflete mudanças (na próxima página refresh ou webhook)
+
+**Segurança:**
+- Verificação de assinatura HMAC-SHA256 é OBRIGATÓRIA
+- Token é armazenado em base64 (suficiente para MVP)
+- Webhook secret é gerado aleatoriamente (32 bytes)
+- Endpoint de webhook é público mas seguro (validação de assinatura)
+
+**Commit:** 860b99e (feat: add GitHub webhook integration with PAT authentication)
+**Status:** ✅ Código concluído e testado localmente
+
+**Próximos passos necessários:**
+1. Configurar `API_PUBLIC_URL` no Railway dashboard (ex: https://devfactory-api.up.railway.app)
+2. Deploy para Railway/Vercel
+3. Implementar frontend UI para conexão GitHub no projeto detail page
+4. Teste end-to-end: criar projeto → conectar GitHub → fazer push → verificar atualização
+
+---
+
 ### 2026-03-12 @dev (Dex) — Feature 3: Learning/Knowledge base system ✅
 
 **Backend (API):**
