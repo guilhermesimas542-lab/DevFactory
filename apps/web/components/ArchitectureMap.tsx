@@ -163,6 +163,12 @@ const STYLES = `
   .panel-close { margin-left: auto; cursor: pointer; color: var(--text-dim); font-size: 18px; line-height: 1; padding: 2px; opacity: 0.6; }
   .panel-close:hover { opacity: 1; }
 
+  .panel-breadcrumb { padding: 8px 20px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: center; gap: 6px; overflow-x: auto; }
+  .breadcrumb-item { font-size: 10px; color: var(--text-dim); cursor: pointer; transition: color 200ms; padding: 4px 0; flex-shrink: 0; }
+  .breadcrumb-item:hover { color: var(--text); }
+  .breadcrumb-item.active { color: var(--text); font-weight: 600; }
+  .breadcrumb-sep { color: rgba(255,255,255,0.15); font-size: 10px; margin: 0 2px; }
+
   .panel-body { padding: 16px 20px 20px; }
   .panel-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; margin-top: 14px; }
   .panel-section-label:first-child { margin-top: 0; }
@@ -269,7 +275,7 @@ function getChildPosition(parentNode: ArchNode, childIndex: number) {
 }
 
 export default function ArchitectureMap({ nodes: initialNodes, edges }: ArchitectureMapProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectionPath, setSelectionPath] = useState<string[]>([]); // e.g., ["dashboard"] or ["dashboard", "StoryBoard"]
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
@@ -294,14 +300,41 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
     y: nodePositions[n.id]?.y || n.y,
   }));
 
-  const selectedNode = nodes.find(n => n.id === selected);
+  // Get the currently selected node (could be parent or child)
+  const getSelectedNode = () => {
+    if (selectionPath.length === 0) return null;
+
+    const parentId = selectionPath[0];
+    const parentNode = nodes.find(n => n.id === parentId);
+    if (!parentNode) return null;
+
+    // If selection path has 2 items, it's a child selection
+    if (selectionPath.length === 2) {
+      const childName = selectionPath[1];
+      const childComponent = parentNode.components?.find(c => c.name === childName);
+      if (childComponent) {
+        return {
+          ...childComponent,
+          id: `${parentId}-${childName}`,
+          type: parentNode.type,
+          isChild: true,
+          parentNode,
+        } as any;
+      }
+    }
+
+    return parentNode;
+  };
+
+  const selectedNode = getSelectedNode();
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Canvas pan handlers
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.node') ||
         (e.target as HTMLElement).closest('.detail-panel') ||
-        (e.target as HTMLElement).closest('.toolbar')) return;
+        (e.target as HTMLElement).closest('.toolbar') ||
+        (e.target as HTMLElement).closest('.breadcrumb-item')) return;
     setDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   };
@@ -354,8 +387,23 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
     if (nodeMoved) {
       return; // Was a drag, don't select
     }
-    const isSelected = selected === nodeId;
-    setSelected(isSelected ? null : nodeId);
+    const isSelected = selectionPath[0] === nodeId;
+    setSelectionPath(isSelected ? [] : [nodeId]);
+  };
+
+  const handleChildNodeClick = (e: React.MouseEvent, parentId: string, childName: string) => {
+    e.stopPropagation();
+    // Only toggle selection if this wasn't actually a drag
+    if (nodeMoved) {
+      return; // Was a drag, don't select
+    }
+    // If already selected this child, deselect it. Otherwise select it.
+    const isSelected = selectionPath[0] === parentId && selectionPath[1] === childName;
+    if (isSelected) {
+      setSelectionPath([parentId]); // Go back to parent
+    } else {
+      setSelectionPath([parentId, childName]); // Select child
+    }
   };
 
   return (
@@ -382,7 +430,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
               if (!from || !to) return null;
               const f = getCenter(from);
               const t = getCenter(to);
-              const isActive = selected === edge.from || selected === edge.to;
+              const isActive = selectionPath[0] === edge.from || selectionPath[0] === edge.to;
               const my = (f.y + t.y) / 2;
               const mx = (f.x + t.x) / 2;
               const typeColor = TYPE_MAP[to.type]?.color || '#fff';
@@ -435,7 +483,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
           {/* NODES */}
           {nodes.map(node => {
             const typeInfo = TYPE_MAP[node.type];
-            const isSelected = selected === node.id;
+            const isSelected = selectionPath[0] === node.id;
             const isDragging = nodeDragStart?.nodeId === node.id && nodeMoved;
             const statusColor = STATUS_COLOR[node.status];
 
@@ -515,21 +563,19 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                   const childPos = getChildPosition(parentNode, childIndex);
                   const typeInfo = TYPE_MAP[parentNode.type];
                   const statusColor = STATUS_COLOR[component.status];
+                  const isSelected = selectionPath[0] === parentNode.id && selectionPath[1] === component.name;
 
                   return (
                     <div
                       key={`${parentNode.id}-${component.name}`}
-                      className="node child fade-in"
+                      className={`node child fade-in ${isSelected ? 'selected' : ''}`}
                       style={{
                         left: childPos.x,
                         top: childPos.y,
                         '--accent': typeInfo.color,
                         cursor: 'pointer',
                       } as React.CSSProperties}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Could open component details in panel
-                      }}
+                      onClick={(e) => handleChildNodeClick(e, parentNode.id, component.name)}
                     >
                       <div className="node-header">
                         <div
@@ -554,6 +600,35 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
         {/* DETAIL PANEL */}
         {selectedNode && (
           <div className="detail-panel fade-in">
+            {selectionPath.length > 0 && (
+              <div className="panel-breadcrumb">
+                {selectionPath.map((nodeId, index) => {
+                  const parentNode = nodes.find(n => n.id === nodeId);
+                  const isLast = index === selectionPath.length - 1;
+                  const isChild = index === 1; // Second level (child)
+
+                  return (
+                    <div key={nodeId} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {index > 0 && <span className="breadcrumb-sep">/</span>}
+                      <span
+                        className={`breadcrumb-item ${isLast ? 'active' : ''}`}
+                        onClick={() => {
+                          if (!isLast) {
+                            setSelectionPath([nodeId]);
+                          }
+                        }}
+                      >
+                        {isChild && selectionPath.length > 1
+                          ? selectionPath[1]
+                          : (parentNode?.name || nodeId)
+                        }
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <div className="panel-header">
               <div
                 className="panel-icon"
@@ -562,52 +637,88 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                   border: `1px solid ${TYPE_MAP[selectedNode.type].color}35`
                 }}
               >
-                {TYPE_MAP[selectedNode.type].icon}
+                {(selectedNode as any).isChild ? '◆' : TYPE_MAP[selectedNode.type].icon}
               </div>
               <div>
                 <div className="panel-title">{selectedNode.name}</div>
-                <div className="panel-subtitle">{selectedNode.subtype}</div>
+                <div className="panel-subtitle">
+                  {(selectedNode as any).isChild
+                    ? (selectedNode as any).status
+                    : selectedNode.subtype
+                  }
+                </div>
               </div>
-              <span className="panel-close" onClick={() => setSelected(null)}>×</span>
+              <span className="panel-close" onClick={() => setSelectionPath([])}>×</span>
             </div>
             <div className="panel-body">
-              <div className="panel-section-label">O que é isso</div>
-              <div className="panel-desc">{selectedNode.desc}</div>
-
-              <div className="panel-section-label">Progresso</div>
-              <div className="progress-big">
-                <div className="progress-big-track">
-                  <div
-                    className="progress-big-fill"
-                    style={{
-                      width: `${selectedNode.pct}%`,
-                      background: `linear-gradient(90deg, ${TYPE_MAP[selectedNode.type].color}60, ${TYPE_MAP[selectedNode.type].color})`
-                    }}
-                  />
-                </div>
-                <div className="progress-big-label">
-                  <span>0%</span>
-                  <span style={{ color: TYPE_MAP[selectedNode.type].color, fontWeight: 600 }}>{selectedNode.pct}%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
-              {selectedNode.components.length > 0 && (
+              {!(selectedNode as any).isChild ? (
                 <>
-                  <div className="panel-section-label">Componentes</div>
-                  <div className="component-list">
-                    {selectedNode.components.map((c, i) => (
-                      <div key={i} className="component-item">
-                        <div
-                          className="component-dot"
-                          style={{ background: STATUS_COLOR[c.status] }}
-                        />
-                        <span>{c.name}</span>
-                        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
-                          {c.status}
-                        </span>
+                  <div className="panel-section-label">O que é isso</div>
+                  <div className="panel-desc">{selectedNode.desc}</div>
+
+                  <div className="panel-section-label">Progresso</div>
+                  <div className="progress-big">
+                    <div className="progress-big-track">
+                      <div
+                        className="progress-big-fill"
+                        style={{
+                          width: `${selectedNode.pct}%`,
+                          background: `linear-gradient(90deg, ${TYPE_MAP[selectedNode.type].color}60, ${TYPE_MAP[selectedNode.type].color})`
+                        }}
+                      />
+                    </div>
+                    <div className="progress-big-label">
+                      <span>0%</span>
+                      <span style={{ color: TYPE_MAP[selectedNode.type].color, fontWeight: 600 }}>{selectedNode.pct}%</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+
+                  {selectedNode.components.length > 0 && (
+                    <>
+                      <div className="panel-section-label">Componentes</div>
+                      <div className="component-list">
+                        {selectedNode.components.map((c: { name: string; status: 'done' | 'progress' | 'pending' }, i: number) => (
+                          <div
+                            key={i}
+                            className="component-item"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => handleChildNodeClick({} as any, selectedNode.id, c.name)}
+                          >
+                            <div
+                              className="component-dot"
+                              style={{ background: STATUS_COLOR[c.status] }}
+                            />
+                            <span>{c.name}</span>
+                            <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
+                              {c.status}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="panel-section-label">Status</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <div
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        background: STATUS_COLOR[(selectedNode as any).status],
+                        boxShadow: `0 0 8px ${STATUS_COLOR[(selectedNode as any).status]}60`
+                      }}
+                    />
+                    <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>
+                      {(selectedNode as any).status}
+                    </span>
+                  </div>
+                  <div className="panel-section-label">Descrição</div>
+                  <div className="panel-desc">
+                    {(selectedNode as any).parentNode?.desc || 'Este é um componente do módulo acima.'}
                   </div>
                 </>
               )}
@@ -621,7 +732,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
             ⊕ Centralizar
           </button>
           <div className="toolbar-sep" />
-          <button className="toolbar-btn" onClick={() => setSelected(null)}>
+          <button className="toolbar-btn" onClick={() => setSelectionPath([])}>
             ◻ Limpar seleção
           </button>
           <div className="toolbar-sep" />
