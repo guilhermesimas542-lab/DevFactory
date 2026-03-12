@@ -524,24 +524,35 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
 
     const commits = await githubResponse.json() as Array<{
       sha: string;
-      commit: { message: string };
+      commit: { message: string; author?: { date: string } };
     }>;
+
+    console.log(`📥 Fetched ${commits.length} commits from ${owner}/${repo}`);
+    console.log(`⏰ Last sync: ${lastSync?.toISOString() || 'never'}`);
 
     // Process commits and update stories
     const storiesUpdated = [];
-    const lastSync = project.github_last_sync;
+    const availableStories = project.stories.map(s => ({ id: s.id, title: s.title }));
+    console.log(`📚 Available stories in project: ${availableStories.length} stories`);
+    if (availableStories.length > 0) {
+      console.log(`   ${availableStories.map(s => `[${s.id}] ${s.title}`).join(', ')}`);
+    } else {
+      console.log(`   ⚠️ WARNING: No stories found in this project! Commits will be processed but no stories will be updated.`);
+    }
 
     for (const commit of commits) {
-      // Skip if commit is before last sync
-      if (lastSync) {
-        const commitDate = new Date(commit.commit.message);
-        if (isNaN(commitDate.getTime()) || commitDate < lastSync) {
+      // Skip if commit is before last sync (use author.date, not message)
+      if (lastSync && commit.commit.author?.date) {
+        const commitDate = new Date(commit.commit.author.date);
+        if (!isNaN(commitDate.getTime()) && commitDate < lastSync) {
           continue;
         }
       }
 
       const commitMessage = commit.commit.message.toLowerCase();
       let newStatus: string | null = null;
+
+      console.log(`  📝 Processing commit: ${commit.sha.substring(0, 7)} - ${commit.commit.message.split('\n')[0]}`);
 
       // Check for status patterns
       if (commitMessage.match(/^done:\s*story-(\w+)/i) || commitMessage.match(/^done:\s*story/i)) {
@@ -553,26 +564,45 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
       }
 
       if (newStatus) {
-        // Extract story ID from message
-        const storyIdMatch = commitMessage.match(/story-(\w+)/);
+        // Extract story ID from message (keeps "story-001" format)
+        const storyIdMatch = commitMessage.match(/story[-_]?(\w+)/i);
         let matchedStory = null;
 
         if (storyIdMatch) {
-          // Try to match by story ID
-          matchedStory = project.stories.find(s => s.id === storyIdMatch[1] || s.id.endsWith(storyIdMatch[1]));
+          // Try to match by story ID (storyIdMatch[1] = just the number part)
+          const storyId = storyIdMatch[1];
+          console.log(`    🔍 Extracted story ID: "${storyId}", searching...`);
+          matchedStory = project.stories.find(s =>
+            s.id === storyId ||
+            s.id.endsWith(storyId) ||
+            s.id === `story-${storyId}` ||
+            s.id === `story_${storyId}`
+          );
+
+          if (matchedStory) {
+            console.log(`    ✓ Found story by ID: [${matchedStory.id}] ${matchedStory.title}`);
+          } else {
+            console.log(`    ✗ No story found for ID "${storyId}"`);
+          }
         }
 
         // If not found by ID, try to match by title (partial, case insensitive)
         if (!matchedStory) {
           const storyTitle = commitMessage.replace(/^(feat|fix|done):\s*/i, '').split('\n')[0].trim();
+          console.log(`    🔍 Trying to match by title: "${storyTitle}"`);
           matchedStory = project.stories.find(s =>
             s.title.toLowerCase().includes(storyTitle.toLowerCase()) ||
             storyTitle.toLowerCase().includes(s.title.toLowerCase())
           );
+
+          if (matchedStory) {
+            console.log(`    ✓ Found story by title: [${matchedStory.id}] ${matchedStory.title}`);
+          }
         }
 
         if (matchedStory) {
           // Update story status
+          console.log(`    📌 Updating story ${matchedStory.id} to "${newStatus}"`);
           await prisma.story.update({
             where: { id: matchedStory.id },
             data: {
@@ -589,6 +619,8 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
             commit_sha: commit.sha.substring(0, 7),
             commit_message: commit.commit.message.split('\n')[0],
           });
+        } else {
+          console.log(`    ⚠️ No story found for this commit`);
         }
       }
     }
@@ -598,6 +630,13 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
       where: { id },
       data: { github_last_sync: new Date() },
     });
+
+    console.log(`✅ Sync completed: ${storiesUpdated.length} stories updated`);
+    if (storiesUpdated.length > 0) {
+      storiesUpdated.forEach(s => {
+        console.log(`   📍 [${s.story_id}] ${s.title} → ${s.new_status}`);
+      });
+    }
 
     res.status(200).json({
       success: true,
