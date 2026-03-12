@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint pages components lib",
+    "lint": "eslint pages components lib --max-warnings=999",
     "typecheck": "tsc --noEmit",
     "test": "echo \"Test suite not yet configured\""
   },
