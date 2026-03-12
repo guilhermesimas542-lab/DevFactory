@@ -60,7 +60,7 @@ class GeminiProvider implements ILLMProvider {
  */
 class GroqProvider implements ILLMProvider {
   private groq: Groq;
-  private modelName = 'mixtral-8x7b-32768';
+  private modelName = 'llama-3.3-70b-versatile';
 
   constructor(apiKey: string) {
     this.groq = new Groq({ apiKey });
