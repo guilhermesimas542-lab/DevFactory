@@ -33,7 +33,8 @@ export function createForceSimulation(
     .force('charge', d3.forceManyBody().strength(-300))
     .force('center', d3.forceCenter(width / 2, height / 2))
     .force('collision', d3.forceCollide().radius(50))
-    .alphaDecay(0.02);
+    .alphaDecay(0.15)  // Faster decay: simulation settles quicker
+    .alphaMin(0.001);  // Stop when alpha reaches minimum
 }
 
 /**
