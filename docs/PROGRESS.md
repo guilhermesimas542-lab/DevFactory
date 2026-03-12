@@ -29,14 +29,14 @@
 
 ---
 
-### 2026-03-12 @dev (Dex) — GitHub Webhook Integration implementado ✅
+### 2026-03-12 @dev (Dex) — GitHub Webhook Integration implementado ✅ (COMPLETO)
 
 **Backend (API):**
 - **Schema Prisma:** Adicionados 3 novos campos ao Project:
   * `github_token` (String, base64 encoded PAT)
   * `github_webhook_id` (Int, ID do webhook no GitHub)
   * `github_webhook_secret` (String, chave para validar assinatura HMAC)
-- **Migration:** `20260312043522_add_github_webhook_fields` criada e aplicada
+- **Migration:** `20260312043522_add_github_webhook_fields` criada
 - **Endpoints novos em `/api/projects`:**
   * `POST /:id/connect-github` - Registra webhook no GitHub
     - Valida PAT com GET /api/github (rate_limit check)
@@ -68,41 +68,67 @@
 **Frontend (Web):**
 - **Novas funções em `/lib/api.ts`:**
   * `connectGitHub(projectId, githubToken)` - POST /api/projects/:id/connect-github
-    - Envía token e recebe webhook_id, repository, webhook_url
   * `disconnectGitHub(projectId)` - DELETE /api/projects/:id/disconnect-github
-    - Sem parâmetros (tudo vem do projeto)
-    - Retorna status de desconexão
+- **UI melhorada em `pages/projects/[id].tsx`:**
+  * Nova seção "Integração GitHub" com suporte para webhooks
+  * Estados visuais: desconectado → entrada de URL → entrada de PAT → conectado
+  * Mostrar status do webhook (Ativo/Desconectado)
+  * Botão "Conectar com GitHub" com instruções para gerar PAT
+  * Instruções inline sobre permissões necessárias (repo + admin:repo_hook)
+  * Botão "Sincronizar Manualmente" para força-refresh (quando webhook não é instant)
+  * Botão "Desconectar" com confirmação
+  * Mostrar última sincronização (data/hora)
+  * Mensagens de sucesso/erro para cada operação
+  * Validação de campos (botões desabilitados até ter dados válidos)
 
 **TypeScript & Build:**
 - ✅ Prisma client regenerado (`npx prisma generate`)
 - ✅ 0 erros TypeScript em apps/api
 - ✅ 0 erros TypeScript em apps/web
+- ✅ Refatorada interface ProjectData para suportar github_webhook_id (campo opcional)
 
-**Fluxo completo de webhook:**
-1. Usuário entra em projeto → vê seção GitHub no painel
-2. Cola URL do repo + PAT (Personal Access Token)
-3. Clica "Conectar com GitHub"
-4. DevFactory valida token → registra webhook no GitHub
-5. Dev faz `git push` com mensagem contendo "story-001"
-6. GitHub envia POST para `/api/webhooks/github` (assinado com HMAC)
-7. DevFactory verifica assinatura → processa commits
-8. Stories são atualizadas no banco de dados
-9. Dashboard reflete mudanças (na próxima página refresh ou webhook)
+**Documentação:**
+- Criado `docs/GITHUB_INTEGRATION.md`:
+  * Guia passo-a-passo para gerar PAT no GitHub
+  * Instruções de setup no DevFactory
+  * Tabela com padrões de commit reconhecidos
+  * Explicação de como matching de stories funciona (por ID ou título)
+  * Instruções de segurança e troubleshooting
+  * Seção sobre webhook verification
+  * Guia para desconectar
+
+**Fluxo completo de webhook (Implementado):**
+1. Usuário entra em projeto → vê seção "Integração GitHub"
+2. Entra URL do repositório → clica "Próximo"
+3. Cola PAT (Personal Access Token)
+4. Clica "Conectar com GitHub"
+5. DevFactory valida token → registra webhook no GitHub automaticamente
+6. Dev faz `git push` com mensagem contendo "story-001"
+7. GitHub envia POST para `/api/webhooks/github` (assinado com HMAC-SHA256)
+8. DevFactory verifica assinatura → processa commits
+9. Stories são atualizadas no banco de dados em tempo real
+10. Dashboard reflete mudanças automaticamente (ou no próximo refresh)
+11. Para desconectar: clica "✕" → confirma → webhook removido do GitHub e DB limpo
 
 **Segurança:**
-- Verificação de assinatura HMAC-SHA256 é OBRIGATÓRIA
-- Token é armazenado em base64 (suficiente para MVP)
-- Webhook secret é gerado aleatoriamente (32 bytes)
-- Endpoint de webhook é público mas seguro (validação de assinatura)
+- ✅ Verificação de assinatura HMAC-SHA256 é OBRIGATÓRIA
+- ✅ Token é armazenado em base64 (suficiente para MVP)
+- ✅ Webhook secret é gerado aleatoriamente (32 bytes crypto.randomBytes)
+- ✅ Endpoint de webhook é público mas seguro (validação obrigatória)
+- ✅ Decodificação segura de tokens com try/catch
 
-**Commit:** 860b99e (feat: add GitHub webhook integration with PAT authentication)
-**Status:** ✅ Código concluído e testado localmente
+**Commits:**
+- 860b99e: feat: add GitHub webhook integration with PAT authentication
+- 66fc8d9: docs: add GitHub webhook integration guide and update progress
+- d82edaf: feat: implement GitHub webhook connection UI on project detail page
 
-**Próximos passos necessários:**
+**Status:** ✅ IMPLEMENTAÇÃO COMPLETA (backend + frontend + documentação)
+
+**Próximas ações para deploy:**
 1. Configurar `API_PUBLIC_URL` no Railway dashboard (ex: https://devfactory-api.up.railway.app)
-2. Deploy para Railway/Vercel
-3. Implementar frontend UI para conexão GitHub no projeto detail page
-4. Teste end-to-end: criar projeto → conectar GitHub → fazer push → verificar atualização
+2. Deploy para Railway (backend) e Vercel (frontend)
+3. Testar end-to-end: criar projeto → conectar GitHub → fazer push → verificar atualização
+4. Monitor logs de webhook em GitHub Settings → Webhooks → Recent Deliveries
 
 ---
 
