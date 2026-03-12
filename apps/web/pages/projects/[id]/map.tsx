@@ -2,66 +2,132 @@ import { useEffect, useState } from 'react';
 import { useModel } from '@/contexts/ModelContext';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProject, extractArchitecture } from '@/lib/api';
+import { extractArchitecture } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
-import HexagonMap from '@/components/HexagonMap';
-import ArchitectureDrawer from '@/components/ArchitectureDrawer';
-import ArchitectureModal from '@/components/ArchitectureModal';
-import { HexagonData } from '@/lib/hexagon';
-import { ModuleLink } from '@/lib/forceLayout';
+import ArchitectureMap, { ArchNode, ArchEdge } from '@/components/ArchitectureMap';
 
-interface ArchitectureNode {
-  id: string;
-  label: string;
-  type: 'frontend' | 'backend' | 'database' | 'auth' | 'infra' | 'integration' | 'other';
-  description: string;
-  why: string;
-  parentId: string | null;
-  components: Array<{
-    name: string;
-    description: string;
-    status: 'pending' | 'partial' | 'implemented';
-  }>;
-}
+// Mock data for testing
+const MOCK_NODES: ArchNode[] = [
+  {
+    id: 'root',
+    type: 'root',
+    x: 340,
+    y: 280,
+    name: 'DevFactory',
+    subtype: 'SaaS · Node.js + PostgreSQL',
+    pct: 72,
+    status: 'progress',
+    desc: 'Sistema de gestão de projetos com análise de arquitetura, mapa hexagonal interativo e chat com IA para automação.',
+    tags: ['Next.js', 'Express', 'PostgreSQL', 'D3.js'],
+    components: [],
+  },
+  {
+    id: 'frontend',
+    type: 'frontend',
+    x: 80,
+    y: 100,
+    name: 'Dashboard',
+    subtype: 'Next.js 16 · React 19',
+    pct: 85,
+    status: 'progress',
+    desc: 'Interface web para gestão de projetos, visualização de stories, mapa de arquitetura interativo e chat com IA.',
+    tags: ['Next.js', 'Tailwind', 'TypeScript', 'D3.js'],
+    components: [
+      { name: 'ProjectLayout', status: 'done' },
+      { name: 'ArchitectureMap', status: 'done' },
+      { name: 'AIPanel', status: 'done' },
+      { name: 'StoryBoard', status: 'progress' },
+    ],
+  },
+  {
+    id: 'backend',
+    type: 'backend',
+    x: 620,
+    y: 100,
+    name: 'API Server',
+    subtype: 'Express.js 5 · TypeScript',
+    pct: 80,
+    status: 'progress',
+    desc: 'Servidor REST que expõe endpoints para o frontend, processa PRDs, gerencia stories e integra com LLMs (Groq, Gemini).',
+    tags: ['Express', 'Prisma', 'REST', 'TypeScript'],
+    components: [
+      { name: 'Routes /projects', status: 'done' },
+      { name: 'Routes /stories', status: 'done' },
+      { name: 'Routes /chat', status: 'done' },
+      { name: 'Architecture Extractor', status: 'done' },
+    ],
+  },
+  {
+    id: 'database',
+    type: 'database',
+    x: 80,
+    y: 460,
+    name: 'PostgreSQL',
+    subtype: 'Railway · Prisma ORM',
+    pct: 95,
+    status: 'done',
+    desc: 'Banco relacional com 9 models: User, Project, Module, Component, Story, Alert, AnalysisResult, Snapshot, GlossaryTerm.',
+    tags: ['PostgreSQL', 'Prisma', 'Railway', 'Schema Migration'],
+    components: [
+      { name: 'Schema migrations', status: 'done' },
+      { name: 'ActivityLog model', status: 'done' },
+    ],
+  },
+  {
+    id: 'auth',
+    type: 'auth',
+    x: 620,
+    y: 460,
+    name: 'Autenticação',
+    subtype: 'NextAuth.js 5 · JWT',
+    pct: 100,
+    status: 'done',
+    desc: 'Autenticação via credentials com JWT. Middleware de sessão em todas as rotas protegidas.',
+    tags: ['NextAuth', 'JWT', 'Session', 'Credentials'],
+    components: [
+      { name: 'Credentials provider', status: 'done' },
+      { name: 'Session middleware', status: 'done' },
+    ],
+  },
+  {
+    id: 'integration',
+    type: 'integration',
+    x: 340,
+    y: 560,
+    name: 'AI Models',
+    subtype: 'Groq + Gemini · LLM Integration',
+    pct: 90,
+    status: 'progress',
+    desc: 'Integração com múltiplos LLMs: Groq (Llama 3.3 70B) para extração rápida e Gemini 2.0 Flash para análise detalhada.',
+    tags: ['Groq', 'Gemini', 'LLM', 'AI', 'Multi-provider'],
+    components: [
+      { name: 'Groq Provider', status: 'done' },
+      { name: 'Gemini Provider', status: 'done' },
+      { name: 'Model Selector UI', status: 'done' },
+    ],
+  },
+];
 
-interface ArchitectureData {
-  nodes: ArchitectureNode[];
-  connections: Array<{
-    from: string;
-    to: string;
-  }>;
-}
-
-type ViewMode = 'sub-hexagons' | 'drawer' | 'modal';
+const MOCK_EDGES: ArchEdge[] = [
+  { from: 'root', to: 'frontend' },
+  { from: 'root', to: 'backend' },
+  { from: 'root', to: 'database' },
+  { from: 'root', to: 'auth' },
+  { from: 'root', to: 'integration' },
+  { from: 'backend', to: 'database' },
+  { from: 'backend', to: 'integration' },
+];
 
 export default function MapPage() {
   const router = useRouter();
   const { selectedModel, autoMode } = useModel();
   const { status } = useSession();
-  const [architecture, setArchitecture] = useState<ArchitectureData | null>(null);
-  const [hexagons, setHexagons] = useState<HexagonData[]>([]);
-  const [links, setLinks] = useState<ModuleLink[]>([]);
+  const [nodes, setNodes] = useState<ArchNode[]>(MOCK_NODES);
+  const [edges, setEdges] = useState<ArchEdge[]>(MOCK_EDGES);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('sub-hexagons');
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [centerMapFn, setCenterMapFn] = useState<(() => void) | null>(null);
 
-  // Load view mode from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('mapViewMode') as ViewMode;
-    if (saved && ['sub-hexagons', 'drawer', 'modal'].includes(saved)) {
-      setViewMode(saved);
-    }
-  }, []);
-
-  // Save view mode to localStorage
-  useEffect(() => {
-    localStorage.setItem('mapViewMode', viewMode);
-  }, [viewMode]);
-
-  // Load project data
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -69,63 +135,10 @@ export default function MapPage() {
     }
 
     if (router.isReady && status === 'authenticated') {
-      loadProject();
-    }
-  }, [router.isReady, status]);
-
-  const loadProject = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { id } = router.query;
-      if (!id || typeof id !== 'string') {
-        setError('Invalid project ID');
-        return;
-      }
-
-      const result = await getProject(id);
-      if (!result.success || !result.data) {
-        setError(result.error || 'Failed to load project');
-        return;
-      }
-
-      // Check if modules have architecture data
-      const hasArchitecture = result.data.modules?.some(m => (m as any).architecture_type);
-
-      if (hasArchitecture) {
-        // Transform existing modules to hexagon data
-        transformModulesToHexagons(result.data.modules || []);
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(message);
-    } finally {
+      // Start with mock data, user can generate if needed
       setLoading(false);
     }
-  };
-
-  const transformModulesToHexagons = (modules: any[]) => {
-    const hexagonsData: HexagonData[] = modules.map(m => ({
-      id: m.id,
-      name: m.name,
-      hierarchy: (m as any).architecture_type || m.hierarchy || 'necessary',
-      progress: Math.round(m.components?.filter((c: any) => c.status === 'implemented').length / Math.max(m.components?.length || 1, 1) * 100) || 0,
-      description: m.description || '',
-      x: undefined,
-      y: undefined,
-    }));
-
-    const linksData: ModuleLink[] = modules
-      .filter(m => m.parent_module_id)
-      .map(m => ({
-        source: m.parent_module_id,
-        target: m.id,
-      }));
-
-    setHexagons(hexagonsData);
-    setLinks(linksData);
-  };
+  }, [router.isReady, status, router]);
 
   const handleGenerateArchitecture = async () => {
     try {
@@ -140,45 +153,36 @@ export default function MapPage() {
 
       const provider = autoMode ? undefined : selectedModel;
       const result = await extractArchitecture(id, provider);
+
       if (!result.success || !result.data) {
         setError(result.error || 'Failed to generate architecture');
         return;
       }
 
-      setArchitecture(result.data.architecture as ArchitectureData);
+      const arch = result.data as any;
 
-      // Transform architecture to hexagons
-      const arch = result.data.architecture as any;
-      const typeToHierarchy = (type: string): string => {
-        const mapping: Record<string, string> = {
-          'frontend': 'importante',
-          'backend': 'critico',
-          'database': 'critico',
-          'auth': 'critico',
-          'infra': 'importante',
-          'integration': 'necessario',
-          'other': 'desejavel',
-        };
-        return mapping[type] || 'necessario';
-      };
-
-      const hexagonsData: HexagonData[] = arch.nodes.map((node: any) => ({
+      // Transform API nodes to ArchNode format
+      const transformedNodes: ArchNode[] = arch.nodes.map((node: any) => ({
         id: node.id,
-        name: node.label,
-        hierarchy: typeToHierarchy(node.type),
-        progress: 50, // Default progress for new architecture
-        description: node.description,
-        x: undefined,
-        y: undefined,
+        type: node.type || 'integration',
+        x: node.x || Math.random() * 600,
+        y: node.y || Math.random() * 600,
+        name: node.label || node.name,
+        subtype: node.subtype || 'Module',
+        pct: node.pct || 50,
+        status: (node.status || 'progress') as 'done' | 'progress' | 'pending',
+        desc: node.description || node.why || '',
+        tags: node.tags || [],
+        components: node.components || [],
       }));
 
-      const linksData: ModuleLink[] = arch.connections.map((conn: any) => ({
-        source: conn.from,
-        target: conn.to,
+      const transformedEdges: ArchEdge[] = arch.connections.map((conn: any) => ({
+        from: conn.from,
+        to: conn.to,
       }));
 
-      setHexagons(hexagonsData);
-      setLinks(linksData);
+      setNodes(transformedNodes);
+      setEdges(transformedEdges);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';
       setError(message);
@@ -189,7 +193,7 @@ export default function MapPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin inline-block h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
           <p className="mt-4 text-gray-600">Carregando mapa...</p>
@@ -199,126 +203,47 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Top Bar */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-          {/* View Mode Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('sub-hexagons')}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                viewMode === 'sub-hexagons'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ⬡ Sub-hexágonos
-            </button>
-            <button
-              onClick={() => setViewMode('drawer')}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                viewMode === 'drawer'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ▶ Drawer
-            </button>
-            <button
-              onClick={() => setViewMode('modal')}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                viewMode === 'modal'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ⊞ Modal
-            </button>
-          </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 52px)', background: '#0D0D0F' }}>
+      {/* Top Bar */}
+      <div style={{
+        padding: '12px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        gap: '12px',
+        alignItems: 'center',
+        background: '#16161A',
+        zIndex: 50,
+      }}>
+        <button
+          onClick={handleGenerateArchitecture}
+          disabled={generating}
+          style={{
+            padding: '6px 12px',
+            background: generating ? '#6B7280' : '#6366F1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: generating ? 'not-allowed' : 'pointer',
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '12px',
+            fontWeight: 500,
+            transition: 'background 150ms',
+          }}
+        >
+          {generating ? '⏳ Gerando...' : '✨ Gerar com IA'}
+        </button>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={handleGenerateArchitecture}
-              disabled={generating}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
-            >
-              {generating ? '⏳ Gerando...' : '🔄 Regenerar'}
-            </button>
-            <button
-              onClick={() => centerMapFn && centerMapFn()}
-              disabled={!centerMapFn}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
-            >
-              📌 Centralizar
-            </button>
-          </div>
-        </div>
-
-        {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">❌ {error}</p>
+          <div style={{ color: '#EF4444', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
+            ❌ {error}
           </div>
         )}
+      </div>
 
-        {/* Generate Button - if no architecture */}
-        {!architecture && hexagons.length === 0 && !generating && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Gerar Mapa de Arquitetura
-            </h2>
-            <p className="text-gray-600 mb-6">
-              O sistema vai analisar o PRD do seu projeto e gerar automaticamente um mapa visual da arquitetura técnica.
-            </p>
-            <button
-              onClick={handleGenerateArchitecture}
-              disabled={generating}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-md transition-colors"
-            >
-              {generating ? '⏳ Analisando PRD...' : '✨ Gerar Mapa com IA'}
-            </button>
-          </div>
-        )}
-
-        {/* Hexagon Map */}
-        {hexagons.length > 0 && (
-          <div className="bg-white rounded-lg shadow">
-            <HexagonMap
-              data={hexagons}
-              links={links}
-              width={1000}
-              height={700}
-              onHexagonClick={(node: HexagonData) => {
-                setSelectedNodeId(node.id);
-                if (viewMode === 'modal') {
-                  // Modal will open automatically via state
-                }
-              }}
-              onReady={(fn) => setCenterMapFn(() => fn)}
-            />
-          </div>
-        )}
-      </main>
-
-      {/* Side Drawer */}
-      {viewMode === 'drawer' && selectedNodeId && architecture && (
-        <ArchitectureDrawer
-          nodeId={selectedNodeId}
-          nodes={architecture.nodes}
-          onClose={() => setSelectedNodeId(null)}
-        />
-      )}
-
-      {/* Modal */}
-      {viewMode === 'modal' && selectedNodeId && architecture && (
-        <ArchitectureModal
-          nodeId={selectedNodeId}
-          nodes={architecture.nodes}
-          onClose={() => setSelectedNodeId(null)}
-        />
-      )}
+      {/* Map Canvas - Full Width/Height */}
+      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <ArchitectureMap nodes={nodes} edges={edges} />
+      </div>
     </div>
   );
 }

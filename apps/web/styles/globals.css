@@ -23,12 +23,23 @@
   --type-auth: #F59E0B;
   --type-infra: #EF4444;
   --type-integration: #EC4899;
+  --type-root: #6366F1;
   --text-primary: #F1F1F3;
   --text-secondary: #9CA3AF;
   --text-tertiary: #4B5563;
   --text-code: #A78BFA;
   --font-sans: 'DM Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Canvas Map Specific */
+  --canvas-bg: #0D0D0F;
+  --canvas-grid: rgba(255,255,255,0.055);
+  --node-bg: #16161A;
+  --node-border: rgba(255,255,255,0.08);
+  --node-border-hover: rgba(255,255,255,0.22);
+  --node-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.6);
+  --edge-inactive: rgba(255,255,255,0.08);
+  --edge-active: rgba(255,255,255,0.15);
 }
 
 /* ── Base ── */
