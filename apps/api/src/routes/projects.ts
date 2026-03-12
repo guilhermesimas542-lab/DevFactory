@@ -600,17 +600,45 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
           }
         }
 
+        // If still not found, CREATE the story automatically from the commit
+        if (!matchedStory && storyIdMatch) {
+          const storyId = storyIdMatch[1];
+          const storyTitle = commitMessage.replace(/^(feat|fix|done):\s*/i, '').split('\n')[0].trim();
+
+          console.log(`    ✨ Creating new story: [${storyId}] "${storyTitle}"`);
+
+          try {
+            matchedStory = await prisma.story.create({
+              data: {
+                project_id: id,
+                id: storyId,
+                title: storyTitle,
+                description: `Auto-created from GitHub commit: ${commit.commit.message.split('\n')[0]}`,
+                status: newStatus,
+                ...(newStatus === 'in_progress' && { started_at: new Date() }),
+                ...(newStatus === 'completed' && { completed_at: new Date() }),
+              },
+            });
+            console.log(`    ✅ Story created successfully: [${matchedStory.id}]`);
+          } catch (createError) {
+            console.error(`    ❌ Failed to create story: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+            // Continue - don't fail the entire sync if one story fails to create
+          }
+        }
+
         if (matchedStory) {
-          // Update story status
-          console.log(`    📌 Updating story ${matchedStory.id} to "${newStatus}"`);
-          await prisma.story.update({
-            where: { id: matchedStory.id },
-            data: {
-              status: newStatus,
-              ...(newStatus === 'in_progress' && { started_at: new Date() }),
-              ...(newStatus === 'completed' && { completed_at: new Date() }),
-            },
-          });
+          // Update story status (if it already existed)
+          if (matchedStory.status !== newStatus) {
+            console.log(`    📌 Updating story ${matchedStory.id} to "${newStatus}"`);
+            await prisma.story.update({
+              where: { id: matchedStory.id },
+              data: {
+                status: newStatus,
+                ...(newStatus === 'in_progress' && { started_at: new Date() }),
+                ...(newStatus === 'completed' && { completed_at: new Date() }),
+              },
+            });
+          }
 
           storiesUpdated.push({
             story_id: matchedStory.id,
@@ -619,8 +647,6 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
             commit_sha: commit.sha.substring(0, 7),
             commit_message: commit.commit.message.split('\n')[0],
           });
-        } else {
-          console.log(`    ⚠️ No story found for this commit`);
         }
       }
     }
