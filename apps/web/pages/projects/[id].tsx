@@ -150,6 +150,25 @@ export default function ProjectDetail() {
     finally { setIsSaving(false); }
   };
 
+  const handleDisconnectRepo = async () => {
+    if (!project) return;
+    try {
+      setIsSaving(true);
+      const result = await updateProject(project.id, { github_repo_url: undefined });
+      if (result.success) {
+        await loadProject();
+        setRepoUrl('');
+        setGithubToken('');
+        setSyncMessage('✓ Repositório desconectado');
+        setTimeout(() => setSyncMessage(null), 3000);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao desconectar');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!project) return;
     try {
@@ -338,6 +357,20 @@ export default function ProjectDetail() {
                 {isSaving ? '⏳' : 'Próximo'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Repository configured - show disconnect button */}
+        {project.github_repo_url && !project.github_webhook_id && (
+          <div style={{ marginBottom: 16, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <button
+              onClick={handleDisconnectRepo}
+              disabled={isSaving}
+              className="df-btn-ghost"
+              style={{ color: 'var(--status-alert)' }}
+            >
+              {isSaving ? '⏳' : '✕ Desconectar Repositório'}
+            </button>
           </div>
         )}
 
