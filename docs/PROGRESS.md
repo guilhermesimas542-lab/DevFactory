@@ -128,23 +128,26 @@
 - TypeScript: 0 erros em web e api
 - Status: ✅ MVP COMPLETO
 
-### 2026-03-11 @devops (Gage) — Package-lock.json Regenerado — Railway Ready
+### 2026-03-11 @devops (Gage) — Package-lock.json Fix + Groq Model Update
 
-- **Problema:** Railway build falhava com erro "Missing: groq-sdk@1.1.1 from lock file"
-- **Causa raiz:** package-lock.json estava desincronizado com a estrutura do monorepo
-- **Solução executada (Opção A):**
-  - Deletado: `package-lock.json` (raiz)
-  - Deletado: `node_modules` (raiz)
-  - Executado: `npm install` (regenera lock file completo)
-  - Resultado: ✅ 552 packages adicionados, 676 packages auditados, 0 vulnerabilities
-- **Verificação:**
-  - ✅ package-lock.json criado com 337K
-  - ✅ groq-sdk@1.1.1 presente no lock file
-  - ✅ Commit `d81e825` (fix: regenerate root package-lock.json with groq-sdk) já estava pushing
-  - ✅ Local e remote branches sincronizados (HEAD @ 4b640ec)
-- **Próximo passo:** Aguardar redeploy automático do Railway com novo lock file
-- **Opção B (para depois):** `npm install groq-sdk@1.1.1 -w apps/api` (para lock file mais correto a longo prazo)
-- **Status:** ✅ Opção A Concluída — Aguardando Railway build
+#### Parte 1: Package-lock.json Sincronização
+- **Problema inicial:** Railway build falhava com "Missing: groq-sdk@1.1.1 from lock file"
+- **Causa raiz:** `apps/api/package-lock.json` estava DESATUALIZADO (não tinha groq-sdk)
+- **Solução executada:**
+  - ✅ Deletado: `apps/api/package-lock.json`
+  - ✅ Deletado: `apps/web/package-lock.json`
+  - ✅ Mantido: `package-lock.json` (raiz) como único lock file
+  - ✅ npm agora usa apenas o lock file da raiz (consistente entre Vercel + Railway)
+  - ✅ Commit eef757d: "fix: remove workspace-level package-lock.json files"
+
+#### Parte 2: Groq Model Deprecation Fix
+- **Problema novo:** Modelo `mixtral-8x7b-32768` foi descontinuado pelo Groq em 2025-03-20
+- **Erro recebido:** "The model `mixtral-8x7b-32768` has been decommissioned"
+- **Solução:** Substituído por `llama-3.3-70b-versatile` (modelo recomendado)
+- **Arquivo alterado:** `apps/api/src/services/AIProviderFactory.ts` linha 63
+- ✅ Build verificado localmente
+- ✅ Commit fab73db: "fix: replace deprecated mixtral-8x7b-32768 with llama-3.3-70b-versatile"
+- **Status:** ✅ CORRIGIDO — Railway deve redesplorarse com novo modelo
 
 ---
 
