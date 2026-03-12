@@ -29,6 +29,33 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — Feature 2B: Cascading detail panel com breadcrumb ✅
+
+- Refatorado sistema de seleção: de single `selected` node para `selectionPath` array
+- Implementada breadcrumb navigation no topo do painel mostrando hierarquia (pai > filho)
+- Styled breadcrumb com separadores "/" e active state (item atual em branco bold)
+- Click em breadcrumb items permite navegação back na hierarquia
+- Nós filhos agora clicáveis para abrir detalhes no painel
+- Painel exibe conteúdo diferente por tipo de seleção:
+  * **Parent node**: descrição completa, barra de progresso, lista de componentes
+  * **Child node**: status indicator (ponto colorido), status de progresso, referência ao módulo pai
+- Componentes listados no painel são clicáveis → navega para detalhe do componente
+- handleChildNodeClick() implementado com toggle: clicar de novo em filho = volta ao pai
+- Canvas pan handler atualizado para não panning quando breadcrumb é clicado
+- TypeScript: ✅ 0 erros (tipos adicionados em map callbacks)
+- Build: ✅ Sucesso
+- Commit: e74f5d7 (feat: add cascading detail panel with breadcrumb navigation)
+- Status: ✅ Concluído e testado
+
+**Fluxo de navegação implementado:**
+1. Click em nó pai → painel mostra detalhes do pai, breadcrumb: "Dashboard"
+2. Click no botão expand → revela nós filhos
+3. Click em nó filho → painel muda para mostrar detalhes do filho, breadcrumb: "Dashboard / StoryBoard"
+4. Click no breadcrumb "Dashboard" → volta ao painel do pai
+5. Click em component do painel → pula para aquele componente
+
+---
+
 ### 2026-03-12 @dev (Dex) — Feature 2A: Expandable child nodes com conexões pai-filho ✅
 
 - Adicionado estado `expandedNodes` (Set<string>) para rastrear nós parentais expandidos
