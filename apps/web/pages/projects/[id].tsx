@@ -309,14 +309,14 @@ export default function ProjectDetail() {
       {/* GitHub Integration - Webhook + Manual Sync */}
       <InfoCard title="Integração GitHub">
         {/* Step 1: Configure Repository URL */}
-        {!repoUrl && (
+        {!project.github_repo_url && (
           <div style={{ marginBottom: 14, padding: '10px 14px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 8, fontSize: 13, color: 'var(--accent)' }}>
             Configure um repositório GitHub para sincronizar stories automaticamente via webhooks.
           </div>
         )}
 
         {/* Repository URL input */}
-        {!repoUrl && (
+        {!project.github_repo_url && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>
               URL do Repositório
@@ -342,7 +342,7 @@ export default function ProjectDetail() {
         )}
 
         {/* Connected state: Show webhook status and PAT option */}
-        {repoUrl && project.github_repo_url && (
+        {project.github_repo_url && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
