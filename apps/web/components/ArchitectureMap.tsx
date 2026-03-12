@@ -397,6 +397,12 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
     setSelectionPath(isSelected ? [] : [nodeId]);
   };
 
+  const handleChildNodeMouseDown = (e: React.MouseEvent, parentId: string, childName: string) => {
+    e.stopPropagation();
+    const childId = `${parentId}-${childName}`;
+    setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId: childId });
+  };
+
   const handleChildNodeClick = (e: React.MouseEvent, parentId: string, childName: string) => {
     e.stopPropagation();
     // Only toggle selection if this wasn't actually a drag
@@ -566,21 +572,30 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
           {nodes.map(parentNode =>
             expandedNodes.has(parentNode.id) && parentNode.components && parentNode.components.length > 0
               ? parentNode.components.map((component, childIndex) => {
-                  const childPos = getChildPosition(parentNode, childIndex);
+                  const childId = `${parentNode.id}-${component.name}`;
+                  const defaultPos = getChildPosition(parentNode, childIndex);
+                  const childPos = nodePositions[childId] || defaultPos;
                   const typeInfo = TYPE_MAP[parentNode.type];
                   const statusColor = STATUS_COLOR[component.status];
                   const isSelected = selectionPath[0] === parentNode.id && selectionPath[1] === component.name;
+                  const isDragging = nodeDragStart?.nodeId === childId && nodeMoved;
 
                   return (
                     <div
-                      key={`${parentNode.id}-${component.name}`}
+                      key={childId}
                       className={`node child fade-in ${isSelected ? 'selected' : ''}`}
                       style={{
                         left: childPos.x,
                         top: childPos.y,
                         '--accent': typeInfo.color,
-                        cursor: 'pointer',
+                        cursor: isDragging ? 'grabbing' : 'pointer',
+                        transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+                        boxShadow: isDragging
+                          ? `0 0 0 1px ${typeInfo.color}, 0 0 30px ${typeInfo.color}40, 0 12px 48px rgba(0,0,0,0.8)`
+                          : undefined,
+                        transition: isDragging ? 'none' : 'transform 150ms, box-shadow 150ms',
                       } as React.CSSProperties}
+                      onMouseDown={(e) => handleChildNodeMouseDown(e, parentNode.id, component.name)}
                       onClick={(e) => handleChildNodeClick(e, parentNode.id, component.name)}
                     >
                       <div className="node-header">
