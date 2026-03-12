@@ -546,13 +546,19 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                     const exitPoint = getExitPoint(parentNode, childPos);
                     const entryPoint = getEntryPoint(childPos, parentCenter);
 
+                    // Calculate control points for smooth bezier curve
+                    const midX = (exitPoint.x + entryPoint.x) / 2;
+                    const midY = (exitPoint.y + entryPoint.y) / 2;
+                    const offsetX = (entryPoint.y - exitPoint.y) * 0.3;
+                    const offsetY = (exitPoint.x - entryPoint.x) * 0.3;
+
+                    const pathData = `M${exitPoint.x},${exitPoint.y} Q${midX + offsetX},${midY + offsetY} ${entryPoint.x},${entryPoint.y}`;
+
                     return (
                       <g key={`edge-${parentNode.id}-${component.name}`}>
-                        <line
-                          x1={exitPoint.x}
-                          y1={exitPoint.y}
-                          x2={entryPoint.x}
-                          y2={entryPoint.y}
+                        <path
+                          d={pathData}
+                          fill="none"
                           stroke={typeColor}
                           strokeWidth="2"
                           opacity="0.6"
