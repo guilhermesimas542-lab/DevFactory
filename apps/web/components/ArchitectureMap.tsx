@@ -74,6 +74,27 @@ const STYLES = `
     min-width: 200px;
   }
 
+  .node.child {
+    min-width: 140px;
+  }
+  .node.child .node-header {
+    padding: 8px 12px 6px;
+  }
+  .node.child .node-name { font-size: 11px; }
+  .node.child .node-type { font-size: 9px; }
+  .node.child .node-body { padding: 6px 12px 8px; }
+
+  .node-footer {
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,0.03);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    transition: color 200ms;
+  }
+  .node-footer:hover { color: rgba(255,255,255,0.6); }
+
   .node-header {
     display: flex; align-items: center; gap: 10px;
     padding: 12px 14px 10px;
@@ -235,6 +256,18 @@ function getCenter(node: ArchNode) {
   return { x: node.x + 90, y: node.y + 54 };
 }
 
+function getChildPosition(parentNode: ArchNode, childIndex: number) {
+  const CHILD_HEIGHT = 120;
+  const GAP = 16;
+  const OFFSET_RIGHT = 32;
+
+  const startY = parentNode.y + 180; // Below the parent
+  const childY = startY + childIndex * (CHILD_HEIGHT + GAP);
+  const childX = parentNode.x + OFFSET_RIGHT;
+
+  return { x: childX, y: childY };
+}
+
 export default function ArchitectureMap({ nodes: initialNodes, edges }: ArchitectureMapProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -245,6 +278,9 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   const [nodeDragStart, setNodeDragStart] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [nodeMoved, setNodeMoved] = useState(false);
   const DRAG_THRESHOLD = 5;
+
+  // Node expansion state (for showing/hiding components)
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   // Node positions (can be updated by dragging)
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>(
@@ -367,6 +403,33 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                 </g>
               );
             })}
+
+            {/* CHILD NODE CONNECTIONS (parent to component edges) */}
+            {nodes.map(parentNode =>
+              expandedNodes.has(parentNode.id) && parentNode.components && parentNode.components.length > 0
+                ? parentNode.components.map((component, childIndex) => {
+                    const childPos = getChildPosition(parentNode, childIndex);
+                    const parentCenter = getCenter(parentNode);
+                    const childCenter = { x: childPos.x + 70, y: childPos.y + 54 };
+                    const typeColor = TYPE_MAP[parentNode.type]?.color || '#fff';
+
+                    return (
+                      <g key={`edge-${parentNode.id}-${component.name}`}>
+                        <line
+                          x1={parentCenter.x}
+                          y1={parentCenter.y}
+                          x2={childCenter.x}
+                          y2={childCenter.y}
+                          stroke={typeColor}
+                          strokeWidth="0.5"
+                          opacity="0.3"
+                          style={{ transition: 'opacity 300ms' }}
+                        />
+                      </g>
+                    );
+                  })
+                : null
+            )}
           </svg>
 
           {/* NODES */}
@@ -420,9 +483,72 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                     ))}
                   </div>
                 </div>
+
+                {/* Footer with expand button (only for nodes with components) */}
+                {node.components && node.components.length > 0 && (
+                  <div
+                    className="node-footer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedNodes(prev => {
+                        const next = new Set(prev);
+                        if (next.has(node.id)) {
+                          next.delete(node.id);
+                        } else {
+                          next.add(node.id);
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    {expandedNodes.has(node.id) ? '▼' : '▶'} {node.components.length} componente{node.components.length !== 1 ? 's' : ''}
+                  </div>
+                )}
               </div>
             );
           })}
+
+          {/* CHILD NODES (rendered after parent nodes) */}
+          {nodes.map(parentNode =>
+            expandedNodes.has(parentNode.id) && parentNode.components && parentNode.components.length > 0
+              ? parentNode.components.map((component, childIndex) => {
+                  const childPos = getChildPosition(parentNode, childIndex);
+                  const typeInfo = TYPE_MAP[parentNode.type];
+                  const statusColor = STATUS_COLOR[component.status];
+
+                  return (
+                    <div
+                      key={`${parentNode.id}-${component.name}`}
+                      className="node child fade-in"
+                      style={{
+                        left: childPos.x,
+                        top: childPos.y,
+                        '--accent': typeInfo.color,
+                        cursor: 'pointer',
+                      } as React.CSSProperties}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Could open component details in panel
+                      }}
+                    >
+                      <div className="node-header">
+                        <div
+                          className="node-icon"
+                          style={{ background: `${typeInfo.color}18`, border: `1px solid ${typeInfo.color}35`, width: 24, height: 24, fontSize: 12 }}
+                        >
+                          {component.status === 'done' ? '✓' : '◉'}
+                        </div>
+                        <div>
+                          <div className="node-name">{component.name}</div>
+                          <div className="node-type">{component.status}</div>
+                        </div>
+                        <div className="node-status-dot" style={{ background: statusColor, boxShadow: `0 0 6px ${statusColor}80` }} />
+                      </div>
+                    </div>
+                  );
+                })
+              : null
+          )}
         </div>
 
         {/* DETAIL PANEL */}
