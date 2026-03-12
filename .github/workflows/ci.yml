@@ -10,9 +10,6 @@ jobs:
   web:
     name: Frontend CI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,16 +17,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - run: npm ci -w apps/web
-      - run: npm run typecheck -w apps/web
-      - run: npm run lint -w apps/web
+      - run: npm ci --workspaces
+      - run: npm run typecheck --workspaces
+      - run: npm run lint --workspaces
 
   api:
     name: Backend CI
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/api
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,8 +31,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      - run: npm ci -w apps/api
-      - run: npx prisma generate
+      - run: npm ci --workspaces
+      - run: npx prisma generate --schema=apps/api/prisma/schema.prisma
         env:
           DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
-      - run: npm run typecheck -w apps/api
+      - run: npm run typecheck --workspaces
