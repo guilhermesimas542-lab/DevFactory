@@ -296,3 +296,4 @@ MIT — Sinta-se livre para usar, modificar e distribuir
 - **UI/UX**: Tailwind CSS + Dark Theme
 
 # Teste webhook
+# Teste polling
