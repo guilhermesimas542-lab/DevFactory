@@ -18,8 +18,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm ci --workspaces
-      - run: npm run typecheck --workspaces
-      - run: npm run lint --workspaces
+      - run: npm run typecheck -w apps/web
+      - run: npm run lint -w apps/web
 
   api:
     name: Backend CI
@@ -32,7 +32,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm ci --workspaces
-      - run: npx prisma generate --schema=apps/api/prisma/schema.prisma
+      - run: cd apps/api && npx prisma generate
         env:
           DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
-      - run: npm run typecheck --workspaces
+      - run: npm run typecheck -w apps/api
