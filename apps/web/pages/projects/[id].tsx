@@ -141,9 +141,10 @@ export default function ProjectDetail() {
       setIsSaving(true);
       const result = await updateProject(project.id, { github_repo_url: repoUrl || undefined });
       if (result.success) {
-        setProject({ ...project, github_repo_url: repoUrl || null });
-        setSyncMessage('✓ Repositório configurado!');
-        setTimeout(() => setSyncMessage(null), 3000);
+        // Reload project from backend to get updated state
+        await loadProject();
+        setSyncMessage('✓ Repositório configurado! Cole seu GitHub Personal Access Token para conectar webhooks.');
+        setTimeout(() => setSyncMessage(null), 5000);
       } else setError(result.error || 'Erro ao salvar');
     } catch (err) { setError(err instanceof Error ? err.message : 'Erro'); }
     finally { setIsSaving(false); }
