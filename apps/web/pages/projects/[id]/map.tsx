@@ -17,7 +17,7 @@ const MOCK_NODES: ArchNode[] = [
     subtype: 'SaaS · Node.js + PostgreSQL',
     pct: 72,
     status: 'progress',
-    desc: 'Sistema de gestão de projetos com análise de arquitetura, mapa hexagonal interativo e chat com IA para automação.',
+    desc: 'Plataforma web que ajuda a entender a arquitetura de qualquer projeto. Você importa um documento de requisitos → DevFactory analisa automaticamente o código do GitHub → mostra um mapa visual interativo com blocos coloridos (cada cor = tipo diferente: banco de dados, autenticação, etc) → você explora com mouse/zoom para entender como cada parte se conecta.',
     tags: ['Next.js', 'Express', 'PostgreSQL', 'D3.js'],
     components: [],
   },
@@ -30,7 +30,7 @@ const MOCK_NODES: ArchNode[] = [
     subtype: 'Next.js 16 · React 19',
     pct: 85,
     status: 'progress',
-    desc: 'Interface web para gestão de projetos, visualização de stories, mapa de arquitetura interativo e chat com IA.',
+    desc: 'O que o usuário vê no navegador. Construído com React (componentes reutilizáveis = blocos de LEGO de interface) e Next.js (framework que conecta React ao servidor). TypeScript verifica erros antes de rodar. D3.js desenha o mapa interativo com hexágonos. Tailwind estiliza tudo com classes CSS prontas.',
     tags: ['Next.js', 'Tailwind', 'TypeScript', 'D3.js'],
     components: [
       { name: 'ProjectLayout', status: 'done' },
@@ -48,7 +48,7 @@ const MOCK_NODES: ArchNode[] = [
     subtype: 'Express.js 5 · TypeScript',
     pct: 80,
     status: 'progress',
-    desc: 'Servidor REST que expõe endpoints para o frontend, processa PRDs, gerencia stories e integra com LLMs (Groq, Gemini).',
+    desc: 'O "servidor" que fica rodando nos bastidores. Quando Dashboard pede algo (exemplo: "me dá a lista de projects"), API Server entrega. Express é o framework que organiza essas requisições em Rotas (tipo endereços: /projects, /stories, /chat). TypeScript verifica se os dados que chegam/saem estão no formato correto. Fala com IA (Groq/Gemini) para análises complexas.',
     tags: ['Express', 'Prisma', 'REST', 'TypeScript'],
     components: [
       { name: 'Routes /projects', status: 'done' },
@@ -66,7 +66,7 @@ const MOCK_NODES: ArchNode[] = [
     subtype: 'Railway · Prisma ORM',
     pct: 95,
     status: 'done',
-    desc: 'Banco relacional com 9 models: User, Project, Module, Component, Story, Alert, AnalysisResult, Snapshot, GlossaryTerm.',
+    desc: 'Guarda todos os dados que você cria (tipo pasta gigante com arquivos bem organizados). PostgreSQL é o software que gerencia essa pasta. Prisma é um "tradutor" entre código JavaScript e linguagem do banco = você escreve normal, Prisma converte. Railway é a nuvem que hospeda esse banco. Tem 9 tabelas: Usuários, Projetos, Módulos, Componentes, Stories, Alertas, Resultados, Snapshots, Glossário.',
     tags: ['PostgreSQL', 'Prisma', 'Railway', 'Schema Migration'],
     components: [
       { name: 'Schema migrations', status: 'done' },
@@ -82,7 +82,7 @@ const MOCK_NODES: ArchNode[] = [
     subtype: 'NextAuth.js 5 · JWT',
     pct: 100,
     status: 'done',
-    desc: 'Autenticação via credentials com JWT. Middleware de sessão em todas as rotas protegidas.',
+    desc: 'Sistema que verifica quem você é. O usuário entra email/senha → DevFactory gera um JWT (cartão identificação digital) → esse cartão é enviado em toda requisição para provar identidade. NextAuth gerencia esse processo; Middleware valida o cartão antes de deixar acessar páginas protegidas.',
     tags: ['NextAuth', 'JWT', 'Session', 'Credentials'],
     components: [
       { name: 'Credentials provider', status: 'done' },
@@ -98,7 +98,7 @@ const MOCK_NODES: ArchNode[] = [
     subtype: 'Groq + Gemini · LLM Integration',
     pct: 90,
     status: 'progress',
-    desc: 'Integração com múltiplos LLMs: Groq (Llama 3.3 70B) para extração rápida e Gemini 2.0 Flash para análise detalhada.',
+    desc: 'Conexão com inteligências artificiais externas que ajudam a entender código. Groq (rápido = 2 segundos) = usado para análise inicial; Gemini (profundo = mais lento) = análise detalhada. Você escolhe qual IA usar através do seletor na interface. LLM = Large Language Model (modelo grande de linguagem = IA treinada com internet inteira).',
     tags: ['Groq', 'Gemini', 'LLM', 'AI', 'Multi-provider'],
     components: [
       { name: 'Groq Provider', status: 'done' },

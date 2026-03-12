@@ -55,16 +55,109 @@ export function drawLinks(
 }
 
 /**
+ * Calculate intersection point of a line with a circle (hexagon approximation)
+ * This ensures lines connect at the edge of nodes, not through their center
+ */
+function getLineCircleIntersection(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  cx: number,
+  cy: number,
+  radius: number,
+  fromNode: boolean = true
+): { x: number; y: number } {
+  // Vector from center to other point
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  if (distance === 0) {
+    return { x: cx, y: cy };
+  }
+
+  // Normalize direction vector
+  const ux = dx / distance;
+  const uy = dy / distance;
+
+  // Calculate intersection point at circle edge
+  const intersectX = cx + (fromNode ? 1 : -1) * ux * radius;
+  const intersectY = cy + (fromNode ? 1 : -1) * uy * radius;
+
+  return { x: intersectX, y: intersectY };
+}
+
+/**
  * Update link positions based on node positions
+ * Lines now connect at node edges instead of passing through centers
  */
 export function updateLinkPositions(
   links: d3.Selection<SVGLineElement, ModuleLink, SVGGElement, unknown>
 ) {
+  const hexagonRadius = 30; // Must match the radius used in hexagon.ts
+
   links
-    .attr('x1', (d: any) => (d.source as any).x || 0)
-    .attr('y1', (d: any) => (d.source as any).y || 0)
-    .attr('x2', (d: any) => (d.target as any).x || 0)
-    .attr('y2', (d: any) => (d.target as any).y || 0);
+    .attr('x1', (d: any) => {
+      const source = (d.source as any);
+      const target = (d.target as any);
+      const intersection = getLineCircleIntersection(
+        source.x || 0,
+        source.y || 0,
+        target.x || 0,
+        target.y || 0,
+        source.x || 0,
+        source.y || 0,
+        hexagonRadius,
+        true
+      );
+      return intersection.x;
+    })
+    .attr('y1', (d: any) => {
+      const source = (d.source as any);
+      const target = (d.target as any);
+      const intersection = getLineCircleIntersection(
+        source.x || 0,
+        source.y || 0,
+        target.x || 0,
+        target.y || 0,
+        source.x || 0,
+        source.y || 0,
+        hexagonRadius,
+        true
+      );
+      return intersection.y;
+    })
+    .attr('x2', (d: any) => {
+      const source = (d.source as any);
+      const target = (d.target as any);
+      const intersection = getLineCircleIntersection(
+        source.x || 0,
+        source.y || 0,
+        target.x || 0,
+        target.y || 0,
+        target.x || 0,
+        target.y || 0,
+        hexagonRadius,
+        false
+      );
+      return intersection.x;
+    })
+    .attr('y2', (d: any) => {
+      const source = (d.source as any);
+      const target = (d.target as any);
+      const intersection = getLineCircleIntersection(
+        source.x || 0,
+        source.y || 0,
+        target.x || 0,
+        target.y || 0,
+        target.x || 0,
+        target.y || 0,
+        hexagonRadius,
+        false
+      );
+      return intersection.y;
+    });
 }
 
 /**
