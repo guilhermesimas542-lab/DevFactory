@@ -655,3 +655,65 @@ export async function analyzeProject(projectId: string): Promise<ApiResponse<{
     return { success: false, error: message };
   }
 }
+
+/**
+ * Connect a GitHub repository with webhook
+ * Registers a webhook and stores authentication credentials
+ * @param projectId - Project ID
+ * @param githubToken - Personal Access Token from GitHub
+ * @returns Webhook connection status
+ */
+export async function connectGitHub(
+  projectId: string,
+  githubToken: string
+): Promise<ApiResponse<{
+  connected: boolean;
+  webhook_id: number;
+  repository: string;
+  webhook_url: string;
+}>> {
+  try {
+    const response = await fetch(`${API_URL}/api/projects/${projectId}/connect-github`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ github_token: githubToken }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Failed to connect GitHub' };
+    }
+    return { success: true, data: data.data };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Network error';
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Disconnect GitHub webhook and remove credentials
+ * @param projectId - Project ID
+ * @returns Disconnection status
+ */
+export async function disconnectGitHub(
+  projectId: string
+): Promise<ApiResponse<{
+  disconnected: boolean;
+  repository: string;
+}>> {
+  try {
+    const response = await fetch(`${API_URL}/api/projects/${projectId}/disconnect-github`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Failed to disconnect GitHub' };
+    }
+    return { success: true, data: data.data };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Network error';
+    return { success: false, error: message };
+  }
+}

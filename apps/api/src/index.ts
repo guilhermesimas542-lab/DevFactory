@@ -12,6 +12,7 @@ import glossaryRoutes from './routes/glossary'
 import activityRoutes from './routes/activity'
 import chatRoutes from './routes/chat'
 import learningRoutes from './routes/learning'
+import webhooksRoutes from './routes/webhooks'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -62,6 +63,7 @@ app.use('/api/glossary', glossaryRoutes)
 app.use('/api/activity', activityRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/learning', learningRoutes)
+app.use('/api/webhooks', webhooksRoutes)
 
 // 404 Handler
 app.use((_req, res) => {

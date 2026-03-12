@@ -24,6 +24,9 @@ model Project {
   prd_original      Json?    // Stores original PRD content
   github_repo_url   String?  // GitHub repository URL for sync (e.g., https://github.com/owner/repo)
   github_last_sync  DateTime? // Last time GitHub repo was synchronized
+  github_token      String?  // Personal Access Token for GitHub API (base64 encoded for MVP)
+  github_webhook_id Int?     // ID of the webhook registered on GitHub
+  github_webhook_secret String? // Secret for validating webhook signatures
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
