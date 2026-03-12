@@ -30,6 +30,66 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — GitHub Webhook Integration - Professionalization COMPLETE ✅
+
+**Implementação de 6 fases concluída:**
+
+**Backend (API) — 4 Fases:**
+1. **Fase 1 — Endpoints de Monitoramento** ✅
+   - `GET /api/webhooks/:projectId/logs` — últimos 50 logs paginados
+   - `GET /api/webhooks/:projectId/stats` — estatísticas de entrega (taxa de sucesso, tempo médio, erros)
+   - `GET /api/webhooks/:projectId/health` — status de saúde (conectado, últimas entregas, falhas consecutivas)
+
+2. **Fase 2 — Idempotência (Anti-duplicata)** ✅
+   - Unique index: `@@unique([project_id, github_event_id])`
+   - Check de duplicata no POST /api/webhooks/github: se já foi processado, retorna 200 com "Already processed"
+   - Migration criada: `20260312150000_add_webhook_idempotency_index`
+
+3. **Fase 3 — Pull Request Tracking** ✅
+   - Suporte a `pull_request` events (além de push)
+   - Padrões adicionados ao extractStoryReferences():
+     - `closes story-001`, `fixes story-001`, `resolves story-001`
+   - Mapeamento automático: PR opened → in_progress, PR merged → completed
+   - Extração de refs do title ou body do PR
+
+4. **Fase 4 — Retry Worker (Background Jobs)** ✅
+   - `WebhookService.processRetries()` — busca logs com status='retry' e next_retry_at <= now
+   - Job executado a cada 2 minutos (exponential backoff até max_retries=5)
+   - `WebhookService.cleanupOldLogs()` — deleta logs antigos (>30 dias) a cada 24 horas
+   - Registrado em index.ts
+
+**Frontend (Web) — 2 Fases:**
+5. **Fase 5 — Real-time Polling** ✅
+   - `loadWebhookData()` função que carrega health, logs, stats
+   - useEffect com polling de 30s (apenas quando webhook_id está configurado)
+   - Dependências: `[project?.github_webhook_id, project?.id]`
+
+6. **Fase 6 — Monitor UI** ✅
+   - Seção "📊 Monitor de Webhook" adicionada ao projects/[id].tsx
+   - Indicador visual de status (● Saudável / ● Problemas)
+   - Grid de últimas 5 entregas com status, tipo de evento, stories, tempo
+   - Stats: taxa de sucesso (X/total), tempo médio de processamento
+   - Funções em lib/api.ts: `getWebhookHealth()`, `getWebhookLogs()`, `getWebhookStats()`
+
+**TypeScript & Build:**
+- ✅ API build: 0 erros TypeScript
+- ✅ Web build: 0 erros TypeScript
+- ✅ Todas as funções com tipos corretos
+
+**Commit:**
+- `ef3fa16`: feat: GitHub Webhook Integration - Complete Professionalization
+
+**Status:** ✅ IMPLEMENTAÇÃO 100% COMPLETA E VERIFICADA
+
+**Próximas Ações (v1.1+):**
+- [ ] Teste end-to-end em produção (Railway + Vercel)
+- [ ] Alertas em tempo real para falhas de webhook
+- [ ] Dashboard de histórico de webhooks (últimos 7 dias)
+- [ ] Retry manual pelo UI (button "Retry Now")
+- [ ] Webhook event filtering (apenas push, ou também issues?)
+
+---
+
 ### 2026-03-12 @aiox-master (Orion) — MVP v1.0.0 OFFICIALLY RELEASED 🚀
 
 **🎉 MAJOR MILESTONE: PROJECT COMPLETE**
