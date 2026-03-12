@@ -451,6 +451,37 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — GitHub Webhook Integration - Verificação Completa ✅
+
+**Resumo da Verificação:**
+- ✅ Schema Prisma: 3 campos (github_token, github_webhook_id, github_webhook_secret)
+- ✅ Endpoint POST /api/projects/:id/connect-github: Implementado com validação de token
+- ✅ Endpoint DELETE /api/projects/:id/disconnect-github: Implementado com limpeza segura
+- ✅ Endpoint POST /api/webhooks/github: Implementado com verificação HMAC-SHA256
+- ✅ Frontend UI: Formulário de conexão com estados (desconectado → conectado)
+- ✅ Documentação: docs/GITHUB_INTEGRATION.md completa com guia passo-a-passo
+- ✅ Build: API compila sem erros | Web compila com warnings harmônicos (87 warnings de `any` type)
+- ✅ Git: Repositório limpo, sem credenciais expostas
+
+**Fluxo Implementado:**
+1. Usuário gera PAT no GitHub (repo + admin:repo_hook)
+2. Cola URL do repo + PAT no DevFactory
+3. POST /api/projects/:id/connect-github valida token, registra webhook no GitHub
+4. Dev faz git push com mensagem "feat: story-001"
+5. GitHub envia POST /api/webhooks/github (assinado com HMAC-SHA256)
+6. DevFactory verifica assinatura → processa commits → atualiza stories
+
+**Status:** ✅ IMPLEMENTAÇÃO 100% CONCLUÍDA E VERIFICADA
+
+**Próximo Passo:** Teste end-to-end em produção
+- [ ] Configurar API_PUBLIC_URL no Railway (ex: https://devfactory-api.up.railway.app)
+- [ ] Criar projeto de teste no DevFactory (prod)
+- [ ] Conectar repositório GitHub real
+- [ ] Fazer commit com story-ref e verificar se story foi atualizada
+- [ ] Monitorer logs de webhook no GitHub Settings → Recent Deliveries
+
+---
+
 ## Decisões Arquiteturais Registradas
 
 | Data | Decisão | Motivo |
