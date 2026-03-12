@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProject, updateProject, syncProjectGitHub, analyzeProject } from '@/lib/api';
+import { getProject, updateProject, syncProjectGitHub, analyzeProject, connectGitHub, disconnectGitHub } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
 import PRDViewer from '@/components/PRDViewer';
 
@@ -11,6 +11,7 @@ interface ProjectData {
   description: string | null;
   github_repo_url: string | null;
   github_last_sync: string | null;
+  github_webhook_id?: number | null;
   prd_original: {
     rawContent: string;
     originalFileName: string;
@@ -20,6 +21,7 @@ interface ProjectData {
   };
   created_at: string;
   updated_at: string;
+  modules?: any[];
 }
 
 function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -59,6 +61,10 @@ export default function ProjectDetail() {
   const [showPRDModal, setShowPRDModal] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeMessage, setAnalyzeMessage] = useState<string | null>(null);
+  const [githubToken, setGithubToken] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [githubMessage, setGithubMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') { router.push('/login'); return; }
@@ -130,6 +136,49 @@ export default function ProjectDetail() {
       } else setError(result.error || 'Erro ao sincronizar');
     } catch (err) { setError(err instanceof Error ? err.message : 'Erro'); }
     finally { setIsSyncing(false); }
+  };
+
+  const handleConnectGitHub = async () => {
+    if (!project || !githubToken) return;
+    try {
+      setIsConnecting(true);
+      setGithubMessage(null);
+      const result = await connectGitHub(project.id, githubToken);
+      if (result.success) {
+        setGithubMessage({ type: 'success', text: '✓ GitHub conectado! Webhook registrado.' });
+        setGithubToken('');
+        await loadProject(); // Reload to get updated project state
+        setTimeout(() => setGithubMessage(null), 5000);
+      } else {
+        setGithubMessage({ type: 'error', text: result.error || 'Erro ao conectar' });
+      }
+    } catch (err) {
+      setGithubMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erro' });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnectGitHub = async () => {
+    if (!project) return;
+    if (!confirm('Desconectar GitHub? O webhook será removido do repositório.')) return;
+    try {
+      setIsDisconnecting(true);
+      setGithubMessage(null);
+      const result = await disconnectGitHub(project.id);
+      if (result.success) {
+        setGithubMessage({ type: 'success', text: '✓ GitHub desconectado' });
+        setGithubToken('');
+        await loadProject(); // Reload to get updated project state
+        setTimeout(() => setGithubMessage(null), 5000);
+      } else {
+        setGithubMessage({ type: 'error', text: result.error || 'Erro ao desconectar' });
+      }
+    } catch (err) {
+      setGithubMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erro' });
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   if (status === 'loading' || loading) {
@@ -218,54 +267,156 @@ export default function ProjectDetail() {
         )}
       </InfoCard>
 
-      {/* GitHub sync */}
-      <InfoCard title="Sincronização GitHub">
+      {/* GitHub Integration - Webhook + Manual Sync */}
+      <InfoCard title="Integração GitHub">
+        {/* Step 1: Configure Repository URL */}
         {!repoUrl && (
           <div style={{ marginBottom: 14, padding: '10px 14px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 8, fontSize: 13, color: 'var(--accent)' }}>
-            Configure um repositório para sincronizar stories via commits.
+            Configure um repositório GitHub para sincronizar stories automaticamente via webhooks.
           </div>
         )}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <input
-            type="text"
-            placeholder="https://github.com/usuario/repo"
-            value={repoUrl}
-            onChange={e => setRepoUrl(e.target.value)}
-            className="df-input"
-            style={{ flex: 1 }}
-          />
-          <button
-            onClick={handleSaveGitHub}
-            disabled={isSaving || repoUrl === (project.github_repo_url || '')}
-            className="df-btn-primary"
-          >
-            {isSaving ? '⏳' : 'Salvar'}
-          </button>
-        </div>
 
-        {project.github_repo_url && (
+        {/* Repository URL input */}
+        {!repoUrl && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>
+              URL do Repositório
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="https://github.com/usuario/repo"
+                value={repoUrl}
+                onChange={e => setRepoUrl(e.target.value)}
+                className="df-input"
+                style={{ flex: 1 }}
+              />
+              <button
+                onClick={handleSaveGitHub}
+                disabled={isSaving || !repoUrl}
+                className="df-btn-primary"
+              >
+                {isSaving ? '⏳' : 'Próximo'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Connected state: Show webhook status and PAT option */}
+        {repoUrl && project.github_repo_url && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>Última Sync</div>
-                <p style={{ fontSize: 13, color: 'var(--text-primary)' }}>
-                  {project.github_last_sync ? formatDate(project.github_last_sync) : 'Nunca'}
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                  Repositório
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                  {project.github_repo_url.replace('https://github.com/', '')}
                 </p>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>Status</div>
-                <span className="df-badge df-badge-done">Configurado</span>
+                <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                  Status Webhook
+                </div>
+                <span className="df-badge" style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--status-done)' }}>
+                  {githubToken || project.github_webhook_id ? '✓ Ativo' : '○ Desconectado'}
+                </span>
               </div>
             </div>
-            <button onClick={handleSyncGitHub} disabled={isSyncing} className="df-btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
-              {isSyncing ? '⏳ Sincronizando...' : '↺ Sincronizar Agora'}
-            </button>
-          </div>
-        )}
 
-        {syncMessage && (
-          <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-done)' }}>
-            {syncMessage}
+            {/* PAT Token Connection */}
+            {!project.github_webhook_id && !githubToken && (
+              <div style={{ marginBottom: 16, padding: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>
+                  Conectar com GitHub
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>
+                  Cole seu Personal Access Token (PAT) do GitHub. Isso permitirá que o DevFactory registre um webhook no seu repositório para sincronizar stories automaticamente.
+                </p>
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 10, fontStyle: 'italic' }}>
+                  💡 Gere um token em: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+                  <br/>
+                  Permissões necessárias: <code style={{ background: 'var(--bg-elevated)', padding: '2px 4px', borderRadius: 3 }}>repo</code> + <code style={{ background: 'var(--bg-elevated)', padding: '2px 4px', borderRadius: 3 }}>admin:repo_hook</code>
+                </div>
+              </div>
+            )}
+
+            {/* PAT Token input form */}
+            {!project.github_webhook_id && (
+              <div style={{ marginBottom: 16 }}>
+                <input
+                  type="password"
+                  placeholder="ghp_xxxxxxxxxxxx... (Personal Access Token)"
+                  value={githubToken}
+                  onChange={e => setGithubToken(e.target.value)}
+                  className="df-input"
+                  style={{ marginBottom: 8 }}
+                />
+                <button
+                  onClick={handleConnectGitHub}
+                  disabled={isConnecting || !githubToken}
+                  className="df-btn-primary"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                >
+                  {isConnecting ? '⏳ Conectando...' : '🔗 Conectar com GitHub'}
+                </button>
+              </div>
+            )}
+
+            {/* Sync controls */}
+            {project.github_webhook_id && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                    Última Sincronização
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+                    {project.github_last_sync ? formatDate(project.github_last_sync) : 'Nunca (aguardando primeiro push)'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleSyncGitHub}
+                    disabled={isSyncing}
+                    className="df-btn-ghost"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    {isSyncing ? '⏳ Sincronizando...' : '↺ Sincronizar Manualmente'}
+                  </button>
+                  <button
+                    onClick={handleDisconnectGitHub}
+                    disabled={isDisconnecting}
+                    className="df-btn-ghost"
+                    style={{ flex: 0.5, justifyContent: 'center', color: 'var(--status-alert)' }}
+                  >
+                    {isDisconnecting ? '⏳' : '✕'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Messages */}
+            {githubMessage && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: '8px 12px',
+                  background: githubMessage.type === 'success' ? 'rgba(16,185,129,0.10)' : 'rgba(239,68,68,0.10)',
+                  border: githubMessage.type === 'success' ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  color: githubMessage.type === 'success' ? 'var(--status-done)' : 'var(--status-alert)',
+                }}
+              >
+                {githubMessage.text}
+              </div>
+            )}
+
+            {syncMessage && (
+              <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-done)' }}>
+                {syncMessage}
+              </div>
+            )}
           </div>
         )}
       </InfoCard>
