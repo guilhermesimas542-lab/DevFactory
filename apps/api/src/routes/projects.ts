@@ -528,10 +528,12 @@ router.post('/:id/sync-github', async (req: Request, res: Response): Promise<voi
     }>;
 
     console.log(`📥 Fetched ${commits.length} commits from ${owner}/${repo}`);
-    console.log(`⏰ Last sync: ${lastSync?.toISOString() || 'never'}`);
 
     // Process commits and update stories
     const storiesUpdated = [];
+    const lastSync = project.github_last_sync;
+    console.log(`⏰ Last sync: ${lastSync?.toISOString() || 'never'}`);
+
     const availableStories = project.stories.map(s => ({ id: s.id, title: s.title }));
     console.log(`📚 Available stories in project: ${availableStories.length} stories`);
     if (availableStories.length > 0) {
