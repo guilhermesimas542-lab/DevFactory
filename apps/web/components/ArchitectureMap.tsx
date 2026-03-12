@@ -263,13 +263,19 @@ function getCenter(node: ArchNode) {
 }
 
 function getChildPosition(parentNode: ArchNode, childIndex: number) {
-  const CHILD_HEIGHT = 120;
-  const GAP = 16;
-  const OFFSET_RIGHT = 32;
+  const CHILD_HEIGHT = 100;
+  const CHILD_WIDTH = 140;
+  const GAP = 20;
+  const OFFSET_RIGHT = 240; // Further to the right to avoid overlap
+
+  // Arrange children in a grid (3 columns)
+  const COLUMNS = 3;
+  const col = childIndex % COLUMNS;
+  const row = Math.floor(childIndex / COLUMNS);
 
   const startY = parentNode.y + 180; // Below the parent
-  const childY = startY + childIndex * (CHILD_HEIGHT + GAP);
-  const childX = parentNode.x + OFFSET_RIGHT;
+  const childY = startY + row * (CHILD_HEIGHT + GAP);
+  const childX = parentNode.x + OFFSET_RIGHT + col * (CHILD_WIDTH + GAP);
 
   return { x: childX, y: childY };
 }
@@ -458,7 +464,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                 ? parentNode.components.map((component, childIndex) => {
                     const childPos = getChildPosition(parentNode, childIndex);
                     const parentCenter = getCenter(parentNode);
-                    const childCenter = { x: childPos.x + 70, y: childPos.y + 54 };
+                    const childCenter = { x: childPos.x + 70, y: childPos.y + 50 };
                     const typeColor = TYPE_MAP[parentNode.type]?.color || '#fff';
 
                     return (

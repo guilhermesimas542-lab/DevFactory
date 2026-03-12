@@ -32,7 +32,7 @@ export default function LoginPage() {
       minHeight: '100vh', background: 'var(--bg-base)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
     }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
+      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto' }}>
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
