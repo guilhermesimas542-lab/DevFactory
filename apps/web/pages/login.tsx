@@ -67,6 +67,7 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 className="df-input"
                 disabled={loading}
+                style={{ width: '100%', boxSizing: 'border-box' }}
               />
             </div>
 
@@ -81,6 +82,7 @@ export default function LoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 className="df-input"
                 disabled={loading}
+                style={{ width: '100%', boxSizing: 'border-box' }}
               />
             </div>
 

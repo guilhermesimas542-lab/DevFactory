@@ -262,6 +262,76 @@ function getCenter(node: ArchNode) {
   return { x: node.x + 90, y: node.y + 54 };
 }
 
+// Calculate exit point on parent node border (closest to target)
+function getExitPoint(parentNode: ArchNode, targetNode: { x: number; y: number }): { x: number; y: number } {
+  const parentCenter = getCenter(parentNode);
+  const parentWidth = 200;
+  const parentHeight = 108;
+
+  // Vector from parent to target
+  const dx = targetNode.x - parentCenter.x;
+  const dy = targetNode.y - parentCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist === 0) return parentCenter;
+
+  // Normalized direction
+  const nx = dx / dist;
+  const ny = dy / dist;
+
+  // Find intersection with parent rectangle border
+  const halfW = parentWidth / 2;
+  const halfH = parentHeight / 2;
+
+  let t = Infinity;
+
+  // Check all 4 sides
+  if (nx > 0) t = Math.min(t, (halfW) / nx); // Right side
+  if (nx < 0) t = Math.min(t, (-halfW) / nx); // Left side
+  if (ny > 0) t = Math.min(t, (halfH) / ny); // Bottom side
+  if (ny < 0) t = Math.min(t, (-halfH) / ny); // Top side
+
+  return {
+    x: parentCenter.x + nx * t,
+    y: parentCenter.y + ny * t,
+  };
+}
+
+// Calculate entry point on child node border (closest to parent)
+function getEntryPoint(childNode: { x: number; y: number }, parentCenter: { x: number; y: number }): { x: number; y: number } {
+  const childCenter = { x: childNode.x + 70, y: childNode.y + 50 };
+  const childWidth = 140;
+  const childHeight = 100;
+
+  // Vector from child to parent
+  const dx = parentCenter.x - childCenter.x;
+  const dy = parentCenter.y - childCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist === 0) return childCenter;
+
+  // Normalized direction
+  const nx = dx / dist;
+  const ny = dy / dist;
+
+  // Find intersection with child rectangle border
+  const halfW = childWidth / 2;
+  const halfH = childHeight / 2;
+
+  let t = Infinity;
+
+  // Check all 4 sides
+  if (nx > 0) t = Math.min(t, (halfW) / nx);
+  if (nx < 0) t = Math.min(t, (-halfW) / nx);
+  if (ny > 0) t = Math.min(t, (halfH) / ny);
+  if (ny < 0) t = Math.min(t, (-halfH) / ny);
+
+  return {
+    x: childCenter.x + nx * t,
+    y: childCenter.y + ny * t,
+  };
+}
+
 function getChildPosition(parentNode: ArchNode, childIndex: number) {
   const CHILD_HEIGHT = 100;
   const CHILD_WIDTH = 140;
@@ -470,20 +540,23 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                 ? parentNode.components.map((component, childIndex) => {
                     const childPos = getChildPosition(parentNode, childIndex);
                     const parentCenter = getCenter(parentNode);
-                    const childCenter = { x: childPos.x + 70, y: childPos.y + 50 };
                     const typeColor = TYPE_MAP[parentNode.type]?.color || '#fff';
+
+                    // Get entry and exit points for smooth lines from border to border
+                    const exitPoint = getExitPoint(parentNode, childPos);
+                    const entryPoint = getEntryPoint(childPos, parentCenter);
 
                     return (
                       <g key={`edge-${parentNode.id}-${component.name}`}>
                         <line
-                          x1={parentCenter.x}
-                          y1={parentCenter.y}
-                          x2={childCenter.x}
-                          y2={childCenter.y}
+                          x1={exitPoint.x}
+                          y1={exitPoint.y}
+                          x2={entryPoint.x}
+                          y2={entryPoint.y}
                           stroke={typeColor}
-                          strokeWidth="0.5"
-                          opacity="0.3"
-                          style={{ transition: 'opacity 300ms' }}
+                          strokeWidth="2"
+                          opacity="0.6"
+                          style={{ transition: 'opacity 300ms, stroke-width 300ms' }}
                         />
                       </g>
                     );
