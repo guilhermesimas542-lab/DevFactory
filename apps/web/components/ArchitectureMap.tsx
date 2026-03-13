@@ -390,8 +390,9 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
       const childComponent = parentNode.components?.find(c => c.name === childName);
       if (childComponent) {
         return {
-          ...childComponent,
           id: `${parentId}-${childName}`,
+          name: childComponent.name,
+          status: childComponent.status,
           type: parentNode.type,
           isChild: true,
           parentNode,
@@ -474,6 +475,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   };
 
   const handleChildNodeClick = (e: React.MouseEvent, parentId: string, childName: string) => {
+    e.preventDefault();
     e.stopPropagation();
     // Only toggle selection if this wasn't actually a drag
     if (nodeMoved) {
@@ -754,7 +756,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
               {!(selectedNode as any).isChild ? (
                 <>
                   <div className="panel-section-label">O que é isso</div>
-                  <div className="panel-desc">{selectedNode.desc}</div>
+                  <div className="panel-desc">{selectedNode.desc || 'Sem descrição'}</div>
 
                   <div className="panel-section-label">Progresso</div>
                   <div className="progress-big">
@@ -762,19 +764,19 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                       <div
                         className="progress-big-fill"
                         style={{
-                          width: `${selectedNode.pct}%`,
+                          width: `${selectedNode.pct || 0}%`,
                           background: `linear-gradient(90deg, ${TYPE_MAP[selectedNode.type].color}60, ${TYPE_MAP[selectedNode.type].color})`
                         }}
                       />
                     </div>
                     <div className="progress-big-label">
                       <span>0%</span>
-                      <span style={{ color: TYPE_MAP[selectedNode.type].color, fontWeight: 600 }}>{selectedNode.pct}%</span>
+                      <span style={{ color: TYPE_MAP[selectedNode.type].color, fontWeight: 600 }}>{selectedNode.pct || 0}%</span>
                       <span>100%</span>
                     </div>
                   </div>
 
-                  {selectedNode.components.length > 0 && (
+                  {selectedNode.components && selectedNode.components.length > 0 && (
                     <>
                       <div className="panel-section-label">Componentes</div>
                       <div className="component-list">
@@ -783,7 +785,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                             key={i}
                             className="component-item"
                             style={{ cursor: 'pointer' }}
-                            onClick={() => handleChildNodeClick({} as any, selectedNode.id, c.name)}
+                            onClick={(e) => handleChildNodeClick(e as any, selectedNode.id, c.name)}
                           >
                             <div
                               className="component-dot"
@@ -808,12 +810,12 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                         width: '12px',
                         height: '12px',
                         borderRadius: '50%',
-                        background: STATUS_COLOR[(selectedNode as any).status],
-                        boxShadow: `0 0 8px ${STATUS_COLOR[(selectedNode as any).status]}60`
+                        background: STATUS_COLOR[(selectedNode as any).status || 'pending'],
+                        boxShadow: `0 0 8px ${STATUS_COLOR[(selectedNode as any).status || 'pending']}60`
                       }}
                     />
                     <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>
-                      {(selectedNode as any).status}
+                      {(selectedNode as any).status || 'pending'}
                     </span>
                   </div>
                   <div className="panel-section-label">Descrição</div>
