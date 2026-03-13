@@ -57,14 +57,17 @@ export default function ChatView({ projectId }: ChatViewProps) {
         body: JSON.stringify({
           message: input,
           projectId,
-          conversationHistory: messages.map((m) => ({
+          history: messages.map((m) => ({
             role: m.role,
             content: m.content,
           })),
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to get response');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
+      }
 
       const data = await response.json();
 
@@ -72,7 +75,7 @@ export default function ChatView({ projectId }: ChatViewProps) {
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || data.message || 'Desculpe, não consegui processar sua mensagem.',
+        content: data.data?.message || 'Desculpe, não consegui processar sua mensagem.',
         timestamp: new Date(),
       };
 
