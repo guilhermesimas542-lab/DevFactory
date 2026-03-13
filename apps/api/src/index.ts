@@ -13,6 +13,7 @@ import activityRoutes from './routes/activity'
 import chatRoutes from './routes/chat'
 import learningRoutes from './routes/learning'
 import webhooksRoutes from './routes/webhooks'
+import debugRoutes from './routes/debug'
 import { WebhookService } from './services/WebhookService'
 
 const app = express()
@@ -85,6 +86,7 @@ app.use('/api/activity', activityRoutes)
 app.use('/api/chat', chatRoutes)
 app.use('/api/learning', learningRoutes)
 app.use('/api/webhooks', webhooksRoutes)
+app.use('/api/debug', debugRoutes)
 
 // 404 Handler
 app.use((_req, res) => {
@@ -113,7 +115,7 @@ runMigrationsAsync().catch(_error => {
 // GitHub sync job - runs every 5 minutes
 setInterval(async () => {
   try {
-    console.log('🔄 GitHub sync job started')
+    console.log(`\n[GitHub Job] ===== Iniciando sync - ${new Date().toISOString()} =====`)
 
     // Dynamic import to avoid module initialization order issues
     const { PrismaClient } = await import('@prisma/client')
@@ -125,14 +127,20 @@ setInterval(async () => {
       },
       select: {
         id: true,
+        name: true,
         github_repo_url: true
       }
     })
 
-    console.log(`📊 Found ${projectsWithGitHub.length} projects with GitHub configured`)
+    console.log(`[GitHub Job] 📊 Projetos encontrados: ${projectsWithGitHub.length}`)
+    if (projectsWithGitHub.length === 0) {
+      console.log(`[GitHub Job] ⚠️ Nenhum projeto com github_repo_url configurado!`)
+    }
 
     for (const project of projectsWithGitHub) {
       try {
+        console.log(`[GitHub Job] 🔄 Sincronizando: ${project.name} → ${project.github_repo_url}`)
+
         // Call sync endpoint internally
         const syncUrl = `http://localhost:${PORT}/api/projects/${project.id}/sync-github`
         const response = await fetch(syncUrl, {
@@ -142,18 +150,21 @@ setInterval(async () => {
 
         if (response.ok) {
           const result = await response.json() as any
-          console.log(`✅ Synced project ${project.id}: ${result.data.stories_updated.length} stories updated`)
+          const storiesCount = result.data?.stories_updated?.length || 0
+          console.log(`[GitHub Job] ✅ Sincronização concluída: ${storiesCount} stories atualizadas`)
+          console.log(`[GitHub Job] 📝 Resultado completo:`, JSON.stringify(result, null, 2))
         } else {
-          console.error(`⚠️ Failed to sync project ${project.id}: ${response.statusText}`)
+          console.error(`[GitHub Job] ❌ Falha na sincronização (${response.status}): ${response.statusText}`)
         }
       } catch (error) {
-        console.error(`❌ Error syncing project ${project.id}:`, error)
+        console.error(`[GitHub Job] ❌ Erro ao sincronizar ${project.name}:`, error)
       }
     }
 
     await prisma.$disconnect()
+    console.log(`[GitHub Job] ===== Ciclo concluído =====\n`)
   } catch (error) {
-    console.error('❌ GitHub sync job failed:', error)
+    console.error('[GitHub Job] ❌ Job falhou:', error)
   }
 }, 5 * 60 * 1000) // 5 minutes
 
