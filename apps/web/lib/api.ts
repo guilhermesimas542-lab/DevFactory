@@ -463,10 +463,33 @@ export async function createGlossaryTerm(term: {
   definition: string;
   analogy?: string;
   relevance?: string;
+  category?: string;
 }): Promise<ApiResponse<any>> {
   return apiCall('/api/glossary', {
     method: 'POST',
     body: JSON.stringify(term),
+  });
+}
+
+/**
+ * Extract glossary terms from PRD using Groq AI
+ * @param projectId - The project ID
+ * @returns Extraction results with created and skipped counts
+ */
+export async function extractGlossaryTerms(projectId: string): Promise<ApiResponse<{
+  created: number;
+  skipped: number;
+  terms: Array<{
+    term: string;
+    definition: string;
+    analogy?: string;
+    relevance?: string;
+    category: string;
+  }>;
+}>> {
+  return apiCall('/api/glossary/extract', {
+    method: 'POST',
+    body: JSON.stringify({ projectId }),
   });
 }
 
@@ -483,6 +506,7 @@ export async function updateGlossaryTerm(
     definition?: string;
     analogy?: string;
     relevance?: string;
+    category?: string;
     isExplored?: boolean;
   }
 ): Promise<ApiResponse<any>> {

@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { GlossaryService } from '../services/GlossaryService';
 
 const router = Router();
 const prisma = new PrismaClient();
+const glossaryService = new GlossaryService(prisma);
 
 /**
  * GET /api/glossary?projectId=X
@@ -76,6 +78,32 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 });
 
 /**
+ * POST /api/glossary/extract
+ * Extract glossary terms from PRD content using Groq AI
+ */
+router.post('/extract', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.body;
+
+    if (!projectId || typeof projectId !== 'string') {
+      res.status(400).json({ error: 'projectId is required' });
+      return;
+    }
+
+    const result = await glossaryService.extractTermsFromPRD(projectId);
+
+    res.status(200).json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Extract glossary terms error:', error);
+
+    res.status(400).json({
+      error: message,
+    });
+  }
+});
+
+/**
  * POST /api/glossary
  * Create a new glossary term
  */
@@ -87,6 +115,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       definition,
       analogy,
       relevance,
+      category,
     } = req.body;
 
     if (!projectId || !term || !definition) {
@@ -113,6 +142,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
           definition,
           analogy: analogy || null,
           relevance: relevance || null,
+          category: category || 'geral',
         },
       });
 
@@ -152,6 +182,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
       definition,
       analogy,
       relevance,
+      category,
       isExplored,
     } = req.body;
 
@@ -176,6 +207,7 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
     if (definition !== undefined) updateData.definition = definition;
     if (analogy !== undefined) updateData.analogy = analogy;
     if (relevance !== undefined) updateData.relevance = relevance;
+    if (category !== undefined) updateData.category = category;
     if (isExplored !== undefined) updateData.is_explored = isExplored;
 
     // Update term

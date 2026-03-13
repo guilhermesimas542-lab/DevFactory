@@ -30,6 +30,59 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — Glossary Enhancement Phase 2: Backend ✅
+
+**Fase 2 — Backend: Endpoint POST `/api/glossary/extract` com Groq IA** ✅
+
+**Implementação:**
+1. **Nova service:** `GlossaryService.ts`
+   - `extractTermsFromPRD(projectId)` — Busca PRD do projeto
+   - `callGroqForTermExtraction(prdContent)` — Chama Groq llama-3.3-70b
+   - `upsertTerms(projectId, terms)` — Insere/atualiza termos no DB (sem duplicatas)
+
+2. **Backend API routes:**
+   - `POST /api/glossary/extract` — Novo endpoint de extração
+   - Valida projectId + PRD existente
+   - Chama Groq com prompt estruturado
+   - Retorna `{ success, data: { created, skipped, terms } }`
+   - `POST /api/glossary` — Atualizado para suportar campo `category`
+   - `PUT /api/glossary/:id` — Atualizado para suportar campo `category`
+
+3. **Frontend API functions:**
+   - `extractGlossaryTerms(projectId)` — Novo em `apps/web/lib/api.ts`
+   - `createGlossaryTerm()` — Atualizado para incluir `category` opcional
+   - `updateGlossaryTerm()` — Atualizado para incluir `category`
+
+4. **Prompt Groq:**
+   - Extrai termos técnicos do PRD
+   - Gera definição leiga (1-2 frases)
+   - Sugere analogy (analogia do mundo real)
+   - Classifica em 7 categorias predefinidas
+   - Retorna JSON com array de termos
+
+**TypeScript & Build:**
+- ✅ API: 0 erros TypeScript | Build sucesso
+- ✅ Web: 0 erros TypeScript
+- ✅ Prisma Client regenerado
+
+**Fluxo de Extração:**
+1. Frontend clica "Auto-gerar com IA"
+2. Chama `extractGlossaryTerms(projectId)`
+3. Backend busca PRD do projeto
+4. Groq análisa PRD → extrai termos + categoriza
+5. Backend faz upsert (cria se novo, pula se já existe)
+6. Retorna: "✓ 12 termos adicionados, 3 já existiam"
+7. Frontend recarrega lista agrupada por categoria
+
+**Arquivos Modificados/Criados:**
+- ✅ `apps/api/src/services/GlossaryService.ts` — NOVO
+- ✅ `apps/api/src/routes/glossary.ts` — +POST /extract + updates
+- ✅ `apps/web/lib/api.ts` — +extractGlossaryTerms() + updates
+
+**Status:** ✅ Concluído — Pronto para Fase 3 (Frontend UI)
+
+---
+
 ### 2026-03-12 @data-engineer (Dara) — Glossary Enhancement Phase 1: Schema ✅
 
 **Objetivo:** Reconstruir glossário com categorias automáticas extraídas de PRD via IA
