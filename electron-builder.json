@@ -1,0 +1,37 @@
+{
+  "appId": "com.devfactory.app",
+  "productName": "DevFactory",
+  "directories": {
+    "buildResources": "assets"
+  },
+  "files": [
+    "apps/electron/src/**/*",
+    "apps/web/out/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
+  "mac": {
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "category": "public.app-category.developer-tools"
+  },
+  "win": {
+    "target": [
+      "nsis",
+      "portable"
+    ]
+  },
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "category": "Development"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+}

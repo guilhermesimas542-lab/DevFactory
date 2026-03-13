@@ -1,0 +1,16 @@
+{
+  "name": "devfactory-desktop",
+  "version": "1.0.0",
+  "description": "DevFactory Desktop Application",
+  "main": "src/main.js",
+  "homepage": "./",
+  "author": "DevFactory",
+  "license": "ISC",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --remote-debugging-port=9222"
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0"
+  }
+}

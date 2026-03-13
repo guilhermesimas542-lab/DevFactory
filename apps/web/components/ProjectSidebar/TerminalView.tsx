@@ -13,42 +13,106 @@ interface TerminalViewProps {
   projectId?: string;
 }
 
+declare global {
+  interface Window {
+    electronAPI?: {
+      terminal: {
+        init: () => Promise<{ success: boolean; cwd: string }>;
+        write: (data: string) => Promise<{ success: boolean }>;
+        read: () => Promise<{ data: string }>;
+        resize: (cols: number, rows: number) => Promise<{ success: boolean }>;
+        kill: () => Promise<{ success: boolean }>;
+        onData: (callback: (data: string) => void) => void;
+      };
+    };
+  }
+}
+
 export default function TerminalView(_props: TerminalViewProps) {
-  const [lines, setLines] = useState<TerminalLine[]>([
-    {
-      id: '0',
-      type: 'info',
-      content: '$ Terminal iniciado',
-      timestamp: new Date(),
-    },
-    {
-      id: '1',
-      type: 'info',
-      content: 'Digite um comando ou "help" para ver opções',
-      timestamp: new Date(),
-    },
-  ]);
+  const [lines, setLines] = useState<TerminalLine[]>([]);
   const [input, setInput] = useState('');
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isElectron, setIsElectron] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll para a última linha
+  // Inicializar terminal
+  useEffect(() => {
+    const initTerminal = async () => {
+      if (typeof window !== 'undefined' && window.electronAPI) {
+        setIsElectron(true);
+        try {
+          const result = await window.electronAPI.terminal.init();
+          setLines([
+            {
+              id: '0',
+              type: 'info',
+              content: `$ Terminal iniciado em ${result.cwd}`,
+              timestamp: new Date(),
+            },
+          ]);
+          setInitialized(true);
+
+          // Listen para output do terminal
+          window.electronAPI.terminal.onData((data: string) => {
+            setLines((prev) => [
+              ...prev,
+              {
+                id: `output-${Date.now()}`,
+                type: 'output',
+                content: data,
+                timestamp: new Date(),
+              },
+            ]);
+          });
+        } catch (error) {
+          setLines([
+            {
+              id: '0',
+              type: 'error',
+              content: 'Erro ao inicializar terminal Electron',
+              timestamp: new Date(),
+            },
+          ]);
+        }
+      } else {
+        // Fallback para modo simulado
+        setLines([
+          {
+            id: '0',
+            type: 'info',
+            content: '$ Terminal (modo simulado - Electron não detectado)',
+            timestamp: new Date(),
+          },
+          {
+            id: '1',
+            type: 'info',
+            content: 'Digite um comando ou "help" para ver opções',
+            timestamp: new Date(),
+          },
+        ]);
+        setInitialized(true);
+      }
+    };
+
+    initTerminal();
+  }, []);
+
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [lines]);
 
-  const executeCommand = (command: string) => {
+  const executeCommand = async (command: string) => {
     if (!command.trim()) return;
 
-    // Adicionar comando ao histórico
     setHistory((prev) => [...prev, command]);
     setHistoryIndex(-1);
 
-    // Adicionar comando ao output
     const commandLine: TerminalLine = {
       id: `cmd-${Date.now()}`,
       type: 'input',
@@ -57,127 +121,18 @@ export default function TerminalView(_props: TerminalViewProps) {
     };
     setLines((prev) => [...prev, commandLine]);
 
-    // Processar comando
-    const [cmd, ...args] = command.trim().split(' ');
-
-    let response = '';
-    let type: 'output' | 'error' | 'info' = 'output';
-
-    switch (cmd.toLowerCase()) {
-      case 'help':
-        response = `Comandos disponíveis:
-  help              - Mostra esta mensagem
-  ls                - Lista arquivos do projeto
-  pwd               - Mostra diretório atual
-  cat <arquivo>    - Mostra conteúdo de arquivo
-  clear             - Limpa o terminal
-  status            - Status do projeto
-  build             - Compila o projeto
-  test              - Executa testes`;
-        break;
-
-      case 'ls':
-        response = `apps/
-  api/
-  web/
-docs/
-  stories/
-  architecture/
-package.json
-.gitignore
-README.md`;
-        break;
-
-      case 'pwd':
-        response = `/Volumes/SSD_PROJETO 8/Dev/devfactory`;
-        break;
-
-      case 'clear':
-        setLines([]);
-        return;
-
-      case 'cat':
-        if (args.length === 0) {
-          response = 'Erro: especifique um arquivo';
-          type = 'error';
-        } else {
-          response = `Conteúdo de ${args[0]}:
-[Arquivo não encontrado ou acesso negado]`;
-          type = 'error';
-        }
-        break;
-
-      case 'status':
-        response = `Status do Projeto:
-  Ramo: main
-  Arquivos modificados: 1
-  Último commit: fix: usar NEXT_PUBLIC_API_URL para chamadas de chat
-  Desenvolvedor: Claude
-  Status: ✅ Saudável`;
-        break;
-
-      case 'build':
-        response = `Building DevFactory...
-  ✓ Compilando frontend
-  ✓ Compilando backend
-  ✓ Build concluído com sucesso`;
-        break;
-
-      case 'test':
-        response = `Executando testes...
-  ✓ 45 testes passaram
-  ✓ 0 testes falharam
-  Cobertura: 78%`;
-        break;
-
-      case 'git':
-        if (args[0]?.toLowerCase() === 'log') {
-          response = `commit 1b0aa83 - fix: usar NEXT_PUBLIC_API_URL para chamadas de chat
-commit e0eeb26 - fix: melhorar debug e error handling do chat com logging
-commit ea3f224 - fix: corrigir payload do chat para usar 'history'
-commit ea4f61d - fix: aumentar altura do chat para ocupar mais da tela`;
-        } else {
-          response = 'Git commands: log, status, add, commit, push, pull';
-        }
-        break;
-
-      case 'npm':
-        if (args[0]?.toLowerCase() === 'run') {
-          response = `Scripts disponíveis:
-  npm run dev       - Inicia servidor de desenvolvimento
-  npm run build     - Build para produção
-  npm test          - Executa testes
-  npm run lint      - Verifica linting`;
-        } else {
-          response = 'Use npm run <script>';
-        }
-        break;
-
-      case 'echo':
-        response = args.join(' ');
-        break;
-
-      case 'date':
-        response = new Date().toString();
-        break;
-
-      case '':
-        return;
-
-      default:
-        response = `Comando não encontrado: ${cmd}`;
-        type = 'error';
-    }
-
-    // Adicionar resposta
-    if (response) {
-      const responseLine: TerminalLine = {
-        id: `res-${Date.now()}`,
-        type,
-        content: response,
-        timestamp: new Date(),
-      };
-      setLines((prev) => [...prev, responseLine]);
+    if (isElectron && initialized && window.electronAPI) {
+      try {
+        await window.electronAPI.terminal.write(command + '\n');
+      } catch (error) {
+        const errorLine: TerminalLine = {
+          id: `err-${Date.now()}`,
+          type: 'error',
+          content: `Erro ao executar comando: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          timestamp: new Date(),
+        };
+        setLines((prev) => [...prev, errorLine]);
+      }
     }
   };
 
@@ -278,7 +233,7 @@ commit ea4f61d - fix: aumentar altura do chat para ocupar mais da tela`;
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Digite um comando..."
+          placeholder={isElectron ? "Digite um comando..." : "Terminal (simulado)"}
           style={{
             flex: 1,
             background: 'transparent',
@@ -289,6 +244,7 @@ commit ea4f61d - fix: aumentar altura do chat para ocupar mais da tela`;
             outline: 'none',
           }}
           autoFocus
+          disabled={!initialized}
         />
       </div>
     </div>
