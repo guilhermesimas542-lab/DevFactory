@@ -796,7 +796,11 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                             key={i}
                             className="component-item"
                             style={{ cursor: 'pointer' }}
-                            onClick={(e) => handleChildNodeClick(e as any, selectedNode.id, c.name)}
+                            onClick={(e: React.MouseEvent) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectionPath([selectedNode.id, c.name]);
+                            }}
                           >
                             <div
                               className="component-dot"
