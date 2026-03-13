@@ -273,15 +273,27 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {/* Project info */}
-      <InfoCard title="Informações do Projeto">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <Field label="Nome" value={project.name} />
-          <Field label="Descrição" value={project.description || 'Sem descrição'} />
-          <Field label="ID" value={project.id} mono />
-          <Field label="Criado em" value={formatDate(project.created_at)} />
+      {/* Project info - Featured */}
+      <div style={{ marginBottom: 24, padding: '20px 0', borderBottom: '1px solid var(--bg-border)' }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
+          {project.name}
+        </h1>
+        {project.description && (
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '80%' }}>
+            {project.description.length > 200
+              ? project.description.substring(0, 200) + '...'
+              : project.description}
+          </p>
+        )}
+        <div style={{ display: 'flex', gap: 24, marginTop: 16, fontSize: 12, color: 'var(--text-tertiary)' }}>
+          <div>
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>ID:</span> {project.id.substring(0, 8)}...
+          </div>
+          <div>
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Criado em:</span> {formatDate(project.created_at)}
+          </div>
         </div>
-      </InfoCard>
+      </div>
 
       {/* PRD info */}
       {project.prd_original && (

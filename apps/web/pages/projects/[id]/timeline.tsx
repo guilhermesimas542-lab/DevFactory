@@ -166,120 +166,133 @@ export default function Timeline() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-6xl mx-auto px-4 py-8">
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', padding: '32px 0' }}>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px' }}>
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">⚠️ {error}</p>
+          <div style={{ marginBottom: 24, padding: '12px 14px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, fontSize: 13, color: 'var(--status-alert)' }}>
+            ⚠️ {error}
           </div>
         )}
 
         {/* Stats */}
         {timeline && (
-          <div className="grid grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600 font-medium">Taxa de Conclusão</p>
-              <p className="text-3xl font-bold text-blue-600">{timeline.completionRate}%</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 12, padding: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Taxa de Conclusão</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#38BDF8' }}>{timeline.completionRate}%</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600 font-medium">Concluídas</p>
-              <p className="text-3xl font-bold text-green-600">{timeline.totalCompleted}</p>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 12, padding: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Concluídas</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#10B981' }}>{timeline.totalCompleted}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600 font-medium">Em Progresso</p>
-              <p className="text-3xl font-bold text-blue-600">{timeline.totalInProgress}</p>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 12, padding: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Em Progresso</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#F59E0B' }}>{timeline.totalInProgress}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-sm text-gray-600 font-medium">Dias Médios</p>
-              <p className="text-3xl font-bold text-purple-600">{timeline.avgDaysToCompletion}d</p>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 12, padding: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dias Médios</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#A78BFA' }}>{timeline.avgDaysToCompletion}d</p>
             </div>
           </div>
         )}
 
         {/* Timeline Visualization */}
-        <div className="bg-white rounded-lg shadow p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Timeline Gráfico</h2>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 14, padding: 24 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 20 }}>📅 Timeline de Histórias</h2>
 
           {stories.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">Nenhuma story com datas</p>
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-secondary)' }}>
+              <p>Nenhuma história com datas registradas</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {/* Timeline scale */}
-              <div className="mb-8">
-                <div className="flex justify-between text-xs text-gray-600 mb-2">
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 8 }}>
                   <span>{getEarliestDate().toLocaleDateString('pt-BR')}</span>
                   <span>{getLatestDate().toLocaleDateString('pt-BR')}</span>
                 </div>
-                <div className="h-1 bg-gray-200 rounded-full relative">
-                  <div className="absolute top-0 left-0 right-0 bottom-0 flex">
+                <div style={{ height: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 999, position: 'relative' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex' }}>
                     {[...Array(5)].map((_, i) => (
-                      <div key={i} className="flex-1 border-r border-gray-300" />
+                      <div key={i} style={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.05)' }} />
                     ))}
                   </div>
                 </div>
               </div>
 
               {/* Stories */}
-              {stories.map(story => (
-                <div key={story.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{story.title}</h3>
-                      <p className="text-sm text-gray-600">
-                        {getStatusLabel(story.status)}
-                        {story.epic && ` • ${story.epic}`}
-                      </p>
-                    </div>
-                    <div className="text-xs text-gray-600 ml-4 text-right">
-                      {story.started_at && (
-                        <div>Início: {formatDate(story.started_at)}</div>
-                      )}
-                      {story.completed_at && (
-                        <div>Fim: {formatDate(story.completed_at)}</div>
-                      )}
-                    </div>
-                  </div>
+              {stories.map(story => {
+                const statusColorMap: Record<string, string> = {
+                  completed: '#10B981',
+                  in_progress: '#F59E0B',
+                  pending: 'rgba(255,255,255,0.2)'
+                };
+                const statusColor = statusColorMap[story.status] || 'rgba(255,255,255,0.2)';
 
-                  {/* Bar */}
-                  <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${getStatusColor(story.status)} rounded-full transition-all`}
-                      style={{
-                        left: `${calculatePosition(
-                          story.started_at ? new Date(story.started_at) : new Date(story.created_at)
-                        )}%`,
-                        width: `${calculateWidth(
-                          story.started_at ? new Date(story.started_at) : null,
-                          story.completed_at ? new Date(story.completed_at) : null
-                        )}%`,
-                        position: 'absolute',
-                      }}
-                      title={story.title}
-                    />
+                return (
+                  <div key={story.id} style={{ padding: 14, background: 'var(--bg-elevated)', border: '1px solid var(--bg-border)', borderRadius: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{story.title}</h3>
+                        <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                          {getStatusLabel(story.status)}
+                          {story.epic && ` • ${story.epic}`}
+                        </p>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', textAlign: 'right', marginLeft: 16 }}>
+                        {story.started_at && (
+                          <div>Início: {formatDate(story.started_at)}</div>
+                        )}
+                        {story.completed_at && (
+                          <div>Fim: {formatDate(story.completed_at)}</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bar */}
+                    <div style={{ position: 'relative', height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 999, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          height: '100%',
+                          background: statusColor,
+                          borderRadius: 999,
+                          transition: 'all 200ms',
+                          left: `${calculatePosition(
+                            story.started_at ? new Date(story.started_at) : new Date(story.created_at)
+                          )}%`,
+                          width: `${calculateWidth(
+                            story.started_at ? new Date(story.started_at) : null,
+                            story.completed_at ? new Date(story.completed_at) : null
+                          )}%`,
+                          boxShadow: `0 0 12px ${statusColor}40`
+                        }}
+                        title={story.title}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* Legend */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="font-bold text-gray-900 mb-4">Legenda</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">✅ Concluída</span>
+        <div style={{ marginTop: 32, background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 14, padding: 20 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>📊 Legenda de Status</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 8, height: 8, background: '#10B981', borderRadius: '50%', boxShadow: '0 0 8px #10B98140' }}></div>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>✅ Concluída</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">🔄 Em Progresso</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 8, height: 8, background: '#F59E0B', borderRadius: '50%', boxShadow: '0 0 8px #F59E0B40' }}></div>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>🔄 Em Progresso</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-              <span className="text-sm text-gray-600">⏳ Pendente</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 8, height: 8, background: 'rgba(255,255,255,0.2)', borderRadius: '50%' }}></div>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>⏳ Pendente</span>
             </div>
           </div>
         </div>
