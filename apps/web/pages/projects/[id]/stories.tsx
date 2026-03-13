@@ -276,21 +276,21 @@ export default function StoriesList() {
                 const sm = statusMap[story.status] || statusMap['pending'];
                 return (
                   <div key={story.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '11px 20px',
+                    display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px 20px',
                     borderBottom: i < stories.length - 1 ? '1px solid var(--bg-border)' : 'none',
                     transition: 'background 150ms',
                   }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: 'var(--accent)', minWidth: 80, flexShrink: 0 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: 'var(--accent)', minWidth: 90, flexShrink: 0, paddingTop: 2 }}>
                       {story.id}
                     </span>
                     <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13.5, color: 'var(--text-primary)', fontWeight: 500 }}>{story.title}</p>
+                      <p style={{ fontSize: 13.5, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 6 }}>{story.title}</p>
+                      {story.description && (
+                        <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
+                          {story.description}
+                        </p>
+                      )}
                     </div>
-                    {story.description && (
-                      <span style={{ fontSize: 12, color: 'var(--text-secondary)', flexShrink: 0, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {story.description}
-                      </span>
-                    )}
 
                     {editingId === story.id ? (
                       <select
