@@ -273,24 +273,34 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {/* Project info - Featured */}
-      <div style={{ marginBottom: 24, padding: '20px 0', borderBottom: '1px solid var(--bg-border)' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>
+      {/* Project Header - Featured */}
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--bg-border)', borderRadius: 14, padding: '24px', marginBottom: 24 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, letterSpacing: '-0.02em' }}>
           {project.name}
         </h1>
         {project.description && (
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '80%' }}>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
             {project.description.length > 200
               ? project.description.substring(0, 200) + '...'
               : project.description}
           </p>
         )}
-        <div style={{ display: 'flex', gap: 24, marginTop: 16, fontSize: 12, color: 'var(--text-tertiary)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, paddingTop: 12, borderTop: '1px solid var(--bg-border)' }}>
           <div>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>ID:</span> {project.id.substring(0, 8)}...
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+              ID
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+              {project.id.substring(0, 8)}...
+            </p>
           </div>
           <div>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Criado em:</span> {formatDate(project.created_at)}
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+              Criado em
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+              {formatDate(project.created_at)}
+            </p>
           </div>
         </div>
       </div>
