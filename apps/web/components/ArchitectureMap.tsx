@@ -454,6 +454,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
           name: childComponent.name,
           status: childComponent.status,
           type: parentNode.type,
+          description: childComponent.description || '',
           isChild: true,
           parentNode,
         } as any;
