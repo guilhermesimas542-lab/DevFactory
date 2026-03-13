@@ -414,7 +414,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
 
   // Node dragging state
-  const [nodeDragStart, setNodeDragStart] = useState<{ x: number; y: number; nodeId: string } | null>(null);
+  const [nodeDragStart, setNodeDragStart] = useState<{ x: number; y: number; nodeId: string; startPos: { x: number; y: number } } | null>(null);
   const [nodeMoved, setNodeMoved] = useState(false);
   const DRAG_THRESHOLD = 5;
   const MIN_ZOOM = 0.3;
@@ -488,29 +488,15 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
         if (!nodeMoved) {
           setNodeMoved(true); // Mark that we've moved past threshold
         }
-        // Update node position with validation
-        setNodePositions(prev => {
-          const currentPos = prev[nodeDragStart.nodeId];
-          if (!currentPos) {
-            // Initialize position if doesn't exist (for child nodes)
-            return {
-              ...prev,
-              [nodeDragStart.nodeId]: {
-                x: deltaX,
-                y: deltaY,
-              },
-            };
-          }
-          return {
-            ...prev,
-            [nodeDragStart.nodeId]: {
-              x: currentPos.x + deltaX,
-              y: currentPos.y + deltaY,
-            },
-          };
-        });
-        // Update drag start for next frame
-        setNodeDragStart({ ...nodeDragStart, x: e.clientX, y: e.clientY });
+        // Update node position relative to start position
+        setNodePositions(prev => ({
+          ...prev,
+          [nodeDragStart.nodeId]: {
+            x: nodeDragStart.startPos.x + deltaX,
+            y: nodeDragStart.startPos.y + deltaY,
+          },
+        }));
+        // Don't update drag start - keep it fixed for accumulating deltas
       }
       return;
     }
@@ -568,7 +554,11 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   // Node drag handlers
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     e.stopPropagation();
-    setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId });
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    const startPos = nodePositions[nodeId] || { x: node.x, y: node.y };
+    setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId, startPos });
   };
 
   const handleNodeClick = (e: React.MouseEvent, nodeId: string) => {
@@ -584,7 +574,14 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   const handleChildNodeMouseDown = (e: React.MouseEvent, parentId: string, childName: string) => {
     e.stopPropagation();
     const childId = `${parentId}-${childName}`;
-    setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId: childId });
+    const parentNode = nodes.find(n => n.id === parentId);
+    if (!parentNode) return;
+
+    // Get the current position of the child from nodePositions or calculate default
+    const childIndex = parentNode.components?.findIndex(c => c.name === childName) ?? 0;
+    const startPos = nodePositions[childId] || getChildPosition(parentNode, childIndex);
+
+    setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId: childId, startPos });
   };
 
   const handleChildNodeClick = (e: React.MouseEvent, parentId: string, childName: string) => {
@@ -681,7 +678,8 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                 return null;
               }
               return parentNode.components.map((component, childIndex) => {
-                const childPos = getChildPosition(parentNode, childIndex);
+                const childId = `${parentNode.id}-${component.name}`;
+                const childPos = nodePositions[childId] || getChildPosition(parentNode, childIndex);
                 const parentCenter = getCenter(parentNode);
                 const typeColor = TYPE_MAP[parentNode.type]?.color || '#fff';
 
