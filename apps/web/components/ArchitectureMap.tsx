@@ -619,22 +619,6 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
         >
           {/* EDGES */}
           <svg className="edges-svg">
-            {/* Define arrow markers for edges */}
-            <defs>
-              {[...new Set(edges.map(e => TYPE_MAP[nodes.find(n => n.id === e.to)?.type || 'integration']?.color || '#fff'))].map((color, i) => (
-                <marker
-                  key={`arrow-${i}`}
-                  id={`arrowhead-${color.replace('#', '')}`}
-                  markerWidth="10"
-                  markerHeight="10"
-                  refX="8"
-                  refY="3"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3, 0 6" fill={color} />
-                </marker>
-              ))}
-            </defs>
 
             {edges.map((edge, i) => {
               const from = nodes.find(n => n.id === edge.from);
@@ -649,8 +633,6 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
               const my = (f.y + t.y) / 2;
               const mx = (f.x + t.x) / 2;
               const typeColor = TYPE_MAP[to.type]?.color || '#fff';
-              const direction = edge.direction || 'unilateral';
-              const arrowId = `arrowhead-${typeColor.replace('#', '')}`;
 
               return (
                 <g key={i}>
@@ -660,8 +642,6 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                     stroke={isActive ? typeColor : 'rgba(255,255,255,0.08)'}
                     strokeWidth={isActive ? 1.5 : 1}
                     strokeDasharray={isActive ? 'none' : '4 4'}
-                    markerEnd={`url(#${arrowId})`}
-                    markerStart={direction === 'bilateral' ? `url(#${arrowId})` : 'none'}
                     style={{ transition: 'stroke 200ms, stroke-width 200ms' }}
                     filter={isActive ? `drop-shadow(0 0 4px ${typeColor}60)` : 'none'}
                   />
@@ -699,8 +679,6 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
 
                 const pathData = `M${exitPoint.x},${exitPoint.y} Q${midX + offsetX},${midY + offsetY} ${entryPoint.x},${entryPoint.y}`;
 
-                const arrowId = `arrowhead-${typeColor.replace('#', '')}`;
-
                 return (
                   <g key={`edge-${parentNode.id}-${component.name}`}>
                     <path
@@ -709,7 +687,6 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                       stroke={typeColor}
                       strokeWidth="2"
                       opacity="0.6"
-                      markerEnd={`url(#${arrowId})`}
                       style={{ transition: 'opacity 300ms, stroke-width 300ms' }}
                     />
                   </g>
