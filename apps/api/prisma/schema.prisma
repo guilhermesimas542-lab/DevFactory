@@ -140,6 +140,7 @@ model GlossaryTerm {
   definition  String
   analogy     String?
   relevance   String?
+  category    String   @default("geral")
   is_explored Boolean  @default(false)
 
   created_at  DateTime @default(now())

@@ -30,6 +30,32 @@
 
 ---
 
+### 2026-03-12 @data-engineer (Dara) — Glossary Enhancement Phase 1: Schema ✅
+
+**Objetivo:** Reconstruir glossário com categorias automáticas extraídas de PRD via IA
+
+**Fase 1 — Schema: Adicionar campo `category`** ✅
+- Schema Prisma: Adicionado campo `category` ao modelo `GlossaryTerm`
+  * Tipo: String com default `"geral"`
+  * Categorias fixas suportadas: tecnologia, arquitetura, banco_de_dados, seguranca, negocio, infraestrutura, geral
+- Migration criada: `20260312151000_add_category_to_glossary_term`
+  * Adiciona coluna `category` com NOT NULL constraint
+  * Cria índice composto `(project_id, category)` para queries agrupadas
+- Prisma Client regenerado ✅
+- TypeScript build: ✅ 0 erros
+- **Status:** ✅ Concluído — Pronto para Fase 2 (Backend)
+
+**Próximas Fases:**
+1. [ ] Fase 2 — Backend: Endpoint POST `/api/glossary/extract` com Groq IA
+2. [ ] Fase 3 — Frontend API: Função `extractGlossaryTerms()` em api.ts
+3. [ ] Fase 4 — Frontend UI: Agrupamento por categoria + botão auto-gerar
+
+**Arquivos Modificados:**
+- `apps/api/prisma/schema.prisma` — GlossaryTerm model
+- `apps/api/prisma/migrations/20260312151000_add_category_to_glossary_term/migration.sql` — Nova
+
+---
+
 ### 2026-03-12 @dev (Dex) — GitHub Webhook Integration - Professionalization COMPLETE ✅
 
 **Implementação de 6 fases concluída:**
