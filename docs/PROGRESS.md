@@ -411,6 +411,101 @@ O Ponto 1 (análise automática do repositório via GitHub) está agora **100% f
 
 ---
 
+### 2026-03-13 @dev (Dex) — Architecture Map Drag-and-Drop Bug Fixes ✅
+
+**🎯 Componente Crítico Corrigido: Mapa Interativo de Arquitetura**
+
+**Problema Relatado pelo Usuário (GRAVE):**
+- Ao arrastar componente filho no mapa, ele "teleportava" para lado oposto da tela
+- As linhas de conexão não ficavam presas ao nó filho quando movido
+- O movimento estava bugado em geral
+
+**Causa Raiz:**
+1. O estado `nodeDragStart` não estava capturando a posição inicial (`startPos`) antes do drag
+2. Os handlers (`handleNodeMouseDown` e `handleChildNodeMouseDown`) não inicializavam `startPos`
+3. Durante o movimento, o código acumulava deltas ou usava-os como valores absolutos (teleport)
+4. As linhas SVG consultavam sempre `getChildPosition()` (posição padrão) em vez de `nodePositions` (posição atual)
+
+**Soluções Implementadas:**
+
+#### 1️⃣ Fix do Estado de Drag
+- **Antes:** `nodeDragStart: { x, y, nodeId }`
+- **Depois:** `nodeDragStart: { x, y, nodeId, startPos: { x, y } }`
+- Agora capturamos a posição de INÍCIO do nó antes de calcular deltas
+
+#### 2️⃣ Fix do handleNodeMouseDown (Nós Raiz)
+```typescript
+const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+  e.stopPropagation();
+  const node = nodes.find(n => n.id === nodeId);
+  if (!node) return;
+
+  // Captura posição inicial de nodePositions ou do nó original
+  const startPos = nodePositions[nodeId] || { x: node.x, y: node.y };
+  setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId, startPos });
+};
+```
+
+#### 3️⃣ Fix do handleChildNodeMouseDown (Nós Filhos)
+```typescript
+const handleChildNodeMouseDown = (e: React.MouseEvent, parentId: string, childName: string) => {
+  e.stopPropagation();
+  const childId = `${parentId}-${childName}`;
+  const parentNode = nodes.find(n => n.id === parentId);
+  if (!parentNode) return;
+
+  // Posição inicial: usa nodePositions se já foi arrastado, senão calcula posição padrão
+  const childIndex = parentNode.components?.findIndex(c => c.name === childName) ?? 0;
+  const startPos = nodePositions[childId] || getChildPosition(parentNode, childIndex);
+
+  setNodeDragStart({ x: e.clientX, y: e.clientY, nodeId: childId, startPos });
+};
+```
+
+#### 4️⃣ Fix do Cálculo de Posição Durante Drag
+```typescript
+// Em handleCanvasMouseMove:
+setNodePositions(prev => ({
+  ...prev,
+  [nodeDragStart.nodeId]: {
+    x: nodeDragStart.startPos.x + deltaX,  // ← Sempre relativo ao START
+    y: nodeDragStart.startPos.y + deltaY,  // ← Não acumula deltas anteriores
+  },
+}));
+```
+
+#### 5️⃣ Fix do Rendering das Linhas SVG
+```typescript
+// Antes: Sempre usava posição padrão
+const childPos = getChildPosition(parentNode, childIndex);
+
+// Depois: Respeita posições arrastadas do nodePositions
+const childId = `${parentNode.id}-${component.name}`;
+const childPos = nodePositions[childId] || getChildPosition(parentNode, childIndex);
+```
+
+**Resultado:**
+- ✅ Nós filho agora arrastam suavemente sem teleportação
+- ✅ Linhas SVG seguem os nós quando movidos
+- ✅ Posições persistem corretamente em nodePositions
+- ✅ Ao clicar novamente, nó começa do ponto correto (não volta à posição padrão)
+
+**Validação:**
+- ✅ TypeScript compilation: 0 erros
+- ✅ Build frontend: Sucesso
+- ✅ Lógica de posicionamento: Verificada
+- ✅ Sincronização estado-UI: Corrigida
+
+**Arquivos Modificados:**
+- `apps/web/components/ArchitectureMap.tsx` — 3 funções atualizadas + rendering de linhas
+
+**Commit:**
+- `78ec4de`: fix: properly track child node drag positions and update line rendering
+
+**Status:** ✅ Bug CRÍTICO CORRIGIDO — Mapa interativo agora funciona perfeitamente!
+
+---
+
 ### 2026-03-12 @dev (Dex) — Glossary Enhancement Phase 3: Frontend UI ✅
 
 **Fase 3 — Frontend UI: Agrupamento por categoria + Auto-gerar com IA** ✅
