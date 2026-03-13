@@ -37,13 +37,33 @@ async function runMigrationsAsync() {
 }
 
 // CORS Configuration
+const corsOrigins = [
+  'https://dev-factory-al5c-1xuy6u0rw-guilhermes-projects-05207aa8.vercel.app',
+  'https://dev-factory-al5c.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://192.168.0.136:3000',
+  'http://192.168.0.136:3001',
+]
+
 app.use(cors({
-  origin: [
-    'https://dev-factory-al5c-1xuy6u0rw-guilhermes-projects-05207aa8.vercel.app',
-    'https://dev-factory-al5c.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl requests, Electron)
+    if (!origin) return callback(null, true)
+
+    // Allow localhost and development origins
+    if (origin.includes('localhost') || origin.includes('192.168') || origin === 'file://') {
+      return callback(null, true)
+    }
+
+    // Check against whitelist
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true)
+    }
+
+    callback(new Error('Not allowed by CORS'))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
