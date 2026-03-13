@@ -119,19 +119,6 @@ export default function Timeline() {
     return Math.max(1, endPos - startPos);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-500';
-      case 'in_progress':
-        return 'bg-blue-500';
-      case 'pending':
-        return 'bg-gray-400';
-      default:
-        return 'bg-gray-400';
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'completed':
