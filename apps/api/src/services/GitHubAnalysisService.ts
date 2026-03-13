@@ -114,7 +114,7 @@ export class GitHubAnalysisService {
         path: 'package.json'
       }).catch(() => null);
 
-      let packageJson = {};
+      let packageJson: any = {};
       if (packageJsonData && 'content' in packageJsonData.data) {
         try {
           const content = Buffer.from(packageJsonData.data.content as string, 'base64').toString();
@@ -124,7 +124,7 @@ export class GitHubAnalysisService {
         }
       }
 
-      const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
+      const dependencies = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) };
 
       // Analisar cada story
       for (const heuristic of STORY_HEURISTICS) {
