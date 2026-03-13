@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "electron:dev": "concurrently \"npm run dev --workspace=web\" \"wait-on http://localhost:3000 && electron apps/electron/src/main.js\"",
+    "electron:dev": "concurrently \"npm run dev --workspace=web\" \"wait-on http://localhost:3000 -t 60000 && sleep 3 && electron apps/electron/src/main.js\"",
     "electron:build": "npm run build --workspace=web && electron-builder"
   },
   "devDependencies": {
