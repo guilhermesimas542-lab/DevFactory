@@ -37,6 +37,17 @@ export default function ChatView({ projectId }: ChatViewProps) {
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
+    if (!projectId) {
+      const errorMsg: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: '❌ Erro: ID do projeto não encontrado. Recarregue a página.',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+      return;
+    }
+
     // Adicionar mensagem do usuário
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -46,47 +57,54 @@ export default function ChatView({ projectId }: ChatViewProps) {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = input;
     setInput('');
     setLoading(true);
 
     try {
+      console.log('Enviando mensagem:', { projectId, message: userInput });
+
       // Chamar API de chat
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: input,
+          message: userInput,
           projectId,
-          history: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          history: messages
+            .filter(m => m.role === 'user' || m.role === 'assistant')
+            .map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get response');
-      }
-
       const data = await response.json();
+      console.log('Resposta da API:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || `Erro ${response.status}`);
+      }
 
       // Adicionar resposta da IA
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.data?.message || 'Desculpe, não consegui processar sua mensagem.',
+        content: data.data?.message || data.message || 'Desculpe, não consegui processar sua mensagem.',
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Chat error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('Chat error:', errorMsg, error);
+
       // Adicionar mensagem de erro
       const errorMessage: ChatMessage = {
         id: (Date.now() + 2).toString(),
         role: 'assistant',
-        content: '❌ Desculpe, houve um erro ao processar sua mensagem. Tente novamente.',
+        content: `❌ Erro: ${errorMsg}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
