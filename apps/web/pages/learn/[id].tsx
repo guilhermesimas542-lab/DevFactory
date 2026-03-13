@@ -53,7 +53,7 @@ export default function CategoryPage() {
   const fetchCategory = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/learning/categories/${id}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/learning/categories/${id}`);
       if (!response.ok) throw new Error('Failed to fetch category');
       const data = await response.json();
       setCategory(data.data);
