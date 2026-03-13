@@ -251,6 +251,7 @@ export interface ArchNode {
 export interface ArchEdge {
   from: string;
   to: string;
+  direction?: 'unilateral' | 'bilateral'; // unilateral: A→B, bilateral: A↔B
 }
 
 interface ArchitectureMapProps {
@@ -260,6 +261,55 @@ interface ArchitectureMapProps {
 
 function getCenter(node: ArchNode) {
   return { x: node.x + 90, y: node.y + 54 };
+}
+
+// Calculate intersection point between center points and rectangle border
+// Direction: from source to target
+function getEdgePoint(
+  sourceNode: ArchNode | undefined,
+  targetNode: ArchNode | undefined,
+  isTarget: boolean = false
+): { x: number; y: number } {
+  if (!sourceNode || !targetNode) return { x: 0, y: 0 };
+
+  const activeNode = isTarget ? targetNode : sourceNode;
+  const otherNode = isTarget ? sourceNode : targetNode;
+
+  const activeCenter = getCenter(activeNode);
+  const otherCenter = getCenter(otherNode);
+
+  // Determine node dimensions based on type
+  const isRootNode = activeNode.type === 'root';
+  const width = isRootNode ? 200 : 140;
+  const height = isRootNode ? 108 : 100;
+
+  // Vector from active to other
+  const dx = otherCenter.x - activeCenter.x;
+  const dy = otherCenter.y - activeCenter.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  if (dist === 0) return activeCenter;
+
+  // Normalized direction
+  const nx = dx / dist;
+  const ny = dy / dist;
+
+  // Find intersection with rectangle border
+  const halfW = width / 2;
+  const halfH = height / 2;
+
+  let t = Infinity;
+
+  // Check all 4 sides
+  if (nx > 0) t = Math.min(t, (halfW) / nx); // Right side
+  if (nx < 0) t = Math.min(t, (-halfW) / nx); // Left side
+  if (ny > 0) t = Math.min(t, (halfH) / ny); // Bottom side
+  if (ny < 0) t = Math.min(t, (-halfH) / ny); // Top side
+
+  return {
+    x: activeCenter.x + nx * t,
+    y: activeCenter.y + ny * t,
+  };
 }
 
 // Calculate exit point on parent node border (closest to target)
@@ -558,16 +608,39 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
         >
           {/* EDGES */}
           <svg className="edges-svg">
+            {/* Define arrow markers for edges */}
+            <defs>
+              {[...new Set(edges.map(e => TYPE_MAP[nodes.find(n => n.id === e.to)?.type || 'integration']?.color || '#fff'))].map((color, i) => (
+                <marker
+                  key={`arrow-${i}`}
+                  id={`arrowhead-${color.replace('#', '')}`}
+                  markerWidth="10"
+                  markerHeight="10"
+                  refX="8"
+                  refY="3"
+                  orient="auto"
+                >
+                  <polygon points="0 0, 10 3, 0 6" fill={color} />
+                </marker>
+              ))}
+            </defs>
+
             {edges.map((edge, i) => {
               const from = nodes.find(n => n.id === edge.from);
               const to = nodes.find(n => n.id === edge.to);
               if (!from || !to) return null;
-              const f = getCenter(from);
-              const t = getCenter(to);
+
+              // Use edge points (border intersection) instead of center
+              const f = getEdgePoint(from, to, false); // source edge point
+              const t = getEdgePoint(from, to, true); // target edge point
+
               const isActive = selectionPath[0] === edge.from || selectionPath[0] === edge.to;
               const my = (f.y + t.y) / 2;
               const mx = (f.x + t.x) / 2;
               const typeColor = TYPE_MAP[to.type]?.color || '#fff';
+              const direction = edge.direction || 'unilateral';
+              const arrowId = `arrowhead-${typeColor.replace('#', '')}`;
+
               return (
                 <g key={i}>
                   <path
@@ -576,6 +649,8 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                     stroke={isActive ? typeColor : 'rgba(255,255,255,0.08)'}
                     strokeWidth={isActive ? 1.5 : 1}
                     strokeDasharray={isActive ? 'none' : '4 4'}
+                    markerEnd={`url(#${arrowId})`}
+                    markerStart={direction === 'bilateral' ? `url(#${arrowId})` : 'none'}
                     style={{ transition: 'stroke 200ms, stroke-width 200ms' }}
                     filter={isActive ? `drop-shadow(0 0 4px ${typeColor}60)` : 'none'}
                   />
@@ -612,6 +687,8 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
 
                 const pathData = `M${exitPoint.x},${exitPoint.y} Q${midX + offsetX},${midY + offsetY} ${entryPoint.x},${entryPoint.y}`;
 
+                const arrowId = `arrowhead-${typeColor.replace('#', '')}`;
+
                 return (
                   <g key={`edge-${parentNode.id}-${component.name}`}>
                     <path
@@ -620,6 +697,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                       stroke={typeColor}
                       strokeWidth="2"
                       opacity="0.6"
+                      markerEnd={`url(#${arrowId})`}
                       style={{ transition: 'opacity 300ms, stroke-width 300ms' }}
                     />
                   </g>

@@ -109,13 +109,13 @@ const MOCK_NODES: ArchNode[] = [
 ];
 
 const MOCK_EDGES: ArchEdge[] = [
-  { from: 'root', to: 'frontend' },
-  { from: 'root', to: 'backend' },
-  { from: 'root', to: 'database' },
-  { from: 'root', to: 'auth' },
-  { from: 'root', to: 'integration' },
-  { from: 'backend', to: 'database' },
-  { from: 'backend', to: 'integration' },
+  { from: 'root', to: 'frontend', direction: 'unilateral' },
+  { from: 'root', to: 'backend', direction: 'unilateral' },
+  { from: 'root', to: 'database', direction: 'unilateral' },
+  { from: 'root', to: 'auth', direction: 'unilateral' },
+  { from: 'root', to: 'integration', direction: 'unilateral' },
+  { from: 'backend', to: 'database', direction: 'unilateral' },
+  { from: 'backend', to: 'integration', direction: 'unilateral' },
 ];
 
 export default function MapPage() {
