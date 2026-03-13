@@ -36,41 +36,26 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(2px)',
-            zIndex: 900,
-            animation: 'fadeIn 200ms ease-out',
-          }}
-        />
-      )}
-
-      {/* Sidebar */}
+      {/* Sidebar - Floating Panel */}
       <div
         style={{
           position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 'clamp(100%, 380px, 100%)',
+          bottom: '20px',
+          right: '20px',
+          width: '380px',
+          height: '500px',
           background: '#141418',
-          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255,255,255,0.08)',
           zIndex: 950,
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+          transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.9) translateY(30px)',
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? 'auto' : 'none',
+          transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: isOpen
-            ? '-2px 0 12px rgba(0,0,0,0.4)'
+            ? '0 20px 25px -5px rgba(0,0,0,0.6), 0 10px 10px -5px rgba(0,0,0,0.4)'
             : 'none',
         }}
       >
@@ -150,17 +135,9 @@ export default function Sidebar({
 
       <style>{`
         @media (max-width: 768px) {
-          [style*="right: 0; bottom: 0; width"] {
-            width: 100%;
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
+          [style*="bottom: 20px; right: 20px"] {
+            width: calc(100% - 40px);
+            max-width: 380px;
           }
         }
       `}</style>
