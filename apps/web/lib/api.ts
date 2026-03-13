@@ -73,6 +73,7 @@ export async function getProject(projectId: string): Promise<ApiResponse<{
   name: string;
   description: string | null;
   github_repo_url: string | null;
+  github_webhook_id?: number | null;
   github_last_sync: string | null;
   prd_original: any;
   modules: Array<{

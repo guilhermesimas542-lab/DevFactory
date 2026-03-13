@@ -405,8 +405,8 @@ export default function ProjectDetail() {
                 <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-tertiary)', marginBottom: 4 }}>
                   Status Webhook
                 </div>
-                <span className="df-badge" style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--status-done)' }}>
-                  {githubToken || project.github_webhook_id ? '✓ Ativo' : '○ Desconectado'}
+                <span className="df-badge" style={{ background: project.github_webhook_id ? 'rgba(16,185,129,0.2)' : 'rgba(107,114,128,0.2)', color: project.github_webhook_id ? 'var(--status-done)' : 'var(--text-secondary)' }}>
+                  {project.github_webhook_id ? '✓ Ativo' : '○ Desconectado'}
                 </span>
               </div>
             </div>
