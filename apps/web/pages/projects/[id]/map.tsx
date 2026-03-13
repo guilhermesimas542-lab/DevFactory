@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { extractArchitecture } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
 import ArchitectureMap, { ArchNode, ArchEdge } from '@/components/ArchitectureMap';
+import { SidebarToggleBar, Sidebar, type SidebarView } from '@/components/ProjectSidebar';
 
 // Mock data for testing
 const MOCK_NODES: ArchNode[] = [
@@ -127,6 +128,8 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarView, setSidebarView] = useState<SidebarView>('chat');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -191,6 +194,17 @@ export default function MapPage() {
     }
   };
 
+  const handleSidebarToggle = (view: SidebarView) => {
+    if (sidebarOpen && sidebarView === view) {
+      // Se já está aberto com essa view, fecha
+      setSidebarOpen(false);
+    } else {
+      // Abre ou troca para a nova view
+      setSidebarView(view);
+      setSidebarOpen(true);
+    }
+  };
+
   if (status === 'loading' || loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gray-50">
@@ -203,7 +217,7 @@ export default function MapPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 52px)', background: '#0D0D0F' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 52px)', background: '#0D0D0F', position: 'relative' }}>
       {/* Top Bar */}
       <div style={{
         padding: '12px 20px',
@@ -244,6 +258,22 @@ export default function MapPage() {
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         <ArchitectureMap nodes={nodes} edges={edges} />
       </div>
+
+      {/* Sidebar Toggle Bar */}
+      <SidebarToggleBar
+        isOpen={sidebarOpen}
+        activeView={sidebarView}
+        onToggle={handleSidebarToggle}
+      />
+
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        activeView={sidebarView}
+        onClose={() => setSidebarOpen(false)}
+        projectId={router.query.id as string}
+        nodes={nodes}
+      />
     </div>
   );
 }
