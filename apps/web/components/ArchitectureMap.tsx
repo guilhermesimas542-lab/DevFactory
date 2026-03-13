@@ -263,8 +263,12 @@ function getCenter(node: ArchNode) {
 }
 
 // Calculate exit point on parent node border (closest to target)
-function getExitPoint(parentNode: ArchNode, targetNode: { x: number; y: number }): { x: number; y: number } {
+function getExitPoint(parentNode: ArchNode | undefined, targetNode: { x: number; y: number } | undefined): { x: number; y: number } {
+  if (!parentNode || !targetNode) return { x: 0, y: 0 };
+
   const parentCenter = getCenter(parentNode);
+  if (!parentCenter) return { x: 0, y: 0 };
+
   const parentWidth = 200;
   const parentHeight = 108;
 
@@ -298,7 +302,9 @@ function getExitPoint(parentNode: ArchNode, targetNode: { x: number; y: number }
 }
 
 // Calculate entry point on child node border (closest to parent)
-function getEntryPoint(childNode: { x: number; y: number }, parentCenter: { x: number; y: number }): { x: number; y: number } {
+function getEntryPoint(childNode: { x: number; y: number } | undefined, parentCenter: { x: number; y: number } | undefined): { x: number; y: number } {
+  if (!childNode || !parentCenter) return { x: 0, y: 0 };
+
   const childCenter = { x: childNode.x + 70, y: childNode.y + 50 };
   const childWidth = 140;
   const childHeight = 100;
@@ -537,40 +543,45 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
             })}
 
             {/* CHILD NODE CONNECTIONS (parent to component edges) */}
-            {nodes.map(parentNode =>
-              expandedNodes.has(parentNode.id) && parentNode.components && parentNode.components.length > 0
-                ? parentNode.components.map((component, childIndex) => {
-                    const childPos = getChildPosition(parentNode, childIndex);
-                    const parentCenter = getCenter(parentNode);
-                    const typeColor = TYPE_MAP[parentNode.type]?.color || '#fff';
+            {nodes.map(parentNode => {
+              if (!parentNode || !expandedNodes.has(parentNode.id) || !parentNode.components || parentNode.components.length === 0) {
+                return null;
+              }
+              return parentNode.components.map((component, childIndex) => {
+                const childPos = getChildPosition(parentNode, childIndex);
+                const parentCenter = getCenter(parentNode);
+                const typeColor = TYPE_MAP[parentNode.type]?.color || '#fff';
 
-                    // Get entry and exit points for smooth lines from border to border
-                    const exitPoint = getExitPoint(parentNode, childPos);
-                    const entryPoint = getEntryPoint(childPos, parentCenter);
+                if (!childPos || !parentCenter) {
+                  return null;
+                }
 
-                    // Calculate control points for smooth bezier curve
-                    const midX = (exitPoint.x + entryPoint.x) / 2;
-                    const midY = (exitPoint.y + entryPoint.y) / 2;
-                    const offsetX = (entryPoint.y - exitPoint.y) * 0.3;
-                    const offsetY = (exitPoint.x - entryPoint.x) * 0.3;
+                // Get entry and exit points for smooth lines from border to border
+                const exitPoint = getExitPoint(parentNode, childPos);
+                const entryPoint = getEntryPoint(childPos, parentCenter);
 
-                    const pathData = `M${exitPoint.x},${exitPoint.y} Q${midX + offsetX},${midY + offsetY} ${entryPoint.x},${entryPoint.y}`;
+                // Calculate control points for smooth bezier curve
+                const midX = (exitPoint.x + entryPoint.x) / 2;
+                const midY = (exitPoint.y + entryPoint.y) / 2;
+                const offsetX = (entryPoint.y - exitPoint.y) * 0.3;
+                const offsetY = (exitPoint.x - entryPoint.x) * 0.3;
 
-                    return (
-                      <g key={`edge-${parentNode.id}-${component.name}`}>
-                        <path
-                          d={pathData}
-                          fill="none"
-                          stroke={typeColor}
-                          strokeWidth="2"
-                          opacity="0.6"
-                          style={{ transition: 'opacity 300ms, stroke-width 300ms' }}
-                        />
-                      </g>
-                    );
-                  })
-                : null
-            )}
+                const pathData = `M${exitPoint.x},${exitPoint.y} Q${midX + offsetX},${midY + offsetY} ${entryPoint.x},${entryPoint.y}`;
+
+                return (
+                  <g key={`edge-${parentNode.id}-${component.name}`}>
+                    <path
+                      d={pathData}
+                      fill="none"
+                      stroke={typeColor}
+                      strokeWidth="2"
+                      opacity="0.6"
+                      style={{ transition: 'opacity 300ms, stroke-width 300ms' }}
+                    />
+                  </g>
+                );
+              });
+            })}
           </svg>
 
           {/* NODES */}
