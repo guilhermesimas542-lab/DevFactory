@@ -124,6 +124,21 @@ export default function CategoryPage() {
 
         .sidebar-back:hover { color: #F1F1F3; }
 
+        .sidebar-exit {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #6B7280;
+          font-size: 13px;
+          text-decoration: none;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          transition: color 200ms;
+        }
+
+        .sidebar-exit:hover { color: #F1F1F3; }
+
         .sidebar-title {
           font-size: 16px;
           font-weight: 600;
@@ -299,6 +314,9 @@ export default function CategoryPage() {
               <span>{category.icon}</span>
               {category.title}
             </div>
+            <Link href="/" className="sidebar-exit">
+              🏠 Sair do Centro de Aprendizado
+            </Link>
           </div>
 
           {/* Entries list */}

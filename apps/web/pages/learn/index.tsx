@@ -66,6 +66,32 @@ export default function LearnPage() {
         .learn-title { font-size: 32px; font-weight: 700; color: #F1F1F3; margin-bottom: 8px; letter-spacing: -0.02em; }
         .learn-subtitle { font-size: 16px; color: #6B7280; }
 
+        .learn-header-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 20px;
+        }
+
+        .learn-exit-btn {
+          padding: 10px 20px;
+          background: #6366F1;
+          border: none;
+          border-radius: 8px;
+          color: #F1F1F3;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          transition: background 200ms;
+        }
+
+        .learn-exit-btn:hover {
+          background: #4F46E5;
+        }
+
         .categories-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -120,8 +146,15 @@ export default function LearnPage() {
 
       <div className="learn-container">
         <div className="learn-header">
-          <h1 className="learn-title">📚 Centro de Aprendizado</h1>
-          <p className="learn-subtitle">Explore tópicos essenciais de desenvolvimento, arquitetura e DevOps</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h1 className="learn-title">📚 Centro de Aprendizado</h1>
+              <p className="learn-subtitle">Explore tópicos essenciais de desenvolvimento, arquitetura e DevOps</p>
+            </div>
+            <Link href="/" className="learn-exit-btn">
+              🏠 Voltar ao Painel
+            </Link>
+          </div>
         </div>
 
         {error && <div className="error-box">❌ {error}</div>}
