@@ -33,10 +33,10 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'O que o usuário vê no navegador. Construído com React (componentes reutilizáveis = blocos de LEGO de interface) e Next.js (framework que conecta React ao servidor). TypeScript verifica erros antes de rodar. D3.js desenha o mapa interativo com hexágonos. Tailwind estiliza tudo com classes CSS prontas.',
     tags: ['Next.js', 'Tailwind', 'TypeScript', 'D3.js'],
     components: [
-      { name: 'ProjectLayout', status: 'done' },
-      { name: 'ArchitectureMap', status: 'done' },
-      { name: 'AIPanel', status: 'done' },
-      { name: 'StoryBoard', status: 'progress' },
+      { name: 'ProjectLayout', status: 'done', description: 'Layout base que envolve todas as páginas. Fornece navegação, header e sidebar reutilizáveis.' },
+      { name: 'ArchitectureMap', status: 'done', description: 'Componente D3.js que renderiza o mapa visual interativo com nós, arestas e zoom.' },
+      { name: 'AIPanel', status: 'done', description: 'Painel lateral para análise de IA, mostra insights e explicações geradas pelo Groq/Gemini.' },
+      { name: 'StoryBoard', status: 'progress', description: 'Timeline visual mostrando a evolução da arquitetura do projeto ao longo do tempo.' },
     ],
   },
   {
@@ -51,10 +51,10 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'O "servidor" que fica rodando nos bastidores. Quando Dashboard pede algo (exemplo: "me dá a lista de projects"), API Server entrega. Express é o framework que organiza essas requisições em Rotas (tipo endereços: /projects, /stories, /chat). TypeScript verifica se os dados que chegam/saem estão no formato correto. Fala com IA (Groq/Gemini) para análises complexas.',
     tags: ['Express', 'Prisma', 'REST', 'TypeScript'],
     components: [
-      { name: 'Routes /projects', status: 'done' },
-      { name: 'Routes /stories', status: 'done' },
-      { name: 'Routes /chat', status: 'done' },
-      { name: 'Architecture Extractor', status: 'done' },
+      { name: 'Routes /projects', status: 'done', description: 'Endpoints REST para gerenciar projetos: criação, leitura, atualização e deleção.' },
+      { name: 'Routes /stories', status: 'done', description: 'Endpoints para histórias de arquitetura e requisitos: CRUD completo.' },
+      { name: 'Routes /chat', status: 'done', description: 'Endpoints de chat interativo para conversar com a IA sobre o código.' },
+      { name: 'Architecture Extractor', status: 'done', description: 'Serviço que analisa PRD e código para extrair e estruturar a arquitetura automaticamente.' },
     ],
   },
   {
@@ -69,8 +69,8 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'Guarda todos os dados que você cria (tipo pasta gigante com arquivos bem organizados). PostgreSQL é o software que gerencia essa pasta. Prisma é um "tradutor" entre código JavaScript e linguagem do banco = você escreve normal, Prisma converte. Railway é a nuvem que hospeda esse banco. Tem 9 tabelas: Usuários, Projetos, Módulos, Componentes, Stories, Alertas, Resultados, Snapshots, Glossário.',
     tags: ['PostgreSQL', 'Prisma', 'Railway', 'Schema Migration'],
     components: [
-      { name: 'Schema migrations', status: 'done' },
-      { name: 'ActivityLog model', status: 'done' },
+      { name: 'Schema migrations', status: 'done', description: 'Versionamento do banco de dados com Prisma migrations: controla mudanças de schema.' },
+      { name: 'ActivityLog model', status: 'done', description: 'Modelo que registra todas as ações dos usuários para auditoria e rastreamento.' },
     ],
   },
   {
@@ -85,8 +85,8 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'Sistema que verifica quem você é. O usuário entra email/senha → DevFactory gera um JWT (cartão identificação digital) → esse cartão é enviado em toda requisição para provar identidade. NextAuth gerencia esse processo; Middleware valida o cartão antes de deixar acessar páginas protegidas.',
     tags: ['NextAuth', 'JWT', 'Session', 'Credentials'],
     components: [
-      { name: 'Credentials provider', status: 'done' },
-      { name: 'Session middleware', status: 'done' },
+      { name: 'Credentials provider', status: 'done', description: 'Estratégia NextAuth que valida email/senha do usuário e gera o JWT de sessão.' },
+      { name: 'Session middleware', status: 'done', description: 'Middleware que verifica o JWT em cada requisição para garantir que o usuário está autenticado.' },
     ],
   },
   {
@@ -101,9 +101,9 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'Conexão com inteligências artificiais externas que ajudam a entender código. Groq (rápido = 2 segundos) = usado para análise inicial; Gemini (profundo = mais lento) = análise detalhada. Você escolhe qual IA usar através do seletor na interface. LLM = Large Language Model (modelo grande de linguagem = IA treinada com internet inteira).',
     tags: ['Groq', 'Gemini', 'LLM', 'AI', 'Multi-provider'],
     components: [
-      { name: 'Groq Provider', status: 'done' },
-      { name: 'Gemini Provider', status: 'done' },
-      { name: 'Model Selector UI', status: 'done' },
+      { name: 'Groq Provider', status: 'done', description: 'Integração com Groq API para análises rápidas (2-5 segundos) usando llama-3.3-70b.' },
+      { name: 'Gemini Provider', status: 'done', description: 'Integração com Gemini API para análises profundas e contextuais do código.' },
+      { name: 'Model Selector UI', status: 'done', description: 'Interface que permite ao usuário escolher qual IA usar ou ativar modo automático.' },
     ],
   },
 ];

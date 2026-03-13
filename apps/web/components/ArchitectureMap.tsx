@@ -245,7 +245,7 @@ export interface ArchNode {
   status: 'done' | 'progress' | 'pending';
   desc: string;
   tags: string[];
-  components: Array<{ name: string; status: 'done' | 'progress' | 'pending' }>;
+  components: Array<{ name: string; status: 'done' | 'progress' | 'pending'; description?: string }>;
 }
 
 export interface ArchEdge {
@@ -957,7 +957,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                   </div>
                   <div className="panel-section-label">Descrição</div>
                   <div className="panel-desc">
-                    {(selectedNode as any).parentNode?.desc || 'Este é um componente do módulo acima.'}
+                    {(selectedNode as any).description || (selectedNode as any).parentNode?.desc || 'Este é um componente do módulo acima.'}
                   </div>
                 </>
               )}
