@@ -359,6 +359,7 @@ function getChildPosition(parentNode: ArchNode, childIndex: number) {
 export default function ArchitectureMap({ nodes: initialNodes, edges }: ArchitectureMapProps) {
   const [selectionPath, setSelectionPath] = useState<string[]>([]); // e.g., ["dashboard"] or ["dashboard", "StoryBoard"]
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
 
@@ -366,6 +367,9 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   const [nodeDragStart, setNodeDragStart] = useState<{ x: number; y: number; nodeId: string } | null>(null);
   const [nodeMoved, setNodeMoved] = useState(false);
   const DRAG_THRESHOLD = 5;
+  const MIN_ZOOM = 0.3;
+  const MAX_ZOOM = 3;
+  const ZOOM_STEP = 0.1;
 
   // Node expansion state (for showing/hiding components)
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -458,6 +462,45 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
     setNodeMoved(false);
   };
 
+  const handleCanvasWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+
+    const direction = e.deltaY > 0 ? -1 : 1;
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + direction * ZOOM_STEP));
+
+    if (newZoom !== zoom && canvasRef.current) {
+      // Get mouse position relative to canvas
+      const rect = canvasRef.current.parentElement?.getBoundingClientRect();
+      if (rect) {
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Calculate zoom center offset
+        const zoomChange = newZoom / zoom;
+        const newOffsetX = mouseX - (mouseX - offset.x) * zoomChange;
+        const newOffsetY = mouseY - (mouseY - offset.y) * zoomChange;
+
+        setZoom(newZoom);
+        setOffset({ x: newOffsetX, y: newOffsetY });
+      }
+    }
+  };
+
+  const handleZoomIn = () => {
+    const newZoom = Math.min(MAX_ZOOM, zoom + ZOOM_STEP * 3);
+    setZoom(newZoom);
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(MIN_ZOOM, zoom - ZOOM_STEP * 3);
+    setZoom(newZoom);
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
   // Node drag handlers
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     e.stopPropagation();
@@ -505,12 +548,13 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
         onMouseMove={handleCanvasMouseMove}
         onMouseUp={handleCanvasMouseUp}
         onMouseLeave={handleCanvasMouseUp}
+        onWheel={handleCanvasWheel}
       >
-        {/* CANVAS (pan) */}
+        {/* CANVAS (pan + zoom) */}
         <div
           className="canvas"
           ref={canvasRef}
-          style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+          style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})` }}
         >
           {/* EDGES */}
           <svg className="edges-svg">
@@ -845,6 +889,19 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
 
         {/* TOOLBAR */}
         <div className="toolbar">
+          <button className="toolbar-btn" onClick={handleZoomOut} title="Zoom out (Ctrl+-)">
+            − Zoom out
+          </button>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontFamily: 'JetBrains Mono, monospace', padding: '0 8px' }}>
+            {(zoom * 100).toFixed(0)}%
+          </span>
+          <button className="toolbar-btn" onClick={handleZoomIn} title="Zoom in (Ctrl++)">
+            + Zoom in
+          </button>
+          <button className="toolbar-btn" onClick={handleResetZoom} title="Reset zoom and center">
+            ⟲ Reset
+          </button>
+          <div className="toolbar-sep" />
           <button className="toolbar-btn" onClick={() => setOffset({ x: 0, y: 0 })}>
             ⊕ Centralizar
           </button>
@@ -854,7 +911,7 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
           </button>
           <div className="toolbar-sep" />
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontFamily: 'JetBrains Mono, monospace', padding: '0 4px' }}>
-            arraste para mover · clique nos nós
+            arraste para mover · scroll para zoom
           </span>
         </div>
 
