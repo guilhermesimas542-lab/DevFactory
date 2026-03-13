@@ -67,7 +67,7 @@ export default function TerminalView(_props: TerminalViewProps) {
               },
             ]);
           });
-        } catch (error) {
+        } catch (_error) {
           setLines([
             {
               id: '0',
