@@ -148,6 +148,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
         name: project.name,
         description: project.description,
         github_repo_url: project.github_repo_url,
+        github_webhook_id: project.github_webhook_id,
         github_last_sync: project.github_last_sync,
         prd_original: project.prd_original,
         modules: project.modules,
