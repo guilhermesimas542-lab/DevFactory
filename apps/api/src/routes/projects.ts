@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { parsePRDMarkdown } from '../utils/prdParser';
 import { createProjectFromParsedPRD, validateAndUpdateProjectTree } from '../services/ProjectService';
+import { GitHubAnalysisService } from '../services/GitHubAnalysisService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -1154,6 +1155,111 @@ router.delete('/:id/disconnect-github', async (req: Request, res: Response): Pro
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error('Disconnect GitHub error:', error);
+    res.status(500).json({ error: message });
+  }
+});
+
+/**
+ * POST /api/projects/:id/scan-github
+ * Analyze GitHub repository to detect which stories have been implemented
+ * Returns confidence-scored analysis of project progress
+ */
+router.post('/:id/scan-github', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    if (!id) {
+      res.status(400).json({ error: 'Invalid project ID' });
+      return;
+    }
+
+    // Get project
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    if (!project.github_repo_url) {
+      res.status(400).json({ error: 'Project does not have a GitHub repository URL configured' });
+      return;
+    }
+
+    if (!project.github_token) {
+      res.status(400).json({ error: 'GitHub credentials not configured. Please connect GitHub first.' });
+      return;
+    }
+
+    // Decode token from base64
+    let githubToken: string;
+    try {
+      githubToken = Buffer.from(project.github_token, 'base64').toString('utf-8');
+    } catch (e) {
+      res.status(400).json({ error: 'Invalid GitHub token format' });
+      return;
+    }
+
+    console.log(`\n🔍 Starting GitHub analysis for project ${project.id} (${project.name})`);
+
+    // Run analysis
+    const analysisResults = await GitHubAnalysisService.analyzeRepository(
+      project.github_repo_url,
+      githubToken
+    );
+
+    // Update stories with detected status (optional - can be done separately)
+    // For now, just return the analysis results
+    let updateCount = 0;
+    for (const result of analysisResults) {
+      try {
+        const story = await prisma.story.findFirst({
+          where: {
+            project_id: id,
+            id: result.story_id
+          }
+        });
+
+        if (story) {
+          // Update story status based on detected status
+          await prisma.story.update({
+            where: { id: story.id },
+            data: {
+              status: result.detected_status
+            }
+          });
+          updateCount++;
+        }
+      } catch (e) {
+        console.warn(`Failed to update story ${result.story_id}:`, e);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        project_id: id,
+        repository: project.github_repo_url,
+        analysis_timestamp: new Date().toISOString(),
+        analyzed_count: analysisResults.length,
+        updated_count: updateCount,
+        findings: analysisResults,
+        summary: {
+          completed: analysisResults.filter(r => r.detected_status === 'completed').length,
+          in_progress: analysisResults.filter(r => r.detected_status === 'in_progress').length,
+          pending: analysisResults.filter(r => r.detected_status === 'pending').length,
+          average_confidence: Math.round(
+            analysisResults.reduce((sum, r) => sum + r.confidence, 0) / analysisResults.length
+          )
+        }
+      }
+    });
+
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('GitHub Analysis error:', error);
     res.status(500).json({ error: message });
   }
 });

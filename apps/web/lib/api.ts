@@ -813,3 +813,34 @@ export async function getWebhookHealth(projectId: string): Promise<ApiResponse<{
 }>> {
   return apiCall(`/api/webhooks/${projectId}/health`);
 }
+
+/**
+ * Scan GitHub repository to auto-detect implemented stories
+ * Analyzes repository structure, commits, and dependencies to determine story status
+ * @param projectId - The project ID
+ * @returns Analysis results with detected stories and confidence scores
+ */
+export async function scanGithubProject(projectId: string): Promise<ApiResponse<{
+  project_id: string;
+  repository: string;
+  analysis_timestamp: string;
+  analyzed_count: number;
+  updated_count: number;
+  findings: Array<{
+    story_id: string;
+    title: string;
+    detected_status: 'completed' | 'in_progress' | 'pending';
+    confidence: number;
+    evidence: string[];
+  }>;
+  summary: {
+    completed: number;
+    in_progress: number;
+    pending: number;
+    average_confidence: number;
+  };
+}>> {
+  return apiCall(`/api/projects/${projectId}/scan-github`, {
+    method: 'POST',
+  });
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { getProject, updateProject, syncProjectGitHub, analyzeProject, connectGitHub, disconnectGitHub, getWebhookHealth, getWebhookLogs, getWebhookStats } from '@/lib/api';
+import { getProject, updateProject, syncProjectGitHub, analyzeProject, connectGitHub, disconnectGitHub, getWebhookHealth, getWebhookLogs, getWebhookStats, scanGithubProject } from '@/lib/api';
 import ProjectLayout from '@/components/layouts/ProjectLayout';
 import PRDViewer from '@/components/PRDViewer';
 
@@ -68,6 +68,9 @@ export default function ProjectDetail() {
   const [webhookHealth, setWebhookHealth] = useState<any>(null);
   const [webhookLogs, setWebhookLogs] = useState<any[]>([]);
   const [webhookStats, setWebhookStats] = useState<any>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResults, setScanResults] = useState<any>(null);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') { router.push('/login'); return; }
@@ -236,6 +239,27 @@ export default function ProjectDetail() {
       setGithubMessage({ type: 'error', text: err instanceof Error ? err.message : 'Erro' });
     } finally {
       setIsDisconnecting(false);
+    }
+  };
+
+  const handleScanGitHub = async () => {
+    if (!project) return;
+    try {
+      setIsScanning(true);
+      setScanMessage(null);
+      setScanResults(null);
+      const result = await scanGithubProject(project.id);
+      if (result.success && result.data) {
+        setScanResults(result.data);
+        setScanMessage(`✓ Análise concluída: ${result.data.summary.completed} concluídas, ${result.data.summary.in_progress} em progresso`);
+        setTimeout(() => setScanMessage(null), 8000);
+      } else {
+        setScanMessage(`✗ Erro na análise: ${result.error || 'Erro desconhecido'}`);
+      }
+    } catch (err) {
+      setScanMessage(`✗ Erro: ${err instanceof Error ? err.message : 'Erro'}`);
+    } finally {
+      setIsScanning(false);
     }
   };
 
@@ -507,6 +531,135 @@ export default function ProjectDetail() {
           </div>
         )}
       </InfoCard>
+
+      {/* GitHub Analysis - Auto-detect stories from repository */}
+      {project.github_repo_url && (
+        <InfoCard title="✨ Análise Automática do Repositório">
+          <div style={{ marginBottom: 14 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10 }}>
+              Analisa o repositório para detectar automaticamente quais stories foram implementadas através da estrutura de pastas, commits e dependências.
+            </p>
+            <button
+              onClick={handleScanGitHub}
+              disabled={isScanning}
+              className="df-btn-primary"
+              style={{ alignSelf: 'flex-start' }}
+            >
+              {isScanning ? '⏳ Analisando... (10-20s)' : '🔍 Escanear Repositório'}
+            </button>
+          </div>
+
+          {scanMessage && (
+            <div style={{
+              padding: '8px 12px',
+              background: scanMessage.startsWith('✓') ? 'rgba(16,185,129,0.10)' : 'rgba(239,68,68,0.10)',
+              border: scanMessage.startsWith('✓') ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 8,
+              fontSize: 13,
+              color: scanMessage.startsWith('✓') ? 'var(--status-done)' : 'var(--status-alert)',
+              marginBottom: 14
+            }}>
+              {scanMessage}
+            </div>
+          )}
+
+          {scanResults && (
+            <div>
+              {/* Summary Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+                <div style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 4 }}>CONCLUÍDAS</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--status-done)' }}>
+                    {scanResults.summary.completed}
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 4 }}>EM PROGRESSO</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--status-progress)' }}>
+                    {scanResults.summary.in_progress}
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 4 }}>PENDENTES</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    {scanResults.summary.pending}
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-tertiary)', marginBottom: 4 }}>CONFIANÇA MÉDIA</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--accent)' }}>
+                    {Math.round(scanResults.summary.average_confidence)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Findings List */}
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 10, color: 'var(--text-primary)' }}>
+                  Stories Detectadas:
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {scanResults.findings.map((finding: any, idx: number) => (
+                    <div key={idx} style={{ padding: 10, background: 'var(--bg-elevated)', borderRadius: 6, border: '1px solid var(--bg-border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <div>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                            {finding.story_id}
+                          </div>
+                          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
+                            {finding.title}
+                          </p>
+                        </div>
+                        <span style={{
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: finding.detected_status === 'completed' ? 'rgba(16,185,129,0.2)' : finding.detected_status === 'in_progress' ? 'rgba(245,158,11,0.2)' : 'rgba(107,114,128,0.2)',
+                          color: finding.detected_status === 'completed' ? 'var(--status-done)' : finding.detected_status === 'in_progress' ? 'var(--status-progress)' : 'var(--text-secondary)'
+                        }}>
+                          {finding.detected_status === 'completed' ? '✓ Concluída' : finding.detected_status === 'in_progress' ? '◐ Progresso' : '○ Pendente'}
+                        </span>
+                      </div>
+
+                      {/* Confidence bar */}
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>Confiança</span>
+                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent)' }}>{finding.confidence}%</span>
+                        </div>
+                        <div style={{ height: 4, background: 'var(--bg-surface)', borderRadius: 2, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${finding.confidence}%`,
+                            background: finding.confidence >= 75 ? 'var(--status-done)' : finding.confidence >= 40 ? 'var(--status-progress)' : 'var(--text-secondary)'
+                          }} />
+                        </div>
+                      </div>
+
+                      {/* Evidence list */}
+                      {finding.evidence.length > 0 && (
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                          <div style={{ marginBottom: 4, color: 'var(--text-tertiary)', fontSize: 10, fontWeight: 600 }}>Evidências:</div>
+                          {finding.evidence.map((ev: string, evIdx: number) => (
+                            <div key={evIdx} style={{ marginLeft: 12, marginBottom: 2 }}>
+                              • {ev}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12, padding: 10, background: 'rgba(99,102,241,0.08)', borderRadius: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
+                <strong>Análise em:</strong> {new Date(scanResults.analysis_timestamp).toLocaleString('pt-BR')}
+              </div>
+            </div>
+          )}
+        </InfoCard>
+      )}
 
       {/* Webhook Monitor */}
       {project?.github_webhook_id && webhookHealth && (
