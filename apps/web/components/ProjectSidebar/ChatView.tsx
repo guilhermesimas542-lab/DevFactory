@@ -64,8 +64,10 @@ export default function ChatView({ projectId }: ChatViewProps) {
     try {
       console.log('Enviando mensagem:', { projectId, message: userInput });
 
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
       // Chamar API de chat
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${apiUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
