@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import ChatView from './ChatView';
 import FileTreeView from './FileTreeView';
+import TerminalView from './TerminalView';
 import { SidebarView } from './SidebarToggleBar';
 
 interface SidebarProps {
@@ -81,6 +82,7 @@ export default function Sidebar({
           >
             {activeView === 'filetree' && '📁 Estrutura'}
             {activeView === 'chat' && '💬 Chat'}
+            {activeView === 'terminal' && '🖥️ Terminal'}
             {activeView === 'settings' && '⚙️ Configurações'}
           </h2>
           <button
@@ -119,6 +121,9 @@ export default function Sidebar({
           )}
           {activeView === 'filetree' && (
             <FileTreeView nodes={nodes} />
+          )}
+          {activeView === 'terminal' && (
+            <TerminalView projectId={projectId} />
           )}
           {activeView === 'settings' && (
             <div

@@ -1,6 +1,6 @@
 'use client';
 
-export type SidebarView = 'filetree' | 'chat' | 'settings';
+export type SidebarView = 'filetree' | 'chat' | 'settings' | 'terminal';
 
 interface SidebarToggleBarProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ export default function SidebarToggleBar({ isOpen, activeView, onToggle }: Sideb
   const icons = [
     { id: 'filetree', icon: '📁', label: 'File Tree', title: 'Estrutura de Arquivos' },
     { id: 'chat', icon: '💬', label: 'Chat', title: 'Chat com IA' },
+    { id: 'terminal', icon: '🖥️', label: 'Terminal', title: 'Terminal' },
     { id: 'settings', icon: '⚙️', label: 'Settings', title: 'Configurações' },
   ];
 
