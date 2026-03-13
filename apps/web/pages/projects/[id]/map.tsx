@@ -34,10 +34,10 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'O que o usuário vê no navegador. Construído com React (componentes reutilizáveis = blocos de LEGO de interface) e Next.js (framework que conecta React ao servidor). TypeScript verifica erros antes de rodar. D3.js desenha o mapa interativo com hexágonos. Tailwind estiliza tudo com classes CSS prontas.',
     tags: ['Next.js', 'Tailwind', 'TypeScript', 'D3.js'],
     components: [
-      { name: 'ProjectLayout', status: 'done', description: 'Layout base que envolve todas as páginas. Fornece navegação, header e sidebar reutilizáveis.' },
-      { name: 'ArchitectureMap', status: 'done', description: 'Componente D3.js que renderiza o mapa visual interativo com nós, arestas e zoom.' },
-      { name: 'AIPanel', status: 'done', description: 'Painel lateral para análise de IA, mostra insights e explicações geradas pelo Groq/Gemini.' },
-      { name: 'StoryBoard', status: 'progress', description: 'Timeline visual mostrando a evolução da arquitetura do projeto ao longo do tempo.' },
+      { name: 'ProjectLayout', status: 'done', description: 'Layout base que envolve todas as páginas. Fornece navegação, header e sidebar reutilizáveis.', laymanDescription: 'É como a moldura de um quadro: mantém menu e header iguais em todas as páginas enquanto o conteúdo do meio muda. Assim você não precisa redesenhar a moldura em cada página.' },
+      { name: 'ArchitectureMap', status: 'done', description: 'Componente D3.js que renderiza o mapa visual interativo com nós, arestas e zoom.', laymanDescription: 'O mapa visual que você está usando agora. Cada caixinha colorida é uma parte do sistema, as linhas mostram como elas se conversam. Você pode arrastar, fazer zoom e explorar cada parte.' },
+      { name: 'AIPanel', status: 'done', description: 'Painel lateral para análise de IA, mostra insights e explicações geradas pelo Groq/Gemini.', laymanDescription: 'Uma IA inteligente que lê seu código e explica o que está acontecendo. Como ter um especialista ao seu lado dizendo "aqui você está fazendo X, que é usado para Y".' },
+      { name: 'StoryBoard', status: 'progress', description: 'Timeline visual mostrando a evolução da arquitetura do projeto ao longo do tempo.', laymanDescription: 'Uma linha do tempo que mostra como o projeto evoluiu ao longo do tempo. Tipo um "antes e depois" — você vê a arquitetura em janeiro, depois em março, vendo o que foi adicionado/mudado.' },
     ],
   },
   {
@@ -52,10 +52,10 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'O "servidor" que fica rodando nos bastidores. Quando Dashboard pede algo (exemplo: "me dá a lista de projects"), API Server entrega. Express é o framework que organiza essas requisições em Rotas (tipo endereços: /projects, /stories, /chat). TypeScript verifica se os dados que chegam/saem estão no formato correto. Fala com IA (Groq/Gemini) para análises complexas.',
     tags: ['Express', 'Prisma', 'REST', 'TypeScript'],
     components: [
-      { name: 'Routes /projects', status: 'done', description: 'Endpoints REST para gerenciar projetos: criação, leitura, atualização e deleção.' },
-      { name: 'Routes /stories', status: 'done', description: 'Endpoints para histórias de arquitetura e requisitos: CRUD completo.' },
-      { name: 'Routes /chat', status: 'done', description: 'Endpoints de chat interativo para conversar com a IA sobre o código.' },
-      { name: 'Architecture Extractor', status: 'done', description: 'Serviço que analisa PRD e código para extrair e estruturar a arquitetura automaticamente.' },
+      { name: 'Routes /projects', status: 'done', description: 'Endpoints REST para gerenciar projetos: criação, leitura, atualização e deleção.', laymanDescription: 'Endereços postais do servidor. Quando o frontend diz "quero ver meus projetos", envia uma mensagem para este endereço que devolve a lista de projetos certa.' },
+      { name: 'Routes /stories', status: 'done', description: 'Endpoints para histórias de arquitetura e requisitos: CRUD completo.', laymanDescription: 'Mais endereços postais. Estes tratam das "histórias" (tarefas/requisitos) do projeto. Você pode criar, ler, atualizar ou deletar histórias por aqui.' },
+      { name: 'Routes /chat', status: 'done', description: 'Endpoints de chat interativo para conversar com a IA sobre o código.', laymanDescription: 'O balcão de atendimento da IA. Você manda uma pergunta sobre o código, e a IA responde. Como enviar um email para um especialista que responde em tempo real.' },
+      { name: 'Architecture Extractor', status: 'done', description: 'Serviço que analisa PRD e código para extrair e estruturar a arquitetura automaticamente.', laymanDescription: 'Um "leitor de raio-X" do seu projeto. Ele lê o documento de requisitos e o código no GitHub, e descobre automaticamente como as coisas se encaixam. Sem você ter que desenhar nada.' },
     ],
   },
   {
@@ -70,8 +70,8 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'Guarda todos os dados que você cria (tipo pasta gigante com arquivos bem organizados). PostgreSQL é o software que gerencia essa pasta. Prisma é um "tradutor" entre código JavaScript e linguagem do banco = você escreve normal, Prisma converte. Railway é a nuvem que hospeda esse banco. Tem 9 tabelas: Usuários, Projetos, Módulos, Componentes, Stories, Alertas, Resultados, Snapshots, Glossário.',
     tags: ['PostgreSQL', 'Prisma', 'Railway', 'Schema Migration'],
     components: [
-      { name: 'Schema migrations', status: 'done', description: 'Versionamento do banco de dados com Prisma migrations: controla mudanças de schema.' },
-      { name: 'ActivityLog model', status: 'done', description: 'Modelo que registra todas as ações dos usuários para auditoria e rastreamento.' },
+      { name: 'Schema migrations', status: 'done', description: 'Versionamento do banco de dados com Prisma migrations: controla mudanças de schema.', laymanDescription: 'Um histórico de versões do banco de dados. Quando você precisa adicionar uma coluna ou mudar uma tabela, o Prisma registra essa mudança. Se algo quebrar, você volta para a versão anterior.' },
+      { name: 'ActivityLog model', status: 'done', description: 'Modelo que registra todas as ações dos usuários para auditoria e rastreamento.', laymanDescription: 'Um "livro de registro" que anota tudo que acontece. "João criou um projeto às 10h", "Maria analisou o PR às 11h". Útil para auditar quem fez o quê e quando.' },
     ],
   },
   {
@@ -86,8 +86,8 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'Sistema que verifica quem você é. O usuário entra email/senha → DevFactory gera um JWT (cartão identificação digital) → esse cartão é enviado em toda requisição para provar identidade. NextAuth gerencia esse processo; Middleware valida o cartão antes de deixar acessar páginas protegidas.',
     tags: ['NextAuth', 'JWT', 'Session', 'Credentials'],
     components: [
-      { name: 'Credentials provider', status: 'done', description: 'Estratégia NextAuth que valida email/senha do usuário e gera o JWT de sessão.' },
-      { name: 'Session middleware', status: 'done', description: 'Middleware que verifica o JWT em cada requisição para garantir que o usuário está autenticado.' },
+      { name: 'Credentials provider', status: 'done', description: 'Estratégia NextAuth que valida email/senha do usuário e gera o JWT de sessão.', laymanDescription: 'O "porteiro" da frente. Você entra seu email/senha, ele checa se estão corretos e emite um "cartão VIP" digital (JWT) para você. Com esse cartão, você pode entrar em qualquer sala do aplicativo.' },
+      { name: 'Session middleware', status: 'done', description: 'Middleware que verifica o JWT em cada requisição para garantir que o usuário está autenticado.', laymanDescription: 'O "segurança" que fica nas portas internas. Cada vez que você tenta acessar algo, ele checa se você tem o cartão (JWT) válido. Sem o cartão válido, nada de entrar.' },
     ],
   },
   {
@@ -102,9 +102,9 @@ const MOCK_NODES: ArchNode[] = [
     desc: 'Conexão com inteligências artificiais externas que ajudam a entender código. Groq (rápido = 2 segundos) = usado para análise inicial; Gemini (profundo = mais lento) = análise detalhada. Você escolhe qual IA usar através do seletor na interface. LLM = Large Language Model (modelo grande de linguagem = IA treinada com internet inteira).',
     tags: ['Groq', 'Gemini', 'LLM', 'AI', 'Multi-provider'],
     components: [
-      { name: 'Groq Provider', status: 'done', description: 'Integração com Groq API para análises rápidas (2-5 segundos) usando llama-3.3-70b.' },
-      { name: 'Gemini Provider', status: 'done', description: 'Integração com Gemini API para análises profundas e contextuais do código.' },
-      { name: 'Model Selector UI', status: 'done', description: 'Interface que permite ao usuário escolher qual IA usar ou ativar modo automático.' },
+      { name: 'Groq Provider', status: 'done', description: 'Integração com Groq API para análises rápidas (2-5 segundos) usando llama-3.3-70b.', laymanDescription: 'Uma IA rápida e "leve" — tipo um corretor de prova que te dá feedback em 2-3 segundos. Bom para respostas simples e rápidas, quando você não precisa de análise super profunda.' },
+      { name: 'Gemini Provider', status: 'done', description: 'Integração com Gemini API para análises profundas e contextuais do código.', laymanDescription: 'Uma IA mais "pesada" e poderosa — tipo um orientador experiente que lê tudo com calma e te dá uma análise muito profunda e detalhada. Mais lenta, mas muito melhor para coisas complexas.' },
+      { name: 'Model Selector UI', status: 'done', description: 'Interface que permite ao usuário escolher qual IA usar ou ativar modo automático.', laymanDescription: 'Um botão que deixa você escolher: quer resposta rápida (Groq) ou análise profunda (Gemini)? Ou deixa automático — o app escolhe a melhor IA para cada pergunta.' },
     ],
   },
 ];

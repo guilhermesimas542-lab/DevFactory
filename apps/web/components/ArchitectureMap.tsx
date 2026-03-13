@@ -245,7 +245,7 @@ export interface ArchNode {
   status: 'done' | 'progress' | 'pending';
   desc: string;
   tags: string[];
-  components: Array<{ name: string; status: 'done' | 'progress' | 'pending'; description?: string }>;
+  components: Array<{ name: string; status: 'done' | 'progress' | 'pending'; description?: string; laymanDescription?: string }>;
 }
 
 export interface ArchEdge {
@@ -429,6 +429,11 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
     Object.fromEntries(initialNodes.map(n => [n.id, { x: n.x, y: n.y }]))
   );
 
+  // Detail panel dragging state
+  const [panelPos, setPanelPos] = useState<{ x: number; y: number } | null>(null);
+  const [panelDragging, setPanelDragging] = useState(false);
+  const [panelDragStart, setPanelDragStart] = useState<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
+
   // Update nodes with current positions
   const nodes = initialNodes.map(n => ({
     ...n,
@@ -478,6 +483,15 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    // Handle detail panel dragging (priority)
+    if (panelDragging && panelDragStart) {
+      setPanelPos({
+        x: panelDragStart.startX + (e.clientX - panelDragStart.mouseX),
+        y: panelDragStart.startY + (e.clientY - panelDragStart.mouseY),
+      });
+      return;
+    }
+
     // Handle node dragging
     if (nodeDragStart) {
       const deltaX = e.clientX - nodeDragStart.x;
@@ -507,6 +521,13 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   };
 
   const handleCanvasMouseUp = () => {
+    // Stop panel dragging
+    if (panelDragging) {
+      setPanelDragging(false);
+      setPanelDragStart(null);
+      return;
+    }
+
     setDragging(false);
     setNodeDragStart(null);
     setNodeMoved(false);
@@ -549,6 +570,21 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
   const handleResetZoom = () => {
     setZoom(1);
     setOffset({ x: 0, y: 0 });
+  };
+
+  // Panel drag handler
+  const handlePanelMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const panel = (e.currentTarget as HTMLElement).closest('.detail-panel') as HTMLElement;
+    if (!panel) return;
+    const rect = panel.getBoundingClientRect();
+    setPanelDragging(true);
+    setPanelDragStart({
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startX: panelPos?.x ?? rect.left,
+      startY: panelPos?.y ?? rect.top,
+    });
   };
 
   // Node drag handlers
@@ -823,7 +859,16 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
 
         {/* DETAIL PANEL */}
         {selectedNode && (
-          <div className="detail-panel fade-in">
+          <div
+            className="detail-panel fade-in"
+            style={panelPos ? {
+              position: 'fixed',
+              left: `${panelPos.x}px`,
+              top: `${panelPos.y}px`,
+              transform: 'none',
+              right: 'auto',
+            } : {}}
+          >
             {selectionPath.length > 0 && (
               <div className="panel-breadcrumb">
                 {selectionPath.map((nodeId, index) => {
@@ -853,15 +898,22 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
               </div>
             )}
 
-            <div className="panel-header">
-              <div
-                className="panel-icon"
-                style={{
-                  background: `${TYPE_MAP[selectedNode.type].color}18`,
-                  border: `1px solid ${TYPE_MAP[selectedNode.type].color}35`
-                }}
-              >
-                {(selectedNode as any).isChild ? '◆' : TYPE_MAP[selectedNode.type].icon}
+            <div
+              className="panel-header"
+              onMouseDown={handlePanelMouseDown}
+              style={{ cursor: panelDragging ? 'grabbing' : 'grab', userSelect: 'none' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '1px' }}>⋮⋮</span>
+                <div
+                  className="panel-icon"
+                  style={{
+                    background: `${TYPE_MAP[selectedNode.type].color}18`,
+                    border: `1px solid ${TYPE_MAP[selectedNode.type].color}35`
+                  }}
+                >
+                  {(selectedNode as any).isChild ? '◆' : TYPE_MAP[selectedNode.type].icon}
+                </div>
               </div>
               <div>
                 <div className="panel-title">{selectedNode.name}</div>
@@ -929,24 +981,76 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
                 </>
               ) : (
                 <>
-                  <div className="panel-section-label">Status</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                  {/* Link back to parent */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <button
+                      onClick={() => setSelectionPath([(selectedNode as any).parentNode?.id])}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--text-dim)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      ← Voltar para {(selectedNode as any).parentNode?.name}
+                    </button>
+                  </div>
+
+                  {/* Layman explanation (destaque) */}
+                  {(selectedNode as any).laymanDescription && (
                     <div
                       style={{
-                        width: '12px',
-                        height: '12px',
-                        borderRadius: '50%',
-                        background: STATUS_COLOR[(selectedNode as any).status || 'pending'],
-                        boxShadow: `0 0 8px ${STATUS_COLOR[(selectedNode as any).status || 'pending']}60`
+                        background: `${TYPE_MAP[selectedNode.type].color}12`,
+                        border: `2px solid ${TYPE_MAP[selectedNode.type].color}30`,
+                        borderLeft: `4px solid ${TYPE_MAP[selectedNode.type].color}`,
+                        borderRadius: '8px',
+                        padding: '12px',
+                        marginBottom: '12px',
+                        fontSize: '13px',
+                        lineHeight: '1.5',
+                        color: 'var(--text)'
                       }}
-                    />
-                    <span style={{ fontSize: '13px', textTransform: 'capitalize' }}>
-                      {(selectedNode as any).status || 'pending'}
-                    </span>
-                  </div>
-                  <div className="panel-section-label">Descrição</div>
-                  <div className="panel-desc">
-                    {(selectedNode as any).description || (selectedNode as any).parentNode?.desc || 'Este é um componente do módulo acima.'}
+                    >
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+                        <span>💡</span>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Em linguagem simples</span>
+                      </div>
+                      {(selectedNode as any).laymanDescription}
+                    </div>
+                  )}
+
+                  {/* Technical description */}
+                  {(selectedNode as any).description && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', alignItems: 'center' }}>
+                        <span>⚙️</span>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Descrição técnica</span>
+                      </div>
+                      <div className="panel-desc" style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
+                        {(selectedNode as any).description}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status */}
+                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '10px',
+                          height: '10px',
+                          borderRadius: '50%',
+                          background: STATUS_COLOR[(selectedNode as any).status || 'pending'],
+                          boxShadow: `0 0 6px ${STATUS_COLOR[(selectedNode as any).status || 'pending']}60`
+                        }}
+                      />
+                      <span style={{ fontSize: '12px', color: 'var(--text-dim)' }}>
+                        Status: <strong style={{ color: 'var(--text)', textTransform: 'capitalize' }}>{(selectedNode as any).status || 'pending'}</strong>
+                      </span>
+                    </div>
                   </div>
                 </>
               )}
