@@ -437,6 +437,7 @@ export async function getGlossaryTerms(projectId: string): Promise<ApiResponse<A
   definition: string;
   analogy: string | null;
   relevance: string | null;
+  category: string;
   is_explored: boolean;
   created_at: string;
 }>>> {
