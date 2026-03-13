@@ -488,14 +488,27 @@ export default function ArchitectureMap({ nodes: initialNodes, edges }: Architec
         if (!nodeMoved) {
           setNodeMoved(true); // Mark that we've moved past threshold
         }
-        // Update node position
-        setNodePositions(prev => ({
-          ...prev,
-          [nodeDragStart.nodeId]: {
-            x: prev[nodeDragStart.nodeId].x + deltaX,
-            y: prev[nodeDragStart.nodeId].y + deltaY,
-          },
-        }));
+        // Update node position with validation
+        setNodePositions(prev => {
+          const currentPos = prev[nodeDragStart.nodeId];
+          if (!currentPos) {
+            // Initialize position if doesn't exist (for child nodes)
+            return {
+              ...prev,
+              [nodeDragStart.nodeId]: {
+                x: deltaX,
+                y: deltaY,
+              },
+            };
+          }
+          return {
+            ...prev,
+            [nodeDragStart.nodeId]: {
+              x: currentPos.x + deltaX,
+              y: currentPos.y + deltaY,
+            },
+          };
+        });
         // Update drag start for next frame
         setNodeDragStart({ ...nodeDragStart, x: e.clientX, y: e.clientY });
       }
