@@ -48,8 +48,8 @@ const corsOrigins = [
   'http://192.168.0.136:3001',
 ]
 
-app.use(cors({
-  origin: (origin, callback) => {
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (like mobile apps, curl requests, Electron)
     if (!origin) return callback(null, true)
 
@@ -68,25 +68,33 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}))
+}
 
 // Middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(logger)
 
-// Routes
-app.use('/api', healthRoutes)
-app.use('/api/db', dbTestRoutes)
-app.use('/api/projects', projectsRoutes)
-app.use('/api/stories', storiesRoutes)
-app.use('/api/alerts', alertsRoutes)
-app.use('/api/glossary', glossaryRoutes)
-app.use('/api/activity', activityRoutes)
-app.use('/api/chat', chatRoutes)
-app.use('/api/learning', learningRoutes)
+// Webhook routes FIRST (NO CORS - allow ANY origin for webhooks, validated via signature)
+app.options('/api/webhooks/github', (_req, res) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'POST')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, X-Hub-Signature-256, X-GitHub-Event, X-GitHub-Delivery')
+  res.sendStatus(200)
+})
 app.use('/api/webhooks', webhooksRoutes)
-app.use('/api/debug', debugRoutes)
+
+// All other routes WITH CORS
+app.use('/api', cors(corsOptions), healthRoutes)
+app.use('/api/db', cors(corsOptions), dbTestRoutes)
+app.use('/api/projects', cors(corsOptions), projectsRoutes)
+app.use('/api/stories', cors(corsOptions), storiesRoutes)
+app.use('/api/alerts', cors(corsOptions), alertsRoutes)
+app.use('/api/glossary', cors(corsOptions), glossaryRoutes)
+app.use('/api/activity', cors(corsOptions), activityRoutes)
+app.use('/api/chat', cors(corsOptions), chatRoutes)
+app.use('/api/learning', cors(corsOptions), learningRoutes)
+app.use('/api/debug', cors(corsOptions), debugRoutes)
 
 // 404 Handler
 app.use((_req, res) => {
