@@ -30,6 +30,82 @@
 
 ---
 
+### 2026-03-12 @dev (Dex) — Glossary Enhancement Phase 3: Frontend UI ✅
+
+**Fase 3 — Frontend UI: Agrupamento por categoria + Auto-gerar com IA** ✅
+
+**Implementação:**
+
+1. **Categoria Configuration:**
+   - 7 categorias: tecnologia ⚙️, arquitetura 🏗️, banco_de_dados 🗄️, seguranca 🔐, negocio 💼, infraestrutura ☁️, geral 📌
+   - Cores únicas por categoria (indigo, purple, pink, orange, cyan, emerald, gray)
+   - Ícones emoji para cada categoria
+
+2. **UI Components:**
+   - **Toolbar com 2 botões:**
+     * "✨ Auto-gerar com IA" — Extrai termos do PRD automaticamente (loading state)
+     * "+ Novo Termo" — Abre formulário para criar termo manual
+
+   - **Formulário de novo termo:**
+     * Campos: termo, definição, analogia, relevância
+     * Dropdown de categoria (7 opções)
+     * Botões: Criar | Cancelar
+
+   - **Busca global:** Filtra por termo ou definição em todas as categorias
+
+3. **Card Layout:**
+   - Grid responsivo: `repeat(auto-fill, minmax(280px, 1fr))`
+   - Cada categoria em seção separada com header
+   - Header da categoria: ícone + nome + contador de termos
+   - Cards mostram: termo, relevância (badge colorida), definição, analogia (se houver)
+   - Botão "Explorar" / "✓ Explorado" no rodapé (toggleável)
+   - Botão delete (🗑) no header do card
+
+4. **Grouping & Sorting:**
+   - `groupedByCategory()` agrupa termos por categoria
+   - Categorias ordenadas conforme: tecn → arq → banco → seg → neg → infra → geral
+   - Contadores de termos por categoria no header
+
+5. **API Type Updates:**
+   - `getGlossaryTerms()` agora retorna array com campo `category: string`
+   - Load handler mapeia resultado para garantir `category || 'geral'`
+
+**TypeScript & Build:**
+- ✅ API: 0 erros TypeScript
+- ✅ Web: 0 erros TypeScript
+- ✅ Ambas as apps compilam com sucesso
+
+**Fluxo Completo:**
+1. Usuário abre `/projects/[id]/glossary`
+2. Clica "✨ Auto-gerar com IA"
+3. Botão mostra "⏳ Analisando..." (disabled)
+4. Backend extrai termos do PRD com Groq
+5. Mostra alert: "✓ 12 termos adicionados, 3 já existiam"
+6. Página recarrega → termos agrupados por categoria
+7. Usuário pode clicar em categoria específica para explorar
+8. Ou adicionar termo manualmente com categoria dropdown
+
+**Arquivos Modificados:**
+- ✅ `apps/web/pages/projects/[id]/glossary.tsx` — Completa reescrita com categorias
+- ✅ `apps/web/lib/api.ts` — Atualizada tipagem getGlossaryTerms
+
+**Visual Features:**
+- Cards coloridos por categoria (usando cores das categorias)
+- Badges de relevância com cores: Crítico (red), Importante (amber), Útil (green)
+- Hover effects em botões de delete
+- Opacity 65% em termos explorados (visual feedback)
+- Animações fade-up mantidas
+
+**Status:** ✅ Concluído — Glossário pronto para produção!
+
+**Próximas ações (fora do escopo):**
+- [ ] Teste E2E da extração com PRD real
+- [ ] Validar extração de categorias em diferentes PRDs
+- [ ] Adicionar busca por categoria (filtro adicional)
+- [ ] Admin page para gerenciar categorias customizadas
+
+---
+
 ### 2026-03-12 @dev (Dex) — Glossary Enhancement Phase 2: Backend ✅
 
 **Fase 2 — Backend: Endpoint POST `/api/glossary/extract` com Groq IA** ✅
