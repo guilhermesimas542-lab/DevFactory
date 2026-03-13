@@ -85,6 +85,11 @@ npm run dev
 \`\`\`
 
 Seu aplicativo estará disponível em \`http://localhost:3000\`.`,
+          simple_explanation: `**Next.js** é uma ferramenta que facilita criar sites com React. Imagine que normalmente você precisa fazer muitas configurações manualmente, mas Next.js já vem com tudo pronto para usar.
+
+O melhor é que ele permite criar páginas rapidinho: você cria uma pasta chamada \`pages\`, adiciona um arquivo chamado \`sobre.tsx\`, e pronto! Você automaticamente tem uma página em \`/sobre\` no seu site.
+
+Next.js também é muito rápido porque ele pode preparar as páginas antes de alguém acessá-las, economizando tempo.`,
           type: 'article',
           order: 1,
         },
@@ -104,6 +109,9 @@ Next.js utiliza roteamento baseado em arquivos onde a estrutura do seu diretóri
 Use colchetes para criar rotas dinâmicas:
 - \`[param].tsx\` para parâmetros únicos
 - \`[...slug].tsx\` para rotas catch-all`,
+          simple_explanation: `Em Next.js, você não precisa configurar rotas manualmente. O framework automaticamente cria rotas baseado nos arquivos que você coloca na pasta \`pages\`.
+
+Por exemplo: se você cria um arquivo chamado \`contato.tsx\`, seu site terá automaticamente uma página em \`/contato\`. Se você quer fazer uma página dinâmica tipo \`/blog/123\` onde 123 muda, você usa colchetes no nome do arquivo assim: \`[id].tsx\`.`,
           type: 'guide',
           order: 2,
         }
@@ -126,6 +134,9 @@ Normalização é o processo de organizar dados em um banco de dados para reduzi
 2. Crie índices em colunas frequentemente consultadas
 3. Use constraints para integridade dos dados
 4. Planeje para escalabilidade`,
+          simple_explanation: `Normalização é basicamente organizar seu banco de dados de forma inteligente para não duplicar informações.
+
+Imagine que você armazena o endereço do cliente junto com cada pedido. Se o cliente muda de endereço, você precisa atualizar em todos os pedidos dele. Normalização evita isso: você guarda o endereço em um lugar só e os pedidos apenas referenciam esse lugar. Assim, quando muda algo, você atualiza uma vez só.`,
           type: 'article',
           order: 1,
         },
@@ -143,6 +154,9 @@ Normalização é o processo de organizar dados em um banco de dados para reduzi
 
 ## Dica: Monitore a Performance dos Índices
 Revise regularmente os logs de consultas lentas para identificar índices faltantes.`,
+          simple_explanation: `Um índice no banco de dados é como um índice em um livro. Se você quer encontrar todas as páginas sobre "gatos", você não lê o livro inteiro - você procura "gatos" no índice, e ele mostra quais páginas têm esse assunto.
+
+Sem índices, o banco precisa procurar em todas as linhas. Com índices, ele encontra muito mais rápido. Mas criar muitos índices deixa a escrita mais lenta porque o banco precisa atualizar o índice toda vez que adiciona dados.`,
           type: 'tip',
           order: 2,
         }
@@ -164,6 +178,13 @@ MVC separa a aplicação em três componentes interconectados.
 - Separação de responsabilidades
 - Testes mais fáceis
 - Componentes reutilizáveis`,
+          simple_explanation: `MVC é um jeito de organizar seu código em três partes separadas:
+
+1. **Model** = os dados (como os usuários, produtos, etc)
+2. **View** = o que o usuário vê (botões, cores, textos)
+3. **Controller** = o intermediário que pega o que o usuário faz e atualiza os dados
+
+Por exemplo: o usuário clica um botão (View), isso avisa o Controller, o Controller pede ao Model para adicionar um novo produto, e a View mostra o resultado. Assim cada parte tem um trabalho bem definido.`,
           type: 'article',
           order: 1,
         }
@@ -186,6 +207,9 @@ CI/CD automatiza testes e deployment de mudanças de código.
 - GitLab CI
 - Jenkins
 - CircleCI`,
+          simple_explanation: `CI/CD é um robô que automaticamente testa seu código e o coloca em produção quando tudo está OK.
+
+Ao invés de você manualmente testar cada mudança, compilar, e depois enviar para o servidor, o robô faz tudo isso automaticamente. Se o código tem erro, o robô detecta e avisa. Se está tudo bem, o robô coloca o código novo no ar. Isso economiza tempo e reduz erros humanos.`,
           type: 'article',
           order: 1,
         }
@@ -208,6 +232,9 @@ REST (Representational State Transfer) é um estilo arquitetônico para APIs.
 - Use substantivos para endpoints: \`/api/usuarios\` e não \`/api/obterUsuarios\`
 - Use minúsculas e hífens: \`/api/perfis-usuario\`
 - Use versão na URL: \`/api/v1/usuarios\``,
+          simple_explanation: `Uma API RESTful é um jeito padrão de um programa conversar com outro. É como uma lista de regras para todo mundo seguir.
+
+As regras principais são: use GET para buscar dados, POST para criar, PUT para atualizar, DELETE para remover. E no nome dos caminhos, use palavras comuns tipo \`/usuarios\` ao invés de \`/obterTodosOsUsuarios\`. Isso torna a API fácil de entender e usar.`,
           type: 'guide',
           order: 1,
         }
@@ -239,6 +266,9 @@ it('deve somar dois números', () => {
   expect(result).toBe(8);
 });
 \`\`\``,
+          simple_explanation: `Um teste unitário é como um checklist para garantir que uma pequena parte do seu código funciona certo.
+
+Você segue 3 passos simples: 1) Prepare os dados (Arrange), 2) Executa a função (Act), 3) Verifica se o resultado é o esperado (Assert). É como testar se uma calculadora funciona: você digita 5 + 3, a calculadora executa, você verifica se o resultado é 8.`,
           type: 'guide',
           order: 1,
         }

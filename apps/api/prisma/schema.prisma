@@ -180,6 +180,7 @@ model LearningEntry {
 
   title       String
   content     String   // markdown content
+  simple_explanation String? // simplified explanation in everyday language
   type        String   @default("article") // article, tip, guide, example, faq
   order       Int      @default(0) // for sorting within category
 

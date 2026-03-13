@@ -9,6 +9,7 @@ interface Entry {
   id: string;
   title: string;
   content: string;
+  simple_explanation?: string;
   type: 'article' | 'tip' | 'guide' | 'example' | 'faq';
   order: number;
   created_at: string;
@@ -95,13 +96,14 @@ export default function CategoryPage() {
   return (
     <div style={{ minHeight: 'calc(100vh - 52px)', background: '#0C0C10' }}>
       <style>{`
-        .learn-layout { display: flex; height: 100%; }
+        .learn-layout { display: flex; height: calc(100vh - 52px); min-height: calc(100vh - 52px); }
         .learn-sidebar {
           width: 300px;
           background: #141418;
           border-right: 1px solid rgba(255,255,255,0.08);
           overflow-y: auto;
           padding: 24px 0;
+          height: 100%;
         }
 
         .sidebar-header {
@@ -165,6 +167,46 @@ export default function CategoryPage() {
           flex: 1;
           overflow-y: auto;
           padding: 40px;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+
+        .learn-content-wrapper {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
+          height: 100%;
+        }
+
+        .content-section {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .content-section h3 {
+          font-size: 14px;
+          font-weight: 600;
+          color: #6B7280;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 20px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .simple-explanation {
+          background: rgba(99,102,241,0.05);
+          border-left: 3px solid #6366F1;
+          padding: 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          line-height: 1.6;
+          color: rgba(255,255,255,0.75);
+        }
+
+        .simple-explanation strong {
+          color: #F1F1F3;
         }
 
         .entry-header {
@@ -286,8 +328,22 @@ export default function CategoryPage() {
                 <h1 className="entry-title">{selectedEntry.title}</h1>
               </div>
 
-              <div className="entry-body">
-                <ReactMarkdown>{selectedEntry.content}</ReactMarkdown>
+              <div className="learn-content-wrapper">
+                <div className="content-section">
+                  <h3>📚 Explicação Técnica</h3>
+                  <div className="entry-body">
+                    <ReactMarkdown>{selectedEntry.content}</ReactMarkdown>
+                  </div>
+                </div>
+
+                {selectedEntry.simple_explanation && (
+                  <div className="content-section">
+                    <h3>💡 Em Palavras Simples</h3>
+                    <div className="simple-explanation">
+                      <ReactMarkdown>{selectedEntry.simple_explanation}</ReactMarkdown>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (
